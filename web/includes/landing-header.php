@@ -1,0 +1,19 @@
+<nav class="landing-nav">
+    <a href="index.php" class="logo">
+        <div class="logo-mark"><i data-lucide="paw-print"></i></div>
+        <span class="logo-text"><?= SITE_NAME ?></span>
+    </a>
+    <div class="landing-nav-links">
+        <a href="index.php">Home</a>
+        <a href="index.php#features">Features</a>
+        <a href="index.php#how-it-works">How It Works</a>
+        <a href="index.php#about">About</a>
+    </div>
+    <div class="landing-nav-actions">
+        <a href="login.php" class="btn-outline btn-sm">Log In</a>
+        <a href="signup.php" class="btn-primary btn-sm">Sign Up</a>
+    </div>
+    <button type="button" class="mobile-menu-btn" data-mobile-menu aria-label="Open menu">
+        <i data-lucide="menu"></i>
+    </button>
+</nav>
