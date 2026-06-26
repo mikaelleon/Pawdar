@@ -294,9 +294,10 @@ function fetch_registry_list(PDO $pdo, array $filters, int $offset = 0, int $lim
         SELECT d.dog_id, d.DogName, d.Breed, d.RegistryID, d.Status, d.DogType, d.Gender, d.Age,
                u.Name AS owner_name, u.Barangay AS owner_barangay, u.UserID AS owner_id,
                COALESCE(b.breed_name, d.Breed) AS breed_label,
-               v.vax_status AS vaccine_status, v.VaccineName, v.DateGiven, v.NextDueDate
+               v.vax_status AS vaccine_status, v.VaccineName, v.DateGiven, v.NextDueDate,
+               (SELECT COUNT(*) FROM incident i WHERE i.dog_id = d.dog_id) AS incident_count
     ';
-    $sql .= ' ORDER BY d.DogName ASC LIMIT :limit OFFSET :offset';
+    $sql .= ' ORDER BY d.dog_id DESC LIMIT :limit OFFSET :offset';
 
     $stmt = $pdo->prepare($select . $sql);
     foreach ($params as $key => $value) {
@@ -307,6 +308,117 @@ function fetch_registry_list(PDO $pdo, array $filters, int $offset = 0, int $lim
     $stmt->execute();
 
     return ['rows' => $stmt->fetchAll(), 'total' => $total];
+}
+
+/**
+ * Registry summary counts for the summary strip.
+ *
+ * @return array{total: int, owned: int, stray: int, rescued: int, vax_verified: int}
+ */
+function fetch_registry_summary(PDO $pdo): array
+{
+    $row = $pdo->query('
+        SELECT
+            COUNT(*) AS total,
+            SUM(DogType = \'Owned\') AS owned,
+            SUM(DogType = \'Stray\') AS stray,
+            SUM(DogType = \'Rescued\') AS rescued
+        FROM dog
+    ')->fetch() ?: [];
+
+    $vaxVerified = (int) $pdo->query('
+        SELECT COUNT(DISTINCT d.dog_id)
+        FROM dog d
+        INNER JOIN vaccinerecord v ON v.dog_id = d.dog_id
+        WHERE v.vax_status = \'Verified\'
+    ')->fetchColumn();
+
+    return [
+        'total' => (int) ($row['total'] ?? 0),
+        'owned' => (int) ($row['owned'] ?? 0),
+        'stray' => (int) ($row['stray'] ?? 0),
+        'rescued' => (int) ($row['rescued'] ?? 0),
+        'vax_verified' => $vaxVerified,
+    ];
+}
+
+/**
+ * Splits registry rows into featured (newest on first page) and regular cards.
+ *
+ * @param list<array<string, mixed>> $rows
+ * @return array{featured: array<string, mixed>|null, regular: list<array<string, mixed>>}
+ */
+function split_registry_bento_rows(array $rows, int $offset): array
+{
+    if ($offset !== 0 || count($rows) === 0) {
+        return ['featured' => null, 'regular' => $rows];
+    }
+
+    $featuredId = (int) max(array_column($rows, 'dog_id'));
+    $featured = null;
+    $regular = [];
+
+    foreach ($rows as $dog) {
+        if ($featured === null && (int) $dog['dog_id'] === $featuredId) {
+            $featured = $dog;
+        } else {
+            $regular[] = $dog;
+        }
+    }
+
+    return ['featured' => $featured, 'regular' => $regular];
+}
+
+/**
+ * CSS classes for a registry bento card.
+ *
+ * @param array<string, mixed> $dog
+ */
+function registry_bento_card_classes(array $dog, ?array $featured): string
+{
+    $classes = ['dog-card'];
+
+    if ($featured !== null && (int) $dog['dog_id'] === (int) $featured['dog_id']) {
+        $classes[] = 'dog-card--featured';
+
+        return implode(' ', $classes);
+    }
+
+    if (($dog['DogType'] ?? '') === 'Stray' && (int) ($dog['incident_count'] ?? 0) >= 3) {
+        $classes[] = 'dog-card--wide';
+    }
+
+    return implode(' ', $classes);
+}
+
+/**
+ * Vaccination badge meta for bento cards.
+ *
+ * @return array{text: string, class: string}
+ */
+function registry_vax_badge(?string $status): array
+{
+    if ($status === 'Verified') {
+        return ['text' => 'Verified', 'class' => 'vax--verified'];
+    }
+    if ($status === 'Expired') {
+        return ['text' => 'Expired', 'class' => 'vax--expired'];
+    }
+    if ($status === 'Unverified') {
+        return ['text' => 'Unverified', 'class' => 'vax--unverified'];
+    }
+
+    return ['text' => 'No record', 'class' => 'vax--none'];
+}
+
+/**
+ * Avatar background color for registry bento cards.
+ */
+function registry_avatar_color(string $dogName): string
+{
+    $colors = ['#C0DAB5', '#87AFAE', '#6C8B9F', '#F8BC72', '#E0765E', '#b5c4c0'];
+
+    return $colors[abs(crc32($dogName)) % count($colors)];
 }
 
 /**

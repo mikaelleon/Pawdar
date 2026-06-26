@@ -4,8 +4,10 @@ document.addEventListener('DOMContentLoaded', function () {
     var loadBtn = document.querySelector('[data-registry-load-more]');
     var loadWrap = document.querySelector('[data-registry-load-wrap]');
     var countEl = document.querySelector('[data-registry-count]');
-    var offset = grid ? grid.querySelectorAll('.registry-dog-card').length : 0;
+    var resultsLabel = document.querySelector('.registry-results-label');
+    var offset = grid ? grid.querySelectorAll('.dog-card').length : 0;
     var timer;
+    var viewStorageKey = 'pawdar-registry-view';
 
     function filters() {
         var activeType = document.querySelector('.registry-type-chip.chip-active');
@@ -23,6 +25,17 @@ document.addEventListener('DOMContentLoaded', function () {
         return el ? el.value : 'all';
     }
 
+    function applyView(view) {
+        if (!grid) return;
+        grid.setAttribute('data-registry-view', view);
+        localStorage.setItem(viewStorageKey, view);
+        document.querySelectorAll('[data-registry-view-btn]').forEach(function (btn) {
+            var active = btn.getAttribute('data-registry-view') === view;
+            btn.classList.toggle('is-active', active);
+            btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+    }
+
     function fetchDogs(reset) {
         if (!grid) return;
         if (reset) offset = 0;
@@ -35,16 +48,25 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(function (data) {
                 if (!data.success) return;
                 if (reset) {
-                    grid.innerHTML = data.html || '<div class="feed-empty-state" style="grid-column:1/-1;"><p class="feed-empty-title">No dogs found</p></div>';
+                    grid.innerHTML = data.html || '<div class="registry-empty"><p class="empty-title">No dogs found</p></div>';
                 } else if (data.html) {
                     grid.insertAdjacentHTML('beforeend', data.html);
                 }
-                offset = grid.querySelectorAll('.registry-dog-card').length;
+                offset = grid.querySelectorAll('.dog-card').length;
                 if (loadWrap) loadWrap.hidden = !data.has_more;
                 if (countEl) countEl.textContent = offset + ' of ' + data.total + ' dogs';
+                if (resultsLabel) resultsLabel.textContent = 'Showing ' + offset + ' of ' + data.total + ' dogs';
                 if (window.lucide) lucide.createIcons();
             });
     }
+
+    applyView(localStorage.getItem(viewStorageKey) || 'tiles');
+
+    document.querySelectorAll('[data-registry-view-btn]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            applyView(btn.getAttribute('data-registry-view') || 'tiles');
+        });
+    });
 
     if (search) {
         search.addEventListener('input', function () {
