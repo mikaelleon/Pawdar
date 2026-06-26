@@ -14,6 +14,7 @@ $navItems = [
     'breeds' => ['href' => 'breeds.php', 'icon' => 'dog', 'label' => 'Breeds'],
     'rescue-board' => ['href' => 'rescue-board.php', 'icon' => 'life-buoy', 'label' => 'Rescue Board'],
     'analytics' => ['href' => 'analytics.php', 'icon' => 'bar-chart-3', 'label' => 'Analytics'],
+    'admin' => ['href' => 'admin.php', 'icon' => 'shield-check', 'label' => 'Admin'],
 ];
 ?>
 <aside class="app-sidebar hidden-mobile">

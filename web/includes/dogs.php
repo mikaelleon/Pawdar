@@ -98,3 +98,137 @@ function fetch_dogs_by_breed(PDO $pdo, string $breedName): array
 
     return $stmt->fetchAll();
 }
+
+/**
+ * Returns dogs for the registry list, scoped by role and barangay.
+ *
+ * @return list<array<string, mixed>>
+ */
+function fetch_registry_dogs(PDO $pdo, string $role, int $userId, string $barangay, ?string $query = null): array
+{
+    $sql = '
+        SELECT d.dog_id, d.DogName, d.Breed, d.RegistryID, d.Status, d.DogType, d.Gender,
+               u.Name AS owner_name, u.Barangay AS owner_barangay,
+               COALESCE(b.breed_name, d.Breed) AS breed_label
+        FROM dog d
+        INNER JOIN user u ON u.UserID = d.UserID
+        LEFT JOIN breeds b ON b.breed_id = d.breed_id
+        WHERE 1=1
+    ';
+    $params = [];
+
+    if ($role === 'Dog Owner') {
+        $sql .= ' AND d.UserID = :user_id';
+        $params[':user_id'] = $userId;
+    } else {
+        $sql .= ' AND u.Barangay = :barangay';
+        $params[':barangay'] = $barangay;
+    }
+
+    if ($query !== null && $query !== '') {
+        $sql .= ' AND (
+            d.DogName LIKE :q OR d.Breed LIKE :q OR d.RegistryID LIKE :q
+            OR u.Name LIKE :q OR b.breed_name LIKE :q
+        )';
+        $params[':q'] = '%' . $query . '%';
+    }
+
+    $sql .= ' ORDER BY d.DogName ASC';
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+
+    return $stmt->fetchAll();
+}
+
+/**
+ * Returns registry summary counts for the current scope.
+ *
+ * @return array{total: int, registered: int, pending: int}
+ */
+function fetch_registry_counts(PDO $pdo, string $role, int $userId, string $barangay): array
+{
+    $sql = '
+        SELECT
+            COUNT(*) AS total,
+            SUM(CASE WHEN d.Status = \'Registered\' THEN 1 ELSE 0 END) AS registered,
+            SUM(CASE WHEN d.Status = \'Pending\' THEN 1 ELSE 0 END) AS pending
+        FROM dog d
+        INNER JOIN user u ON u.UserID = d.UserID
+        WHERE 1=1
+    ';
+    $params = [];
+
+    if ($role === 'Dog Owner') {
+        $sql .= ' AND d.UserID = :user_id';
+        $params[':user_id'] = $userId;
+    } else {
+        $sql .= ' AND u.Barangay = :barangay';
+        $params[':barangay'] = $barangay;
+    }
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $row = $stmt->fetch() ?: [];
+
+    return [
+        'total' => (int) ($row['total'] ?? 0),
+        'registered' => (int) ($row['registered'] ?? 0),
+        'pending' => (int) ($row['pending'] ?? 0),
+    ];
+}
+
+/**
+ * @return list<array<string, mixed>>
+ */
+function fetch_pending_users(PDO $pdo): array
+{
+    $stmt = $pdo->query('
+        SELECT UserID, Name, Email, Role, Barangay, Phone, created_at
+        FROM user
+        WHERE Status = \'pending\'
+        ORDER BY created_at ASC
+    ');
+
+    return $stmt->fetchAll();
+}
+
+/**
+ * @return list<array<string, mixed>>
+ */
+function fetch_pending_dogs(PDO $pdo): array
+{
+    $stmt = $pdo->query('
+        SELECT d.dog_id, d.DogName, d.Breed, d.RegistryID, d.Status, d.DogType,
+               u.Name AS owner_name, u.Barangay AS owner_barangay
+        FROM dog d
+        INNER JOIN user u ON u.UserID = d.UserID
+        WHERE d.Status = \'Pending\'
+        ORDER BY d.dog_id ASC
+    ');
+
+    return $stmt->fetchAll();
+}
+
+/**
+ * @return list<array<string, mixed>>
+ */
+function fetch_rescue_stray_incidents(PDO $pdo, string $barangay, int $limit = 20): array
+{
+    $stmt = $pdo->prepare('
+        SELECT i.IncidentID, i.IncidentType, i.Date, i.Location, i.Description,
+               c.CaseStatus, u.Name AS reporter_name
+        FROM incident i
+        INNER JOIN user u ON u.UserID = i.UserID
+        LEFT JOIN `case` c ON c.IncidentID = i.IncidentID
+        WHERE i.IncidentType = \'Injured Stray\'
+          AND u.Barangay = :barangay
+        ORDER BY i.Date DESC
+        LIMIT :limit
+    ');
+    $stmt->bindValue(':barangay', $barangay);
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->execute();
+
+    return $stmt->fetchAll();
+}

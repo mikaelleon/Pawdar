@@ -176,6 +176,7 @@ function role_can_see_nav(string $item, string $role): bool
         'breeds' => true,
         'rescue-board' => in_array($role, ['Rescue Organization', 'Admin'], true),
         'analytics' => in_array($role, ['LGU Official', 'Admin'], true),
+        'admin' => $role === 'Admin',
     ];
 
     return $rules[$item] ?? false;

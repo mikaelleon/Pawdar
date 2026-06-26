@@ -5,7 +5,7 @@ $userRole = (string) ($_SESSION['user_role'] ?? '');
 $bottomItems = [
     ['key' => 'feed', 'href' => 'feed.php', 'icon' => 'layout-list', 'label' => 'Feed'],
     ['key' => 'map', 'href' => 'map.php', 'icon' => 'map', 'label' => 'Map'],
-    ['key' => 'registry', 'href' => 'dog-profile.php', 'icon' => 'book-marked', 'label' => 'Registry'],
+    ['key' => 'registry', 'href' => 'registry.php', 'icon' => 'book-marked', 'label' => 'Registry'],
     ['key' => 'cases', 'href' => 'cases.php', 'icon' => 'folder-check', 'label' => 'Cases', 'nav' => 'cases'],
     ['key' => 'profile', 'href' => 'auth/logout.php', 'icon' => 'user', 'label' => 'Profile', 'always' => true],
 ];
