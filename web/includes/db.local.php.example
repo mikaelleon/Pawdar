@@ -1,0 +1,8 @@
+<?php
+/**
+ * Copy this file to db.local.php and set your XAMPP MySQL credentials.
+ */
+putenv('PAWDAR_DB_HOST=localhost');
+putenv('PAWDAR_DB_NAME=pawdar');
+putenv('PAWDAR_DB_USER=root');
+putenv('PAWDAR_DB_PASS=your_mysql_password_here');

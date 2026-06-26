@@ -75,4 +75,10 @@ app_layout_start('map', 'Incident Map', ['showSearch' => false]);
     </div>
 </div>
 
-<?php app_layout_end(true); ?>
+<?php
+$userRole = current_user_role();
+$mapFab = role_can_report($userRole)
+    ? ['show' => true, 'label' => 'Report', 'href' => 'feed.php']
+    : ['show' => false];
+app_layout_end($mapFab);
+?>

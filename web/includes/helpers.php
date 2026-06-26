@@ -1,0 +1,238 @@
+<?php
+
+/**
+ * Incident type metadata for badges, accents, and filters.
+ *
+ * @return array<string, array<string, string>>
+ */
+function incident_type_map(): array
+{
+    return [
+        'Animal Bite' => [
+            'filter' => 'animal_bite',
+            'badge' => 'badge-bite',
+            'accent' => 'accent-bite',
+            'icon' => 'dog',
+            'label' => 'Animal Bite',
+        ],
+        'Injured Stray' => [
+            'filter' => 'injured_stray',
+            'badge' => 'badge-injured',
+            'accent' => 'accent-injured',
+            'icon' => 'paw-print',
+            'label' => 'Injured Stray',
+        ],
+        'Aggressive Behavior' => [
+            'filter' => 'aggressive',
+            'badge' => 'badge-aggressive',
+            'accent' => 'accent-aggressive',
+            'icon' => 'alert-triangle',
+            'label' => 'Aggressive',
+        ],
+        'Vehicular Accident' => [
+            'filter' => 'vehicular',
+            'badge' => 'badge-vehicular',
+            'accent' => 'accent-teal',
+            'icon' => 'car',
+            'label' => 'Vehicular',
+        ],
+        'Trash Disturbance' => [
+            'filter' => 'trash',
+            'badge' => 'badge-trash',
+            'accent' => 'accent-dark',
+            'icon' => 'trash-2',
+            'label' => 'Trash',
+        ],
+    ];
+}
+
+/**
+ * Maps URL filter slug to DB incident type.
+ */
+function filter_to_incident_type(string $filter): ?string
+{
+    foreach (incident_type_map() as $type => $meta) {
+        if ($meta['filter'] === $filter) {
+            return $type;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Generates a readable incident title from type and location.
+ */
+function generate_incident_title(string $type, string $location): string
+{
+    $phrases = [
+        'Animal Bite' => 'Animal bite reported near',
+        'Injured Stray' => 'Injured stray spotted near',
+        'Aggressive Behavior' => 'Aggressive dog reported at',
+        'Vehicular Accident' => 'Dog involved in road incident near',
+        'Trash Disturbance' => 'Dog disturbing trash near',
+    ];
+
+    return ($phrases[$type] ?? 'Incident reported near') . ' ' . $location;
+}
+
+/**
+ * Returns a human-readable elapsed time string.
+ */
+function time_elapsed_string(string $datetime): string
+{
+    $timestamp = strtotime($datetime);
+    if ($timestamp === false) {
+        return 'Unknown';
+    }
+
+    $diff = time() - $timestamp;
+
+    if ($diff < 60) {
+        return max(1, $diff) . 's ago';
+    }
+
+    if ($diff < 3600) {
+        return (int) floor($diff / 60) . 'm ago';
+    }
+
+    if ($diff < 86400) {
+        return (int) floor($diff / 3600) . 'h ago';
+    }
+
+    if ($diff < 604800) {
+        return (int) floor($diff / 86400) . 'd ago';
+    }
+
+    return date('M j, Y', $timestamp);
+}
+
+/**
+ * Derives display initials from a full name.
+ */
+function user_initials_from_name(string $name): string
+{
+    $parts = preg_split('/\s+/', trim($name));
+
+    if ($parts === false || count($parts) === 0) {
+        return '?';
+    }
+
+    if (count($parts) === 1) {
+        return strtoupper(substr($parts[0], 0, 1));
+    }
+
+    return strtoupper(substr($parts[0], 0, 1) . substr($parts[count($parts) - 1], 0, 1));
+}
+
+/**
+ * Avatar background class derived from user id.
+ */
+function avatar_color_class(int $userId): string
+{
+    return 'avatar-color-' . ($userId % 6);
+}
+
+/**
+ * Derives a pastel block color from a string (breed name, etc.).
+ */
+function string_color_class(string $value): string
+{
+    return 'pastel-color-' . (abs(crc32($value)) % 6);
+}
+
+/**
+ * Case status display label and badge class.
+ *
+ * @return array{label: string, class: string}
+ */
+function case_status_meta(?string $status): array
+{
+    $map = [
+        'Received' => ['label' => 'Received', 'class' => 'badge-received'],
+        'Under Investigation' => ['label' => 'Investigating', 'class' => 'badge-investigating'],
+        'Resolved' => ['label' => 'Resolved', 'class' => 'badge-resolved'],
+        'Referred' => ['label' => 'Referred', 'class' => 'badge-referred'],
+    ];
+
+    if ($status === null || !isset($map[$status])) {
+        return ['label' => 'No case', 'class' => 'badge-received'];
+    }
+
+    return $map[$status];
+}
+
+/**
+ * Returns true when the role may access a nav item.
+ */
+function role_can_see_nav(string $item, string $role): bool
+{
+    $rules = [
+        'feed' => true,
+        'map' => true,
+        'registry' => true,
+        'cases' => in_array($role, ['LGU Official', 'Admin'], true),
+        'first-aid' => true,
+        'breeds' => true,
+        'rescue-board' => in_array($role, ['Rescue Organization', 'Admin'], true),
+        'analytics' => in_array($role, ['LGU Official', 'Admin'], true),
+    ];
+
+    return $rules[$item] ?? false;
+}
+
+/**
+ * Returns true when the role may report incidents.
+ */
+function role_can_report(string $role): bool
+{
+    return in_array($role, ['Dog Owner', 'Community Reporter', 'Admin'], true);
+}
+
+/**
+ * Validates CSRF token from header or POST body.
+ */
+function validate_csrf(?string $token): bool
+{
+    return isset($_SESSION['csrf_token'])
+        && is_string($token)
+        && hash_equals($_SESSION['csrf_token'], $token);
+}
+
+/**
+ * Reads CSRF token from request headers or body.
+ */
+function request_csrf_token(): ?string
+{
+    $header = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
+    if (is_string($header) && $header !== '') {
+        return $header;
+    }
+
+    if (isset($_POST['csrf_token']) && is_string($_POST['csrf_token'])) {
+        return $_POST['csrf_token'];
+    }
+
+    $input = file_get_contents('php://input');
+    if ($input !== false && $input !== '') {
+        $json = json_decode($input, true);
+        if (is_array($json) && isset($json['csrf_token']) && is_string($json['csrf_token'])) {
+            return $json['csrf_token'];
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Sends JSON response and exits.
+ *
+ * @param array<string, mixed> $payload
+ */
+function json_response(array $payload, int $status = 200): void
+{
+    http_response_code($status);
+    header('Content-Type: application/json');
+    echo json_encode($payload);
+    exit;
+}

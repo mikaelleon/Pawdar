@@ -1,11 +1,27 @@
 <?php
-require_once __DIR__ . '/includes/config.php';
+require_once __DIR__ . '/includes/bootstrap.php';
+
+if (isset($_SESSION['user_id'])) {
+    header('Location: feed.php');
+    exit;
+}
+
 $pageTitle = 'Sign Up · ' . SITE_NAME;
+$pageScripts = ['assets/js/ui.js', 'assets/js/auth.js'];
 require __DIR__ . '/includes/head.php';
+
+$roles = [
+    ['value' => 'Dog Owner', 'icon' => 'paw-print', 'title' => 'Dog Owner', 'desc' => 'Register and manage your dogs', 'approval' => false],
+    ['value' => 'Community Reporter', 'icon' => 'megaphone', 'title' => 'Community Reporter', 'desc' => 'Report incidents in your area', 'approval' => false],
+    ['value' => 'Veterinarian', 'icon' => 'stethoscope', 'title' => 'Veterinarian', 'desc' => 'Verify vaccination records', 'approval' => true],
+    ['value' => 'LGU Official', 'icon' => 'shield', 'title' => 'LGU Official', 'desc' => 'Manage cases and advisories', 'approval' => true],
+    ['value' => 'Rescue Organization', 'icon' => 'heart', 'title' => 'Rescue Org', 'desc' => 'Manage stray rescues and adoptions', 'approval' => true],
+    ['value' => 'Admin', 'icon' => 'lock', 'title' => 'Admin', 'desc' => 'System administration', 'approval' => false, 'disabled' => true],
+];
 ?>
 
 <div class="auth-page">
-    <div class="auth-panel auth-desktop-only">
+    <div class="auth-panel auth-desktop-only auth-panel-pattern">
         <a href="index.php" class="flex items-center gap-sm">
             <div class="logo-mark"><i data-lucide="paw-print"></i></div>
             <span class="logo-text">Pawdar</span>
@@ -14,78 +30,61 @@ require __DIR__ . '/includes/head.php';
         <p class="auth-panel-sub">One account to register dogs, report incidents, and help keep your barangay safe.</p>
     </div>
 
-    <div class="auth-form-side">
-        <div class="auth-mobile-header hidden-desktop">
-            <a href="index.php"><i data-lucide="arrow-left"></i></a>
-            <div class="flex-1 text-center" style="font-weight:800;font-size:17px;margin-left:-24px;">Sign Up</div>
-        </div>
-
-        <div class="auth-form-wrap">
-            <div class="hidden-desktop text-center" style="margin-bottom:22px;">
-                <div class="logo-mark" style="margin:0 auto;"><i data-lucide="paw-print" style="width:26px;height:26px;"></i></div>
-                <h1 class="auth-title" style="font-size:22px;margin-top:12px;">Create your account</h1>
-                <p class="text-sm text-muted">Already have one? <a href="login.php" style="text-decoration:underline;">Log in</a></p>
-            </div>
-
+    <div class="auth-form-side auth-form-side-padded">
+        <div class="auth-form-wrap signup-form-wrap">
             <h1 class="auth-title auth-desktop-only">Create your account</h1>
-            <p class="text-sm text-muted auth-desktop-only">Already have an account? <a href="login.php" style="text-decoration:underline;">Log in</a></p>
+            <p class="text-sm text-muted auth-desktop-only">Already have an account? <a href="login.php" class="link-hover">Log in</a></p>
 
-            <form action="feed.php" method="get" style="margin-top:22px;">
-                <div class="form-group">
-                    <label class="form-label" for="name">Full Name</label>
-                    <input class="form-input" type="text" id="name" name="name" value="Rosa Castillo">
+            <form id="signup-form" action="auth/signup-handler.php" method="post" style="margin-top:22px;" novalidate>
+                <div class="form-section">
+                    <div class="form-section-label">Personal info</div>
+                    <div class="float-field"><input class="form-input" type="text" id="name" name="name" required placeholder=" "><label for="name">Full name</label></div>
+                    <div class="float-field"><input class="form-input" type="email" id="email" name="email" required placeholder=" "><label for="email">Email address</label></div>
+                    <div class="float-field"><input class="form-input" type="tel" id="phone" name="phone" placeholder=" "><label for="phone">Contact number</label></div>
+                    <div class="float-field"><input class="form-input" type="text" id="barangay" name="barangay" required placeholder=" "><label for="barangay">Barangay</label></div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="email">Email Address</label>
-                    <input class="form-input" type="email" id="email" name="email" value="rosa.castillo@email.com">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="phone">Contact Number</label>
-                    <input class="form-input" type="tel" id="phone" name="phone" value="0917 555 0142">
-                </div>
-                <div class="form-group auth-desktop-only">
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                        <div><label class="form-label" for="password">Password</label><input class="form-input" type="password" id="password" value="••••••••"></div>
-                        <div><label class="form-label" for="password2">Confirm Password</label><input class="form-input" type="password" id="password2" value="••••••••"></div>
+
+                <div class="form-section">
+                    <div class="form-section-label">Account setup</div>
+                    <div class="float-field float-field-password">
+                        <input class="form-input" type="password" id="password" name="password" required minlength="6" placeholder=" ">
+                        <label for="password">Password</label>
+                        <button type="button" class="password-toggle" data-toggle-password="password" aria-label="Show password"><i data-lucide="eye"></i></button>
                     </div>
-                </div>
-                <div class="form-group hidden-desktop">
-                    <label class="form-label" for="password-m">Password</label>
-                    <input class="form-input" type="password" id="password-m" value="••••••••">
-                </div>
-                <div class="form-group hidden-desktop">
-                    <label class="form-label" for="password2-m">Confirm Password</label>
-                    <input class="form-input" type="password" id="password2-m" value="••••••••">
-                </div>
-
-                <div style="margin-top:18px;">
-                    <div class="text-sm" style="font-weight:800;margin-bottom:10px;">I am a…</div>
-                    <div class="role-grid">
-                        <button type="button" class="role-chip is-selected" data-role-chip>Dog Owner</button>
-                        <button type="button" class="role-chip" data-role-chip>Community Reporter</button>
-                        <button type="button" class="role-chip" data-role-chip>Veterinarian</button>
-                        <button type="button" class="role-chip" data-role-chip>LGU Official</button>
-                        <button type="button" class="role-chip" data-role-chip>Rescue Org</button>
-                        <button type="button" class="role-chip is-disabled" data-role-chip disabled>Admin</button>
+                    <div class="password-strength">
+                        <div class="strength-bar"><span class="strength-seg" data-strength-seg></span><span class="strength-seg" data-strength-seg></span><span class="strength-seg" data-strength-seg></span><span class="strength-seg" data-strength-seg></span></div>
+                        <span class="text-xs text-muted" data-strength-label></span>
                     </div>
+                    <div class="float-field float-field-password">
+                        <input class="form-input" type="password" id="password_confirm" name="password_confirm" required minlength="6" placeholder=" ">
+                        <label for="password_confirm">Confirm password</label>
+                        <span class="match-icon" data-match-icon aria-hidden="true"></span>
+                    </div>
+
+                    <div class="text-sm form-section-label" style="margin-top:8px;">I am a…</div>
+                    <div class="role-card-grid">
+                        <?php foreach ($roles as $role): ?>
+                            <button type="button"
+                                    class="role-card<?= !empty($role['disabled']) ? ' is-disabled' : '' ?><?= $role['value'] === 'Dog Owner' ? ' is-selected' : '' ?>"
+                                    data-role-card
+                                    data-role-value="<?= htmlspecialchars($role['value']) ?>"
+                                    <?= !empty($role['disabled']) ? 'disabled title="Contact your administrator to get access"' : '' ?>>
+                                <?php if ($role['value'] === 'Dog Owner'): ?><span class="role-card-check"><i data-lucide="check"></i></span><?php endif; ?>
+                                <i data-lucide="<?= htmlspecialchars($role['icon']) ?>"></i>
+                                <strong><?= htmlspecialchars($role['title']) ?></strong>
+                                <span><?= htmlspecialchars($role['desc']) ?></span>
+                                <?php if (!empty($role['approval'])): ?><span class="role-approval-badge">Requires approval</span><?php endif; ?>
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
+                    <input type="hidden" name="role" id="role-input" value="Dog Owner">
                 </div>
 
-                <p class="text-xs text-muted mt-md flex items-center gap-sm"><i data-lucide="info"></i> Dog Owner accounts are activated instantly.</p>
-
-                <div class="flex items-center gap-sm mt-md">
-                    <div style="width:20px;height:20px;border-radius:5px;background:var(--burnt-peach);display:flex;align-items:center;justify-content:center;flex:none;"><i data-lucide="check" style="width:14px;height:14px;color:#fff;"></i></div>
-                    <span class="text-sm">I agree to the <span class="text-muted" style="text-decoration:underline;">Terms of Service</span> and <span class="text-muted" style="text-decoration:underline;">Privacy Policy</span></span>
-                </div>
-
-                <button type="submit" class="btn-primary btn-block" style="margin-top:18px;">Create Account</button>
-
-                <div class="divider-or"><span class="text-xs text-muted">or</span></div>
-                <button type="button" class="btn-outline btn-block">
-                    <span class="logo-mark" style="width:20px;height:20px;border-radius:50%;font-size:12px;">G</span> Continue with Google
-                </button>
+                <button type="submit" class="btn-primary btn-block" style="margin-top:18px;" disabled>Create Account</button>
             </form>
         </div>
     </div>
 </div>
 
+<div class="toast-container" data-toast-container aria-live="polite"></div>
 <?php require __DIR__ . '/includes/foot.php'; ?>

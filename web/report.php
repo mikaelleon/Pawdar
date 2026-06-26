@@ -63,4 +63,4 @@ app_layout_start('cases', 'Report Incident', [
     </div>
 </div>
 
-<?php app_layout_end(false); ?>
+<?php app_layout_end([]); ?>

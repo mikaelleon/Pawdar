@@ -45,4 +45,4 @@ app_layout_start('cases', 'Report Details', [
     </a>
 </div>
 
-<?php app_layout_end(false); ?>
+<?php app_layout_end([]); ?>

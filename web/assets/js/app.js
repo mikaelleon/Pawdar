@@ -22,6 +22,133 @@ document.addEventListener('DOMContentLoaded', function () {
                 c.classList.remove('is-selected');
             });
             chip.classList.add('is-selected');
+
+            var roleInput = document.getElementById('role-input');
+            var roleValue = chip.getAttribute('data-role-value');
+            if (roleInput && roleValue) {
+                roleInput.value = roleValue;
+            }
         });
     });
+
+    initNotificationBell();
 });
+
+function getCsrfToken() {
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.getAttribute('content') : '';
+}
+
+function initNotificationBell() {
+    var bells = document.querySelectorAll('[data-notification-bell]');
+    if (!bells.length) {
+        return;
+    }
+
+    bells.forEach(function (bell) {
+        bell.addEventListener('click', function (event) {
+            event.stopPropagation();
+            var wrap = bell.closest('.notification-wrap');
+            var dropdown = wrap ? wrap.querySelector('[data-notification-dropdown]') : null;
+            if (!dropdown) {
+                return;
+            }
+
+            var isOpen = !dropdown.hasAttribute('hidden');
+            document.querySelectorAll('[data-notification-dropdown]').forEach(function (d) {
+                d.setAttribute('hidden', '');
+            });
+
+            if (isOpen) {
+                return;
+            }
+
+            dropdown.removeAttribute('hidden');
+            loadNotifications(dropdown, true);
+        });
+    });
+
+    document.addEventListener('click', function () {
+        document.querySelectorAll('[data-notification-dropdown]').forEach(function (d) {
+            d.setAttribute('hidden', '');
+        });
+    });
+
+    pollNotifications();
+    setInterval(pollNotifications, 30000);
+}
+
+function loadNotifications(dropdown, markRead) {
+    var list = dropdown.querySelector('[data-notification-list]');
+    if (!list) {
+        return;
+    }
+
+    fetch('ajax/notifications.php')
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (!data.success) {
+                return;
+            }
+
+            updateNotificationBadges(data.count);
+
+            if (!data.items.length) {
+                list.innerHTML = '<p class="notification-empty text-sm text-muted">No notifications yet.</p>';
+            } else {
+                list.innerHTML = data.items.map(function (item) {
+                    var href = item.link ? item.link : '#';
+                    return '<a class="notification-item' + (item.is_read ? '' : ' is-unread') + '" href="' + href + '">' +
+                        '<span class="notification-item-message">' + escapeHtml(item.message) + '</span>' +
+                        '<span class="notification-item-time text-xs text-muted">' + escapeHtml(item.time) + '</span>' +
+                        '</a>';
+                }).join('');
+            }
+
+            if (markRead && data.count > 0) {
+                fetch('ajax/notifications.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': getCsrfToken()
+                    },
+                    body: JSON.stringify({ csrf_token: getCsrfToken() })
+                }).then(function () {
+                    updateNotificationBadges(0);
+                });
+            }
+        });
+}
+
+function pollNotifications() {
+    fetch('ajax/notifications.php')
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (!data.success) {
+                return;
+            }
+
+            var prev = parseInt(document.querySelector('[data-notification-count]')?.textContent || '0', 10);
+            updateNotificationBadges(data.count);
+
+            if (data.count > prev) {
+                document.querySelectorAll('[data-notification-bell]').forEach(function (bell) {
+                    bell.classList.add('is-ringing');
+                    setTimeout(function () { bell.classList.remove('is-ringing'); }, 400);
+                });
+            }
+        });
+}
+
+function updateNotificationBadges(count) {
+    document.querySelectorAll('[data-notification-count]').forEach(function (badge) {
+        badge.textContent = count;
+        badge.classList.toggle('is-hidden', count <= 0);
+    });
+}
+
+function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}

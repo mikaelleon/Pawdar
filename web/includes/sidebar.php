@@ -1,5 +1,20 @@
 <?php
 $activeNav = $activeNav ?? '';
+$userName = htmlspecialchars((string) ($_SESSION['user_name'] ?? ''));
+$userRole = htmlspecialchars((string) ($_SESSION['user_role'] ?? ''));
+$userInitials = htmlspecialchars((string) ($_SESSION['user_initials'] ?? '?'));
+$avatarClass = avatar_color_class((int) ($_SESSION['user_id'] ?? 0));
+
+$navItems = [
+    'feed' => ['href' => 'feed.php', 'icon' => 'layout-list', 'label' => 'Feed'],
+    'map' => ['href' => 'map.php', 'icon' => 'map', 'label' => 'Map'],
+    'registry' => ['href' => 'registry.php', 'icon' => 'book-marked', 'label' => 'Registry'],
+    'cases' => ['href' => 'cases.php', 'icon' => 'folder-check', 'label' => 'Cases'],
+    'first-aid' => ['href' => 'first-aid.php', 'icon' => 'heart-pulse', 'label' => 'First Aid'],
+    'breeds' => ['href' => 'breeds.php', 'icon' => 'dog', 'label' => 'Breeds'],
+    'rescue-board' => ['href' => 'rescue-board.php', 'icon' => 'life-buoy', 'label' => 'Rescue Board'],
+    'analytics' => ['href' => 'analytics.php', 'icon' => 'bar-chart-3', 'label' => 'Analytics'],
+];
 ?>
 <aside class="app-sidebar hidden-mobile">
     <a href="feed.php" class="flex items-center gap-sm" style="padding: 4px 8px 22px;">
@@ -7,30 +22,21 @@ $activeNav = $activeNav ?? '';
         <span class="logo-text"><?= SITE_NAME ?></span>
     </a>
     <nav class="sidebar-nav">
-        <a href="feed.php" class="sidebar-link<?= $activeNav === 'feed' ? ' is-active' : '' ?>">
-            <i data-lucide="layout-list"></i> Feed
-        </a>
-        <a href="map.php" class="sidebar-link<?= $activeNav === 'map' ? ' is-active' : '' ?>">
-            <i data-lucide="map"></i> Map
-        </a>
-        <a href="dog-profile.php" class="sidebar-link<?= $activeNav === 'registry' ? ' is-active' : '' ?>">
-            <i data-lucide="book-marked"></i> Registry
-        </a>
-        <a href="cases.php" class="sidebar-link<?= $activeNav === 'cases' ? ' is-active' : '' ?>">
-            <i data-lucide="folder-check"></i> Cases
-        </a>
-        <a href="first-aid.php" class="sidebar-link<?= $activeNav === 'first-aid' ? ' is-active' : '' ?>">
-            <i data-lucide="heart-pulse"></i> First Aid
-        </a>
-        <a href="breeds.php" class="sidebar-link<?= $activeNav === 'breeds' ? ' is-active' : '' ?>">
-            <i data-lucide="dog"></i> Breeds
-        </a>
+        <?php foreach ($navItems as $key => $item): ?>
+            <?php if (!role_can_see_nav($key, (string) ($_SESSION['user_role'] ?? ''))) {
+                continue;
+            } ?>
+            <a href="<?= htmlspecialchars($item['href']) ?>" class="sidebar-link<?= $activeNav === $key ? ' is-active' : '' ?>">
+                <i data-lucide="<?= htmlspecialchars($item['icon']) ?>"></i> <?= htmlspecialchars($item['label']) ?>
+            </a>
+        <?php endforeach; ?>
     </nav>
     <div class="sidebar-user">
-        <div class="avatar avatar-md">MJ</div>
+        <div class="avatar avatar-md <?= htmlspecialchars($avatarClass) ?>"><?= $userInitials ?></div>
         <div>
-            <div class="sidebar-user-name">Maria J.</div>
-            <div class="sidebar-user-role">Community member</div>
+            <div class="sidebar-user-name"><?= $userName ?></div>
+            <div class="sidebar-user-role"><?= $userRole ?></div>
         </div>
     </div>
+    <a href="auth/logout.php" class="sidebar-logout text-xs">Log out</a>
 </aside>

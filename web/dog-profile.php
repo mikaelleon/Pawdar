@@ -1,115 +1,207 @@
 <?php
 require_once __DIR__ . '/includes/app-layout.php';
+require_once __DIR__ . '/includes/dogs.php';
+require_once __DIR__ . '/includes/breeds.php';
+
+$dogId = (int) ($_GET['id'] ?? 0);
+$pdo = db();
+$dog = $dogId > 0 ? fetch_dog_profile($pdo, $dogId) : null;
+
+if (!$dog) {
+    $fallback = $pdo->query('SELECT dog_id FROM dog ORDER BY dog_id ASC LIMIT 1')->fetch();
+    if ($fallback) {
+        header('Location: dog-profile.php?id=' . (int) $fallback['dog_id']);
+        exit;
+    }
+}
+
+$userRole = current_user_role();
+$userId = current_user_id();
+$isOwner = $dog && (int) $dog['owner_id'] === $userId;
+$breedInfo = null;
+if ($dog) {
+    if (!empty($dog['breed_id'])) {
+        $breedInfo = fetch_breed_by_id($pdo, (int) $dog['breed_id']);
+    }
+    if (!$breedInfo) {
+        $breedInfo = fetch_breed_by_name($pdo, (string) ($dog['Breed'] ?? ''));
+    }
+}
+$registryId = (string) ($dog['RegistryID'] ?? ('PWD-2024-' . str_pad((string) ($dog['dog_id'] ?? 0), 5, '0', STR_PAD_LEFT)));
+$breedColor = string_color_class((string) ($dog['Breed'] ?? 'dog'));
+
 app_layout_start('registry', 'Dog Profile', [
     'showSearch' => false,
     'mobileHeader' => 'back',
     'backTitle' => 'Registry',
-    'backHref' => 'feed.php',
+    'backHref' => 'registry.php',
 ]);
 ?>
 
+<a href="registry.php" class="registry-back hidden-mobile"><i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Back to Registry</a>
+
 <div class="profile-layout">
     <div class="profile-main">
-        <div class="card card-bordered profile-hero hidden-mobile" style="flex-direction:row;text-align:left;padding:24px;align-items:center;gap:20px;">
-            <div class="icon-box icon-box-lg" style="background:var(--muted-teal);color:#fff;width:120px;height:120px;border:4px solid #fff;box-shadow:0 4px 12px rgba(74,67,67,.15);">
+        <div class="card card-bordered profile-hero hidden-mobile card-hoverable" style="flex-direction:row;text-align:left;padding:24px;align-items:center;gap:20px;">
+            <div class="icon-box icon-box-lg <?= htmlspecialchars($breedColor) ?>" style="color:#fff;width:120px;height:120px;border:4px solid #fff;box-shadow:0 4px 12px rgba(74,67,67,.15);">
                 <i data-lucide="dog" style="width:58px;height:58px;"></i>
             </div>
-            <div>
-                <h1 style="font-weight:800;font-size:30px;letter-spacing:-.5px;margin:0;">Bantay</h1>
+            <div class="flex-1">
+                <h1 style="font-weight:500;font-size:30px;letter-spacing:-.5px;margin:0;"><?= htmlspecialchars((string) $dog['DogName']) ?></h1>
                 <div class="flex items-center gap-sm mt-sm">
-                    <span class="badge badge-owned">Owned</span>
-                    <span class="text-sm">Aspin (Asong Pinoy) · Male</span>
+                    <span class="badge badge-owned"><?= htmlspecialchars((string) ($dog['DogType'] ?? 'Owned')) ?></span>
+                    <span class="text-sm"><?= htmlspecialchars((string) $dog['Breed']) ?> · <?= htmlspecialchars((string) ($dog['Gender'] ?? 'Unknown')) ?></span>
                 </div>
-                <div class="text-xs text-muted mt-sm">Registry ID · PWD-2024-00831</div>
+                <div class="text-xs text-muted mt-sm registry-id flex items-center gap-sm">
+                    Registry ID · <?= htmlspecialchars($registryId) ?>
+                    <button type="button" class="copy-btn" data-copy="<?= htmlspecialchars($registryId) ?>" title="Copy ID"><i data-lucide="copy" style="width:14px;height:14px;"></i></button>
+                </div>
+                <?php if ($isOwner): ?><a href="#" class="btn-outline btn-sm" style="margin-top:12px;">Edit Profile</a><?php endif; ?>
+                <?php if ($userRole === 'Veterinarian'): ?><button type="button" class="btn-primary btn-sm" style="margin-top:12px;">Co-sign Vaccination</button><?php endif; ?>
+                <?php if (in_array($userRole, ['LGU Official', 'Admin'], true)): ?><a href="cases.php" class="btn-primary btn-sm" style="margin-top:12px;">Create Case</a><?php endif; ?>
+                <?php if ($userRole === 'Admin'): ?><button type="button" class="btn-ghost btn-sm" style="margin-top:12px;">Deactivate Registry Entry</button><?php endif; ?>
             </div>
         </div>
 
         <div class="profile-hero hidden-desktop">
-            <div class="icon-box icon-box-lg" style="background:var(--muted-teal);color:#fff;border:4px solid #fff;box-shadow:0 4px 12px rgba(74,67,67,.15);">
+            <div class="icon-box icon-box-lg <?= htmlspecialchars($breedColor) ?>" style="color:#fff;border:4px solid #fff;">
                 <i data-lucide="dog" style="width:48px;height:48px;"></i>
             </div>
-            <h1 class="profile-name">Bantay</h1>
-            <div class="flex items-center gap-sm">
-                <span class="badge badge-owned">Owned</span>
-                <span class="text-sm">Aspin (Asong Pinoy) · Male</span>
-            </div>
-            <div class="text-xs text-muted mt-sm">Registry ID · PWD-2024-00831</div>
+            <h1 class="profile-name"><?= htmlspecialchars((string) $dog['DogName']) ?></h1>
+            <div class="registry-id text-xs text-muted">Registry ID · <?= htmlspecialchars($registryId) ?></div>
         </div>
 
         <div class="card card-bordered card-body">
             <div class="label-upper mb-md">Owner</div>
             <div class="flex items-center gap-md">
-                <div class="avatar avatar-lg">RC</div>
+                <div class="avatar avatar-lg"><?= htmlspecialchars(user_initials_from_name((string) $dog['owner_name'])) ?></div>
                 <div class="flex-1">
-                    <div style="font-weight:800;font-size:15px;">Rosa Castillo</div>
-                    <div class="text-xs text-muted">Dog Owner · Brgy. San Roque</div>
+                    <div style="font-weight:500;font-size:15px;"><?= htmlspecialchars((string) $dog['owner_name']) ?></div>
+                    <div class="text-xs text-muted"><?= htmlspecialchars((string) $dog['owner_role']) ?> · Brgy. <?= htmlspecialchars((string) $dog['owner_barangay']) ?></div>
                 </div>
-                <div class="icon-box icon-box-sm hidden-mobile"><i data-lucide="phone"></i></div>
-                <a href="tel:09175550142" class="btn-outline btn-sm hidden-desktop">Call</a>
+                <?php if (!empty($dog['owner_phone'])): ?>
+                    <a href="tel:<?= htmlspecialchars(preg_replace('/\s+/', '', (string) $dog['owner_phone'])) ?>"
+                       class="btn-outline btn-sm hidden-desktop">Call owner</a>
+                    <button type="button" class="btn-outline btn-sm hidden-mobile" title="Call: <?= htmlspecialchars((string) $dog['owner_phone']) ?>">Call owner</button>
+                <?php endif; ?>
             </div>
         </div>
 
         <div class="card card-bordered card-body">
             <div class="flex justify-between items-center mb-md">
                 <div class="label-upper">Vaccination</div>
-                <span class="badge badge-verified"><i data-lucide="check" style="width:13px;height:13px;"></i> Verified</span>
+                <?php if ($dog['vaccine']): ?>
+                    <span class="badge badge-verified"><i data-lucide="shield-check" style="width:13px;height:13px;"></i> Verified</span>
+                <?php else: ?>
+                    <span class="badge badge-investigating">Pending</span>
+                <?php endif; ?>
             </div>
-            <div class="flex items-center gap-md">
-                <div class="icon-box icon-box-sm"><i data-lucide="syringe"></i></div>
-                <div>
-                    <div style="font-weight:800;font-size:15px;">Anti-Rabies · Annual</div>
-                    <div class="text-xs text-muted mt-sm">Verified by Dr. A. Lim · 14 Mar 2026</div>
+            <?php if ($dog['vaccine']): ?>
+                <div class="flex items-center gap-md">
+                    <div class="icon-box icon-box-sm"><i data-lucide="syringe"></i></div>
+                    <div>
+                        <div style="font-weight:500;font-size:15px;"><?= htmlspecialchars((string) $dog['vaccine']['VaccineName']) ?></div>
+                        <div class="text-xs text-muted mt-sm">Verified by <?= htmlspecialchars((string) ($dog['vaccine']['VetName'] ?? 'Vet')) ?> · <?= htmlspecialchars((string) $dog['vaccine']['DateGiven']) ?></div>
+                    </div>
                 </div>
-            </div>
+            <?php else: ?>
+                <p class="text-sm text-muted">No verified vaccination on file.</p>
+            <?php endif; ?>
         </div>
 
-        <div class="card card-bordered card-body hidden-mobile">
-            <div class="label-upper mb-md">Breed Info</div>
-            <?php require __DIR__ . '/partials/breed-info-grid.php'; ?>
-        </div>
+        <?php if ($breedInfo): ?>
+            <div class="card card-bordered card-body hidden-mobile">
+                <div class="label-upper mb-md">Breed Info</div>
+                <?php
+                $traits = [
+                    ['shield', 'Loyalty', (int) ($breedInfo['loyalty_score'] ?? 3)],
+                    ['zap', 'Energy', (int) ($breedInfo['energy_score'] ?? 3)],
+                    ['smile', 'Friendliness', (int) ($breedInfo['friendliness_score'] ?? 3)],
+                ];
+                foreach ($traits as [$icon, $label, $filled]): ?>
+                    <div class="flex items-center gap-md mb-md">
+                        <i data-lucide="<?= $icon ?>" style="color:var(--muted-teal);"></i>
+                        <div class="flex-1 text-sm" style="font-weight:500;"><?= $label ?></div>
+                        <div>
+                            <div class="rating-dots">
+                                <?php for ($i = 0; $i < 5; $i++): ?>
+                                    <span class="rating-dot<?= $i >= $filled ? ' empty' : '' ?>"></span>
+                                <?php endfor; ?>
+                            </div>
+                            <div class="rating-scale-labels"><span>Low</span><span>High</span></div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
 
         <div>
-            <div style="font-size:14px;font-weight:800;color:var(--air-force);margin-bottom:10px;">Past Incidents</div>
-            <div class="flex flex-col gap-md">
-                <div class="card card-bordered card-body flex items-center gap-md">
-                    <span class="badge badge-aggressive">Aggressive</span>
-                    <div class="flex-1"><div class="text-sm" style="font-weight:700;">Barking at delivery rider</div><div class="text-xs text-muted">08 Feb 2026</div></div>
-                    <span class="badge badge-resolved">Resolved</span>
+            <div style="font-size:14px;font-weight:500;color:var(--air-force);margin-bottom:10px;">Past Incidents</div>
+            <?php if (empty($dog['incidents'])): ?>
+                <div class="card card-bordered card-body text-center text-sm text-muted">
+                    <i data-lucide="paw-print" style="width:20px;height:20px;margin-bottom:6px;"></i>
+                    <div>No incidents recorded</div>
                 </div>
-                <div class="card card-bordered card-body flex items-center gap-md">
-                    <span class="badge badge-bite">Bite</span>
-                    <div class="flex-1"><div class="text-sm" style="font-weight:700;">Nipped a child at the gate</div><div class="text-xs text-muted">22 Nov 2025</div></div>
-                    <span class="badge badge-resolved">Resolved</span>
+            <?php else: ?>
+                <div class="flex flex-col gap-md">
+                    <?php foreach ($dog['incidents'] as $incident):
+                        $meta = case_status_meta($incident['CaseStatus'] ?? null); ?>
+                        <div class="card card-bordered card-body flex items-center gap-md card-hoverable">
+                            <span class="badge badge-aggressive"><?= htmlspecialchars((string) $incident['IncidentType']) ?></span>
+                            <div class="flex-1">
+                                <div class="text-sm" style="font-weight:500;"><?= htmlspecialchars((string) ($incident['Description'] ?: $incident['IncidentType'])) ?></div>
+                                <div class="text-xs text-muted"><?= htmlspecialchars(date('d M Y', strtotime((string) $incident['Date']))) ?></div>
+                            </div>
+                            <span class="badge <?= $meta['class'] ?>"><?= htmlspecialchars($meta['label']) ?></span>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
-            </div>
+            <?php endif; ?>
         </div>
 
-        <a href="report.php" class="btn-ghost hidden-mobile" style="align-self:flex-start;">
-            <i data-lucide="flag"></i> Flag This Dog
-        </a>
+        <div class="profile-actions hidden-mobile">
+            <button type="button" class="btn-ghost" data-flag-dog>
+                <i data-lucide="flag"></i> Flag This Dog
+            </button>
+        </div>
     </div>
 
     <aside class="profile-side">
         <div class="card card-bordered card-body text-center">
-            <div class="qr-box" style="margin:0 auto;">
-                <div style="grid-column:1/4;grid-row:1/4;border:5px solid var(--taupe);border-radius:4px;"></div>
-                <div style="grid-column:5/8;grid-row:1/4;border:5px solid var(--taupe);border-radius:4px;"></div>
-                <div style="grid-column:1/4;grid-row:5/8;border:5px solid var(--taupe);border-radius:4px;"></div>
-            </div>
-            <div style="font-weight:800;font-size:15px;margin-top:14px;">Scan to View Profile</div>
-            <div class="text-xs text-muted">PWD-2024-00831</div>
-        </div>
-        <div class="card card-bordered card-body">
-            <div class="label-upper mb-md">Breed Info</div>
-            <?php require __DIR__ . '/partials/breed-info-grid.php'; ?>
+            <img src="qr.php?id=<?= urlencode($registryId) ?>" alt="QR code for dog profile" width="180" height="180" style="border-radius:8px;">
+            <div style="font-weight:500;font-size:15px;margin-top:14px;">Scan to View Profile</div>
+            <div class="text-xs text-muted registry-id"><?= htmlspecialchars($registryId) ?></div>
+            <a href="qr.php?id=<?= urlencode($registryId) ?>" download="<?= htmlspecialchars($registryId) ?>.png" class="text-sm link-hover" style="display:inline-block;margin-top:10px;">Download QR</a>
         </div>
     </aside>
 </div>
 
 <div class="sticky-cta hidden-desktop">
-    <a href="report.php" class="btn-ghost btn-block" style="height:48px;">
+    <button type="button" class="btn-ghost btn-block" style="height:48px;" data-flag-dog>
         <i data-lucide="flag"></i> Flag This Dog
-    </a>
+    </button>
 </div>
 
-<?php app_layout_end(false); ?>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-copy]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            navigator.clipboard.writeText(btn.getAttribute('data-copy') || '');
+            PawdarUI.showToast('Copied!');
+        });
+    });
+    document.querySelectorAll('[data-flag-dog]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            PawdarUI.showConfirmModal({
+                title: 'Flag this dog?',
+                body: 'Are you sure you want to flag this dog? This will notify the admin for review.',
+                confirmLabel: 'Confirm'
+            }).then(function (ok) {
+                if (ok) PawdarUI.showToast('Dog flagged for review');
+            });
+        });
+    });
+});
+</script>
+
+<?php app_layout_end([]); ?>

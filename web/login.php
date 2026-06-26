@@ -1,23 +1,42 @@
 <?php
-require_once __DIR__ . '/includes/config.php';
+require_once __DIR__ . '/includes/bootstrap.php';
+
+if (isset($_SESSION['user_id'])) {
+    header('Location: ' . redirect_after_login((string) ($_SESSION['user_role'] ?? '')));
+    exit;
+}
+
 $pageTitle = 'Log In · ' . SITE_NAME;
+$error = $_GET['error'] ?? '';
+$lockSeconds = (int) ($_GET['seconds'] ?? 0);
+$hasInlineError = $error === 'invalid';
+$isLocked = $error === 'locked' || login_lockout_remaining() > 0;
+$lockRemaining = login_lockout_remaining() ?: $lockSeconds;
+$pageScripts = ['assets/js/ui.js', 'assets/js/auth.js'];
 require __DIR__ . '/includes/head.php';
 ?>
 
 <div class="auth-page">
-    <div class="auth-panel auth-desktop-only">
+    <div class="auth-panel auth-desktop-only auth-panel-pattern">
         <a href="index.php" class="flex items-center gap-sm">
             <div class="logo-mark"><i data-lucide="paw-print"></i></div>
             <span class="logo-text">Pawdar</span>
         </a>
         <h1 class="auth-panel-title">Welcome back.</h1>
         <p class="auth-panel-sub">Pick up where you left off — your cases and dogs are waiting.</p>
+        <div class="demo-disclosure">
+            <button type="button" class="demo-disclosure-toggle text-xs" data-demo-toggle aria-expanded="false">Demo access</button>
+            <div class="demo-disclosure-panel text-xs" hidden>
+                maria.santos@email.com / password<br>
+                luis.cruz@email.com / password (LGU)
+            </div>
+        </div>
     </div>
 
-    <div class="auth-form-side">
+    <div class="auth-form-side auth-form-side-padded">
         <div class="auth-mobile-header hidden-desktop">
             <a href="index.php"><i data-lucide="arrow-left"></i></a>
-            <div class="flex-1 text-center" style="font-weight:800;font-size:17px;margin-left:-24px;">Log In</div>
+            <div class="flex-1 text-center" style="font-weight:500;font-size:17px;margin-left:-24px;">Log In</div>
         </div>
 
         <div class="auth-form-wrap">
@@ -28,30 +47,47 @@ require __DIR__ . '/includes/head.php';
             </div>
 
             <h1 class="auth-title auth-desktop-only">Log in to Pawdar</h1>
-            <p class="text-sm text-muted auth-desktop-only">Don't have an account? <a href="signup.php" style="text-decoration:underline;">Sign up</a></p>
+            <p class="text-sm text-muted auth-desktop-only">Don't have an account? <a href="signup.php" class="link-hover">Sign up</a></p>
 
-            <form action="feed.php" method="get" style="margin-top:26px;">
-                <div class="form-group">
-                    <label class="form-label" for="email">Email Address</label>
-                    <input class="form-input" type="email" id="email" name="email" value="rosa.castillo@email.com">
+            <?php if ($isLocked): ?>
+                <p class="field-error" style="margin-top:16px;">
+                    <span aria-hidden="true">✕</span>
+                    Too many attempts. Try again in <?= (int) ceil($lockRemaining / 60) ?> min.
+                </p>
+            <?php endif; ?>
+
+            <form id="login-form"
+                  action="auth/login-handler.php"
+                  method="post"
+                  style="margin-top:26px;"
+                  data-login-error="<?= $hasInlineError ? '1' : '0' ?>"
+                  <?= $isLocked ? 'data-locked="1"' : '' ?>>
+                <div class="float-field">
+                    <input class="form-input" type="email" id="email" name="email" required autocomplete="email" placeholder=" ">
+                    <label for="email">Email address</label>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="password">Password</label>
-                    <input class="form-input" type="password" id="password" name="password" value="password">
-                    <div class="text-right text-sm text-muted" style="margin-top:8px;text-decoration:underline;">Forgot password?</div>
+
+                <div class="float-field float-field-password">
+                    <input class="form-input" type="password" id="password" name="password" required autocomplete="current-password" placeholder=" ">
+                    <label for="password">Password</label>
+                    <button type="button" class="password-toggle" data-toggle-password="password" aria-label="Show password" aria-pressed="false">
+                        <i data-lucide="eye"></i>
+                    </button>
                 </div>
-                <button type="submit" class="btn-primary btn-block auth-desktop-only" style="margin-top:18px;">Log In</button>
-                <div class="divider-or auth-desktop-only"><span class="text-xs text-muted">or</span></div>
-                <button type="button" class="btn-outline btn-block auth-desktop-only">
-                    <span class="logo-mark" style="width:20px;height:20px;border-radius:50%;font-size:12px;">G</span> Continue with Google
-                </button>
+
+                <div class="text-right" style="margin-top:8px;">
+                    <a href="#" class="text-sm link-hover forgot-link">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="btn-primary btn-block auth-desktop-only" style="margin-top:18px;" data-login-submit <?= $isLocked ? 'disabled' : '' ?>>Log In</button>
             </form>
 
-            <div class="hidden-desktop" style="position:fixed;left:0;right:0;bottom:0;padding:16px 18px;background:linear-gradient(to top,#fff 75%,transparent);">
-                <a href="feed.php" class="btn-primary btn-block">Log In</a>
+            <div class="hidden-desktop auth-mobile-submit">
+                <button type="submit" form="login-form" class="btn-primary btn-block" data-login-submit <?= $isLocked ? 'disabled' : '' ?>>Log In</button>
             </div>
         </div>
     </div>
 </div>
 
+<div class="toast-container" data-toast-container aria-live="polite"></div>
 <?php require __DIR__ . '/includes/foot.php'; ?>

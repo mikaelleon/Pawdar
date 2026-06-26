@@ -32,10 +32,21 @@ This folder contains the production-ready HTML/PHP site converted from the Pawda
 | `breeds.php` | Breed directory |
 | `first-aid.php` | First aid guides |
 
+## Local setup (XAMPP)
+
+1. Copy `includes/db.local.php.example` → `includes/db.local.php` and set MySQL password.
+2. Run schema: `php sql/setup.php`
+3. Import Kaggle breeds: `php sql/import-breeds.php` (reads `../archive/dogs_cleaned.csv`)
+4. Open `http://localhost/WS101_Aliwate/WS101-Pawdar/web/`
+
+Demo login: any seeded account, password `password`.
+
+CSV column mapping documented in `sql/BREEDS_CSV_HEADERS.md`.
+
 ## Requirements
 
-- **PHP 7.4+** (InfinityFree provides PHP 8.x — fully supported)
-- No database required for this static prototype
+- **PHP 7.4+** with PDO MySQL
+- **MariaDB/MySQL** (XAMPP or InfinityFree)
 - Lucide icons and Google Fonts load from CDN (internet required)
 
 ## Notes
