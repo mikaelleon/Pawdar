@@ -59,15 +59,13 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    initReportDrawer(csrfToken, function () {
-        nextOffset = 0;
-        fetchFeed(currentFilter, 0, false);
-        showToast('Incident reported successfully');
-    });
-
-    document.querySelectorAll('[data-open-report-drawer]').forEach(function (btn) {
-        btn.addEventListener('click', openReportDrawer);
-    });
+    if (typeof window.initReportDrawer === 'function') {
+        window.initReportDrawer(csrfToken, function () {
+            nextOffset = 0;
+            fetchFeed(currentFilter, 0, false);
+            showToast('Incident reported successfully');
+        });
+    }
 });
 
 function updateFilterChips(activeFilter) {
@@ -221,7 +219,7 @@ function handleCaseStatusUpdate(select, csrfToken) {
     var incidentId = select.getAttribute('data-case-status');
     var status = select.value;
 
-    fetch('ajax/update-case-status.php', {
+    fetch('ajax/update_case.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -292,219 +290,9 @@ function toggleDetails(toggle) {
     panel.hidden = expanded;
 }
 
-function initReportDrawer(csrfToken, onSuccess) {
-    var drawer = document.querySelector('[data-report-drawer]');
-    var overlay = document.querySelector('[data-report-drawer-overlay]');
-    var form = document.querySelector('[data-report-form]');
-    if (!drawer || !overlay || !form) {
-        return;
-    }
-
-    var currentStep = 1;
-    var submitBtn = form.querySelector('[data-report-submit]');
-
-    document.querySelectorAll('[data-close-report-drawer], [data-report-drawer-overlay]').forEach(function (el) {
-        el.addEventListener('click', closeReportDrawer);
-    });
-
-    document.querySelectorAll('[data-report-next]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            if (currentStep === 2) {
-                var location = form.querySelector('[name="location"]');
-                if (!location.value.trim()) {
-                    location.focus();
-                    return;
-                }
-            }
-            showReportStep(currentStep + 1);
-        });
-    });
-
-    document.querySelectorAll('[data-report-back]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            showReportStep(currentStep - 1);
-        });
-    });
-
-    var geoBtn = form.querySelector('[data-use-location]');
-    if (geoBtn) {
-        geoBtn.addEventListener('click', function () {
-            if (!navigator.geolocation) {
-                showToast('Geolocation not supported');
-                return;
-            }
-            geoBtn.disabled = true;
-            navigator.geolocation.getCurrentPosition(function (pos) {
-                form.querySelector('#report-location').value =
-                    pos.coords.latitude.toFixed(5) + ', ' + pos.coords.longitude.toFixed(5);
-                geoBtn.disabled = false;
-            }, function () {
-                showToast('Location permission denied');
-                geoBtn.disabled = false;
-            });
-        });
-    }
-
-    var desc = form.querySelector('#report-description');
-    var charCount = form.querySelector('[data-char-count]');
-    if (desc && charCount) {
-        desc.addEventListener('input', function () {
-            var len = desc.value.length;
-            charCount.textContent = len + ' / 280';
-            charCount.style.color = len >= 280 ? '#E24B4A' : (len >= 250 ? '#F8BC72' : '');
-        });
-    }
-
-    var dogSearch = form.querySelector('#report-dog-search');
-    var dogResults = form.querySelector('[data-dog-search-results]');
-    var dogTimer;
-    if (dogSearch && dogResults) {
-        dogSearch.addEventListener('input', function () {
-            clearTimeout(dogTimer);
-            dogTimer = setTimeout(function () {
-                fetch('ajax/search_dogs.php?q=' + encodeURIComponent(dogSearch.value))
-                    .then(function (res) { return res.json(); })
-                    .then(function (data) {
-                        if (!data.dogs || !data.dogs.length) {
-                            dogResults.hidden = true;
-                            return;
-                        }
-                        dogResults.hidden = false;
-                        dogResults.innerHTML = data.dogs.map(function (dog) {
-                            return '<button type="button" class="dog-search-item" data-dog-id="' + dog.id + '" data-dog-name="' + dog.name + '">' + dog.name + ' · ' + (dog.breed || '') + '</button>';
-                        }).join('');
-                    });
-            }, 300);
-        });
-        dogResults.addEventListener('click', function (e) {
-            var item = e.target.closest('[data-dog-id]');
-            if (!item) return;
-            form.querySelector('#report-dog-id').value = item.getAttribute('data-dog-id');
-            dogSearch.value = item.getAttribute('data-dog-name');
-            dogResults.hidden = true;
-        });
-    }
-
-    var dropzone = form.querySelector('[data-photo-dropzone]');
-    var photoInput = form.querySelector('#report-photo');
-    var preview = form.querySelector('[data-photo-preview]');
-    if (dropzone && photoInput) {
-        dropzone.addEventListener('click', function () { photoInput.click(); });
-        dropzone.addEventListener('dragover', function (e) { e.preventDefault(); dropzone.classList.add('is-dragover'); });
-        dropzone.addEventListener('dragleave', function () { dropzone.classList.remove('is-dragover'); });
-        dropzone.addEventListener('drop', function (e) {
-            e.preventDefault();
-            dropzone.classList.remove('is-dragover');
-            if (e.dataTransfer.files[0]) setPhotoFile(e.dataTransfer.files[0]);
-        });
-        photoInput.addEventListener('change', function () {
-            if (photoInput.files[0]) setPhotoFile(photoInput.files[0]);
-        });
-    }
-
-    function setPhotoFile(file) {
-        if (file.size > 5 * 1024 * 1024) {
-            showToast('Photo must be 5MB or less');
-            return;
-        }
-        if (!/^image\/(jpeg|png)$/.test(file.type)) {
-            showToast('Use JPG or PNG only');
-            return;
-        }
-        var reader = new FileReader();
-        reader.onload = function () {
-            preview.src = reader.result;
-            preview.hidden = false;
-        };
-        reader.readAsDataURL(file);
-        var dt = new DataTransfer();
-        dt.items.add(file);
-        photoInput.files = dt.files;
-    }
-
-    form.addEventListener('submit', function (event) {
-        event.preventDefault();
-        PawdarUI.setButtonLoading(submitBtn, true);
-        var formData = new FormData(form);
-        formData.set('csrf_token', csrfToken);
-
-        fetch('ajax/submit-report.php', {
-            method: 'POST',
-            headers: { 'X-CSRF-Token': csrfToken },
-            body: formData
-        })
-            .then(function (res) { return res.json(); })
-            .then(function (data) {
-                PawdarUI.setButtonLoading(submitBtn, false);
-                if (data.success) {
-                    closeReportDrawer();
-                    form.reset();
-                    if (preview) preview.hidden = true;
-                    showReportStep(1);
-                    showToast('Your report has been submitted');
-                    onSuccess();
-                } else {
-                    showToast(data.message || 'Failed to submit report');
-                }
-            })
-            .catch(function () {
-                PawdarUI.setButtonLoading(submitBtn, false);
-            });
-    });
-
-    function showReportStep(step) {
-        currentStep = Math.max(1, Math.min(3, step));
-        form.querySelectorAll('[data-report-step]').forEach(function (panel) {
-            panel.hidden = parseInt(panel.getAttribute('data-report-step'), 10) !== currentStep;
-        });
-        document.querySelectorAll('[data-step-indicator]').forEach(function (dot) {
-            var n = parseInt(dot.getAttribute('data-step-indicator'), 10);
-            dot.classList.remove('is-active', 'is-done');
-            dot.textContent = n;
-            if (n < currentStep) {
-                dot.classList.add('is-done');
-                dot.innerHTML = '<i data-lucide="check" style="width:14px;height:14px;"></i>';
-            } else if (n === currentStep) {
-                dot.classList.add('is-active');
-            }
-        });
-        document.querySelectorAll('[data-progress-line]').forEach(function (line, i) {
-            line.classList.toggle('is-done', (i + 1) < currentStep);
-        });
-        if (window.lucide) lucide.createIcons();
-    }
-}
-
-window.openReportDrawer = openReportDrawer;
-
-function openReportDrawer() {
-    var drawer = document.querySelector('[data-report-drawer]');
-    var overlay = document.querySelector('[data-report-drawer-overlay]');
-    if (!drawer || !overlay) {
-        return;
-    }
-    drawer.removeAttribute('hidden');
-    drawer.setAttribute('aria-hidden', 'false');
-    overlay.removeAttribute('hidden');
-    document.body.classList.add('drawer-open');
-}
-
-function closeReportDrawer() {
-    var drawer = document.querySelector('[data-report-drawer]');
-    var overlay = document.querySelector('[data-report-drawer-overlay]');
-    if (!drawer || !overlay) {
-        return;
-    }
-    drawer.setAttribute('hidden', '');
-    drawer.setAttribute('aria-hidden', 'true');
-    overlay.setAttribute('hidden', '');
-    document.body.classList.remove('drawer-open');
-}
-
 function showToast(message) {
     if (window.PawdarUI && PawdarUI.showToast) {
         PawdarUI.showToast(message, 4000);
-        return;
     }
 }
 

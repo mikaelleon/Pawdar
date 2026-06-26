@@ -16,35 +16,37 @@ try {
 }
 ?>
 <header class="app-topbar hidden-mobile">
-    <?php if ($topbarTitle): ?>
-        <div class="page-title"><?= htmlspecialchars($topbarTitle) ?></div>
-    <?php endif; ?>
-    <?php if ($showSearch): ?>
-        <div class="app-topbar-search search-bar search-bar-light">
-            <i data-lucide="search"></i>
-            <span class="text-muted"><?= htmlspecialchars($searchPlaceholder) ?></span>
-        </div>
-    <?php else: ?>
-        <div class="flex-1"></div>
-    <?php endif; ?>
-    <div class="flex items-center gap-md">
-        <div class="icon-box icon-box-sm" style="background: var(--bg-soft);">
-            <i data-lucide="sun"></i>
-        </div>
-        <div class="notification-wrap" style="position:relative;">
-            <button type="button" class="notification-bell-btn" data-notification-bell aria-label="Notifications">
-                <i data-lucide="bell"></i>
-                <?php if ($notificationCount > 0): ?>
-                    <span class="notification-badge" data-notification-count><?= (int) $notificationCount ?></span>
-                <?php else: ?>
-                    <span class="notification-badge is-hidden" data-notification-count>0</span>
-                <?php endif; ?>
-            </button>
-            <div class="notification-dropdown" data-notification-dropdown hidden>
-                <div class="notification-dropdown-header">Notifications</div>
-                <div class="notification-list" data-notification-list></div>
+    <div class="app-topbar-inner">
+        <?php if ($topbarTitle): ?>
+            <div class="page-title"><?= htmlspecialchars($topbarTitle) ?></div>
+        <?php endif; ?>
+        <?php if ($showSearch): ?>
+            <div class="app-topbar-search search-bar search-bar-light">
+                <i data-lucide="search"></i>
+                <span class="text-muted"><?= htmlspecialchars($searchPlaceholder) ?></span>
             </div>
+        <?php else: ?>
+            <div class="flex-1"></div>
+        <?php endif; ?>
+        <div class="header-actions flex items-center gap-md">
+            <div class="icon-box icon-box-sm" style="background: var(--bg-soft);">
+                <i data-lucide="sun"></i>
+            </div>
+            <div class="notification-wrap" style="position:relative;">
+                <a href="notifications.php" class="notification-bell-btn" data-notification-bell aria-label="Notifications">
+                    <i data-lucide="bell"></i>
+                    <?php if ($notificationCount > 0): ?>
+                        <span class="notification-badge" data-notification-count><?= (int) $notificationCount ?></span>
+                    <?php else: ?>
+                        <span class="notification-badge is-hidden" data-notification-count>0</span>
+                    <?php endif; ?>
+                </a>
+                <div class="notification-dropdown" data-notification-dropdown hidden>
+                    <div class="notification-dropdown-header">Notifications</div>
+                    <div class="notification-list" data-notification-list></div>
+                </div>
+            </div>
+            <a href="profile.php" class="avatar avatar-md <?= htmlspecialchars($avatarClass) ?>" title="<?= $userInitials ?>"><?= $userInitials ?></a>
         </div>
-        <div class="avatar avatar-md <?= htmlspecialchars($avatarClass) ?>"><?= $userInitials ?></div>
     </div>
 </header>

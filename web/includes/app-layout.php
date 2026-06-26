@@ -4,7 +4,7 @@ require_login_active();
 
 function app_layout_start(string $activeNav, string $pageTitle, array $options = []): void
 {
-    global $bodyClass, $pageScripts;
+    global $bodyClass, $pageScripts, $breadcrumbs, $adminContext, $includeReportDrawer;
     $bodyClass = 'app-page';
     $pageTitle = $pageTitle . ' · ' . SITE_NAME;
     $activeNav = $activeNav;
@@ -15,6 +15,9 @@ function app_layout_start(string $activeNav, string $pageTitle, array $options =
     $backTitle = $options['backTitle'] ?? 'Back';
     $backHref = $options['backHref'] ?? 'javascript:history.back()';
     $pageScripts = $options['scripts'] ?? [];
+    $breadcrumbs = $options['breadcrumbs'] ?? null;
+    $adminContext = (bool) ($options['admin_context'] ?? false);
+    $includeReportDrawer = (bool) ($options['report_drawer'] ?? false);
 
     require __DIR__ . '/head.php';
     echo '<div class="app-shell">';
@@ -31,6 +34,9 @@ function app_layout_start(string $activeNav, string $pageTitle, array $options =
     echo '<main class="app-main">';
     require __DIR__ . '/topbar.php';
     echo '<div class="app-content app-content-padded">';
+    if (is_array($breadcrumbs) && count($breadcrumbs) > 0) {
+        require __DIR__ . '/../partials/breadcrumb.php';
+    }
 }
 
 /**
@@ -38,8 +44,15 @@ function app_layout_start(string $activeNav, string $pageTitle, array $options =
  */
 function app_layout_end(array $fabOptions = []): void
 {
+    global $includeReportDrawer;
+
     echo '</div></main>';
     require __DIR__ . '/bottom-nav.php';
+
+    if (!empty($includeReportDrawer)) {
+        require __DIR__ . '/../partials/report-drawer.php';
+        echo '<div class="toast-container" data-toast-container aria-live="polite"></div>';
+    }
 
     $showFab = (bool) ($fabOptions['show'] ?? false);
     if ($showFab) {

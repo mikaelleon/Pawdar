@@ -35,6 +35,10 @@ app_layout_start('registry', 'Dog Profile', [
     'mobileHeader' => 'back',
     'backTitle' => 'Registry',
     'backHref' => 'registry.php',
+    'breadcrumbs' => [
+        ['label' => 'Registry', 'url' => 'registry.php'],
+        ['label' => (string) ($dog['DogName'] ?? 'Dog Profile')],
+    ],
 ]);
 ?>
 

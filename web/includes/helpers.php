@@ -151,6 +151,7 @@ function case_status_meta(?string $status): array
     $map = [
         'Received' => ['label' => 'Received', 'class' => 'badge-received'],
         'Under Investigation' => ['label' => 'Investigating', 'class' => 'badge-investigating'],
+        'Action Taken' => ['label' => 'Action Taken', 'class' => 'badge-investigating'],
         'Resolved' => ['label' => 'Resolved', 'class' => 'badge-resolved'],
         'Referred' => ['label' => 'Referred', 'class' => 'badge-referred'],
     ];

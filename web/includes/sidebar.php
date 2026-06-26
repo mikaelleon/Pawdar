@@ -12,7 +12,7 @@ $navItems = [
     'cases' => ['href' => 'cases.php', 'icon' => 'folder-check', 'label' => 'Cases'],
     'first-aid' => ['href' => 'first-aid.php', 'icon' => 'heart-pulse', 'label' => 'First Aid'],
     'breeds' => ['href' => 'breeds.php', 'icon' => 'dog', 'label' => 'Breeds'],
-    'rescue-board' => ['href' => 'rescue-board.php', 'icon' => 'life-buoy', 'label' => 'Rescue Board'],
+    'rescue-board' => ['href' => 'rescue.php', 'icon' => 'life-buoy', 'label' => 'Rescue Board'],
     'analytics' => ['href' => 'analytics.php', 'icon' => 'bar-chart-3', 'label' => 'Analytics'],
     'admin' => ['href' => 'admin.php', 'icon' => 'shield-check', 'label' => 'Admin'],
 ];

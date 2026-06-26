@@ -232,3 +232,144 @@ function fetch_rescue_stray_incidents(PDO $pdo, string $barangay, int $limit = 2
 
     return $stmt->fetchAll();
 }
+
+/**
+ * Paginated registry listing with filters.
+ *
+ * @param array<string, string> $filters
+ * @return array{rows: list<array<string, mixed>>, total: int}
+ */
+function fetch_registry_list(PDO $pdo, array $filters, int $offset = 0, int $limit = 20): array
+{
+    $sql = '
+        FROM dog d
+        INNER JOIN user u ON u.UserID = d.UserID
+        LEFT JOIN breeds b ON b.breed_id = d.breed_id
+        LEFT JOIN vaccinerecord v ON v.dog_id = d.dog_id AND v.VaccineID = (
+            SELECT VaccineID FROM vaccinerecord WHERE dog_id = d.dog_id ORDER BY DateGiven DESC LIMIT 1
+        )
+        WHERE 1=1
+    ';
+    $params = [];
+
+    $query = trim((string) ($filters['q'] ?? ''));
+    if ($query !== '') {
+        $sql .= ' AND (d.DogName LIKE :q OR d.Breed LIKE :q OR d.RegistryID LIKE :q OR u.Name LIKE :q OR b.breed_name LIKE :q)';
+        $params[':q'] = '%' . $query . '%';
+    }
+
+    $type = trim((string) ($filters['type'] ?? 'all'));
+    if ($type !== '' && $type !== 'all') {
+        $sql .= ' AND d.DogType = :dog_type';
+        $params[':dog_type'] = $type;
+    }
+
+    $barangay = trim((string) ($filters['barangay'] ?? 'all'));
+    if ($barangay !== '' && $barangay !== 'all') {
+        $sql .= ' AND u.Barangay = :barangay';
+        $params[':barangay'] = $barangay;
+    }
+
+    $breed = trim((string) ($filters['breed'] ?? 'all'));
+    if ($breed !== '' && $breed !== 'all') {
+        $sql .= ' AND (b.breed_name = :breed OR d.Breed = :breed_text)';
+        $params[':breed'] = $breed;
+        $params[':breed_text'] = $breed;
+    }
+
+    $vax = trim((string) ($filters['vaccine'] ?? 'all'));
+    if ($vax === 'Verified') {
+        $sql .= ' AND v.vax_status = \'Verified\'';
+    } elseif ($vax === 'Unverified') {
+        $sql .= ' AND (v.vax_status IS NULL OR v.vax_status = \'Unverified\')';
+    } elseif ($vax === 'Expired') {
+        $sql .= ' AND v.vax_status = \'Expired\'';
+    }
+
+    $countStmt = $pdo->prepare('SELECT COUNT(DISTINCT d.dog_id) ' . $sql);
+    $countStmt->execute($params);
+    $total = (int) $countStmt->fetchColumn();
+
+    $select = '
+        SELECT d.dog_id, d.DogName, d.Breed, d.RegistryID, d.Status, d.DogType, d.Gender, d.Age,
+               u.Name AS owner_name, u.Barangay AS owner_barangay, u.UserID AS owner_id,
+               COALESCE(b.breed_name, d.Breed) AS breed_label,
+               v.vax_status AS vaccine_status, v.VaccineName, v.DateGiven, v.NextDueDate
+    ';
+    $sql .= ' ORDER BY d.DogName ASC LIMIT :limit OFFSET :offset';
+
+    $stmt = $pdo->prepare($select . $sql);
+    foreach ($params as $key => $value) {
+        $stmt->bindValue($key, $value);
+    }
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+
+    return ['rows' => $stmt->fetchAll(), 'total' => $total];
+}
+
+/**
+ * @return list<string>
+ */
+function fetch_registry_barangays(PDO $pdo): array
+{
+    $stmt = $pdo->query('SELECT DISTINCT Barangay FROM user ORDER BY Barangay ASC');
+
+    return array_column($stmt->fetchAll(), 'Barangay');
+}
+
+/**
+ * @return array<string, mixed>|null
+ */
+function fetch_dog_by_registry_id(PDO $pdo, string $registryId): ?array
+{
+    $stmt = $pdo->prepare('
+        SELECT d.*, u.Name AS owner_name, u.Phone AS owner_phone, u.Barangay AS owner_barangay,
+               v.VaccineName, v.DateGiven, v.NextDueDate, v.vax_status
+        FROM dog d
+        LEFT JOIN user u ON u.UserID = d.UserID
+        LEFT JOIN vaccinerecord v ON v.dog_id = d.dog_id AND v.VaccineID = (
+            SELECT VaccineID FROM vaccinerecord WHERE dog_id = d.dog_id ORDER BY DateGiven DESC LIMIT 1
+        )
+        WHERE d.RegistryID = :registry_id OR d.dog_id = :dog_id_num
+        LIMIT 1
+    ');
+    $stmt->execute([
+        ':registry_id' => $registryId,
+        ':dog_id_num' => ctype_digit($registryId) ? (int) $registryId : 0,
+    ]);
+    $row = $stmt->fetch();
+
+    return $row ?: null;
+}
+
+/**
+ * @return array{class: string, label: string}
+ */
+function vaccine_status_badge(?string $status): array
+{
+    if ($status === 'Verified') {
+        return ['class' => 'badge-verified', 'label' => 'Verified'];
+    }
+    if ($status === 'Expired') {
+        return ['class' => 'badge-bite', 'label' => 'Expired'];
+    }
+
+    return ['class' => 'badge-received', 'label' => 'Unverified'];
+}
+
+/**
+ * Returns dog type chip class.
+ */
+function dog_type_chip_class(?string $dogType): string
+{
+    if ($dogType === 'Stray') {
+        return 'badge-investigating';
+    }
+    if ($dogType === 'Rescued') {
+        return 'badge-owned';
+    }
+
+    return 'badge-verified';
+}

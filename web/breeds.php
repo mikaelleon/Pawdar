@@ -17,6 +17,7 @@ app_layout_start('breeds', 'Breed Directory', [
     'topbarTitle' => 'Breed Directory',
     'searchPlaceholder' => 'Search breeds…',
     'scripts' => ['assets/js/breeds.js'],
+    'breadcrumbs' => [['label' => 'Breed Directory']],
 ]);
 ?>
 

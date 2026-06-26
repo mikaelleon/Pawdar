@@ -214,8 +214,147 @@ function notify_case_status_change(PDO $pdo, int $incidentId, string $newStatus)
     $insert->execute([
         ':user_id' => (int) $incident['UserID'],
         ':message' => 'Case status updated to ' . $newStatus . ': ' . $title,
-        ':link' => 'case-detail.php?id=' . $incidentId,
+        ':link' => 'incident.php?id=' . $incidentId,
     ]);
+}
+
+/**
+ * @return array<string, mixed>|null
+ */
+function fetch_incident_detail(PDO $pdo, int $incidentId, int $currentUserId = 0): ?array
+{
+    $stmt = $pdo->prepare('
+        SELECT i.*, u.Name AS reporter_name, u.Role AS reporter_role, u.Barangay AS reporter_barangay,
+               c.CaseID, c.CaseStatus, c.RabiesMonitoring,
+               d.dog_id, d.DogName, d.Breed, d.RegistryID, d.Status AS dog_status,
+               COUNT(DISTINCT corr.corroboration_id) AS corroborate_count,
+               EXISTS(
+                   SELECT 1 FROM corroborations uc
+                   WHERE uc.incident_id = i.IncidentID AND uc.user_id = :uid
+               ) AS user_corroborated
+        FROM incident i
+        INNER JOIN user u ON i.UserID = u.UserID
+        LEFT JOIN `case` c ON c.IncidentID = i.IncidentID
+        LEFT JOIN dog d ON d.dog_id = i.dog_id
+        LEFT JOIN corroborations corr ON corr.incident_id = i.IncidentID
+        WHERE i.IncidentID = :id
+        GROUP BY i.IncidentID
+        LIMIT 1
+    ');
+    $stmt->execute([':id' => $incidentId, ':uid' => $currentUserId]);
+    $row = $stmt->fetch();
+
+    return $row ?: null;
+}
+
+/**
+ * @return list<array<string, mixed>>
+ */
+function fetch_incident_corroborators(PDO $pdo, int $incidentId, int $limit = 5): array
+{
+    $stmt = $pdo->prepare('
+        SELECT u.UserID, u.Name
+        FROM corroborations c
+        INNER JOIN user u ON u.UserID = c.user_id
+        WHERE c.incident_id = :id
+        ORDER BY c.created_at ASC
+        LIMIT :limit
+    ');
+    $stmt->bindValue(':id', $incidentId, PDO::PARAM_INT);
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->execute();
+
+    return $stmt->fetchAll();
+}
+
+/**
+ * @return list<array<string, mixed>>
+ */
+function fetch_related_incidents(PDO $pdo, string $barangay, int $excludeId, int $limit = 3): array
+{
+    $stmt = $pdo->prepare('
+        SELECT i.IncidentID, i.IncidentType, i.Location, i.Date, c.CaseStatus
+        FROM incident i
+        INNER JOIN user u ON u.UserID = i.UserID
+        LEFT JOIN `case` c ON c.IncidentID = i.IncidentID
+        WHERE u.Barangay = :barangay AND i.IncidentID != :exclude
+        ORDER BY i.Date DESC
+        LIMIT :limit
+    ');
+    $stmt->bindValue(':barangay', $barangay);
+    $stmt->bindValue(':exclude', $excludeId, PDO::PARAM_INT);
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->execute();
+
+    return $stmt->fetchAll();
+}
+
+/**
+ * @return list<array<string, mixed>>
+ */
+function fetch_map_incidents(
+    PDO $pdo,
+    string $barangay,
+    ?string $incidentType = null,
+    ?string $dateFrom = null,
+    int $limit = 100
+): array {
+    $sql = '
+        SELECT i.IncidentID, i.IncidentType, i.Location, i.Date, i.latitude, i.longitude,
+               c.CaseStatus, i.Description
+        FROM incident i
+        LEFT JOIN `case` c ON c.IncidentID = i.IncidentID
+        INNER JOIN user u ON u.UserID = i.UserID
+        WHERE u.Barangay = :barangay
+    ';
+    $params = [':barangay' => $barangay];
+
+    if ($incidentType !== null && $incidentType !== '') {
+        $sql .= ' AND i.IncidentType = :type';
+        $params[':type'] = $incidentType;
+    }
+
+    if ($dateFrom !== null && $dateFrom !== '') {
+        $sql .= ' AND i.Date >= :date_from';
+        $params[':date_from'] = $dateFrom;
+    }
+
+    $sql .= ' ORDER BY i.Date DESC LIMIT :limit';
+
+    $stmt = $pdo->prepare($sql);
+    foreach ($params as $key => $value) {
+        $stmt->bindValue($key, $value);
+    }
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->execute();
+
+    $rows = $stmt->fetchAll();
+    $colors = incident_pin_colors();
+
+    foreach ($rows as &$row) {
+        $row['pin_color'] = $colors[$row['IncidentType']] ?? '#87AFAE';
+        if (empty($row['latitude']) || empty($row['longitude'])) {
+            $id = (int) $row['IncidentID'];
+            $row['latitude'] = 13.7568 + ($id % 7) * 0.002;
+            $row['longitude'] = 121.0583 + ($id % 5) * 0.003;
+        }
+    }
+
+    return $rows;
+}
+
+/**
+ * @return array<string, string>
+ */
+function incident_pin_colors(): array
+{
+    return [
+        'Animal Bite' => '#E0765E',
+        'Injured Stray' => '#F8BC72',
+        'Aggressive Behavior' => '#6C8B9F',
+        'Vehicular Accident' => '#87AFAE',
+        'Trash Disturbance' => '#4A4343',
+    ];
 }
 
 /**
@@ -247,7 +386,7 @@ function notify_matching_dog_owners(PDO $pdo, int $incidentId, ?string $breed, s
         $insert->execute([
             ':user_id' => (int) $row['UserID'],
             ':message' => 'An incident may involve a ' . $breed . ' in your barangay.',
-            ':link' => 'feed.php',
+            ':link' => 'incident.php?id=' . $incidentId,
         ]);
     }
 }

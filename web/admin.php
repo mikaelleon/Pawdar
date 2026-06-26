@@ -12,6 +12,8 @@ app_layout_start('admin', 'Admin', [
     'showSearch' => false,
     'topbarTitle' => 'Admin Console',
     'scripts' => ['assets/js/admin.js'],
+    'admin_context' => true,
+    'breadcrumbs' => [['label' => 'Dashboard']],
 ]);
 ?>
 

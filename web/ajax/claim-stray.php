@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../includes/bootstrap.php';
+require_once __DIR__ . '/../includes/rescue.php';
 
 require_login();
 require_role(['Rescue Organization', 'Admin']);
@@ -21,7 +22,6 @@ if ($incidentId <= 0) {
 }
 
 $pdo = db();
-
 $check = $pdo->prepare('SELECT IncidentID, IncidentType FROM incident WHERE IncidentID = :incident_id LIMIT 1');
 $check->execute([':incident_id' => $incidentId]);
 $incident = $check->fetch();
@@ -30,25 +30,18 @@ if (!$incident || $incident['IncidentType'] !== 'Injured Stray') {
     json_response(['success' => false, 'message' => 'Only injured stray cases can be claimed'], 400);
 }
 
-$caseCheck = $pdo->prepare('SELECT CaseID FROM `case` WHERE IncidentID = :incident_id LIMIT 1');
-$caseCheck->execute([':incident_id' => $incidentId]);
-
-if ($caseCheck->fetch()) {
-    $update = $pdo->prepare('UPDATE `case` SET CaseStatus = \'Under Investigation\' WHERE IncidentID = :incident_id');
-    $update->execute([':incident_id' => $incidentId]);
-} else {
-    $insert = $pdo->prepare('INSERT INTO `case` (IncidentID, CaseStatus) VALUES (:incident_id, \'Under Investigation\')');
-    $insert->execute([':incident_id' => $incidentId]);
+if (!claim_stray_case($pdo, $incidentId, (int) $_SESSION['user_id'])) {
+    json_response(['success' => false, 'message' => 'Case already claimed'], 400);
 }
 
 $notify = $pdo->prepare('
-    INSERT INTO notifications (user_id, message, link)
-    SELECT i.UserID, :message, :link
+    INSERT INTO notifications (user_id, message, link, notification_type)
+    SELECT i.UserID, :message, :link, \'rescue\'
     FROM incident i WHERE i.IncidentID = :incident_id
 ');
 $notify->execute([
     ':message' => 'Your injured stray report has been claimed by a rescue organization.',
-    ':link' => 'feed.php',
+    ':link' => 'rescue.php',
     ':incident_id' => $incidentId,
 ]);
 

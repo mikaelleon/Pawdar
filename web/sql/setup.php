@@ -45,6 +45,19 @@ try {
         }
     }
 
+    $v4 = file_get_contents(__DIR__ . '/schema-v4-screens.sql');
+    if ($v4 !== false) {
+        foreach (array_filter(array_map('trim', explode(';', $v4))) as $statement) {
+            if ($statement === '' || stripos($statement, '--') === 0 || stripos($statement, 'USE pawdar') === 0) {
+                continue;
+            }
+            try {
+                $pdo->exec($statement);
+            } catch (PDOException $ignored) {
+            }
+        }
+    }
+
     echo "Database setup complete.\n";
     echo "Demo login: maria.santos@email.com / password\n";
 } catch (Throwable $e) {

@@ -23,6 +23,7 @@ $pageScripts = $pageScripts ?? [];
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
     <script src="assets/js/app.js" defer></script>
     <script src="assets/js/ui.js" defer></script>
+    <script src="assets/js/report-drawer.js" defer></script>
     <?php foreach ($pageScripts as $script): ?>
         <script src="<?= htmlspecialchars($script) ?>" defer></script>
     <?php endforeach; ?>

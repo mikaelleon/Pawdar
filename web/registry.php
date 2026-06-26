@@ -1,15 +1,22 @@
 <?php
 require_once __DIR__ . '/includes/app-layout.php';
 require_once __DIR__ . '/includes/dogs.php';
+require_once __DIR__ . '/includes/breeds.php';
 
 $pdo = db();
 $userRole = current_user_role();
-$userId = (int) ($_SESSION['user_id'] ?? 0);
-$barangay = (string) ($_SESSION['user_barangay'] ?? '');
-$query = trim((string) ($_GET['q'] ?? ''));
+$canRegister = in_array($userRole, ['Dog Owner', 'Admin'], true);
 
-$counts = fetch_registry_counts($pdo, $userRole, $userId, $barangay);
-$dogs = fetch_registry_dogs($pdo, $userRole, $userId, $barangay, $query !== '' ? $query : null);
+$filters = [
+    'q' => trim((string) ($_GET['q'] ?? '')),
+    'type' => trim((string) ($_GET['type'] ?? 'all')),
+    'barangay' => trim((string) ($_GET['barangay'] ?? 'all')),
+    'breed' => trim((string) ($_GET['breed'] ?? 'all')),
+    'vaccine' => trim((string) ($_GET['vaccine'] ?? 'all')),
+];
+$result = fetch_registry_list($pdo, $filters, 0, 20);
+$barangays = fetch_registry_barangays($pdo);
+$breedOptions = fetch_all_breeds($pdo);
 
 app_layout_start('registry', 'Dog Registry', [
     'showSearch' => false,
@@ -18,73 +25,80 @@ app_layout_start('registry', 'Dog Registry', [
 ]);
 ?>
 
-<div class="feed-header">
+<div class="feed-header flex justify-between items-start">
     <div>
         <h1 class="feed-title">Dog Registry</h1>
-        <p class="text-sm text-muted">
-            <?php if ($userRole === 'Dog Owner'): ?>
-                Your registered dogs on Pawdar.
-            <?php else: ?>
-                Registered dogs in Brgy. <?= htmlspecialchars($barangay) ?>.
-            <?php endif; ?>
-        </p>
+        <p class="text-sm text-muted">Browse, search, and filter registered dogs in your community.</p>
     </div>
+    <?php if ($canRegister): ?>
+        <a href="register_dog.php" class="btn-primary btn-sm hidden-mobile"><i data-lucide="plus"></i> Register a dog</a>
+    <?php endif; ?>
 </div>
 
-<div class="summary-strip mb-md">
-    <div class="summary-card resolved">
-        <div class="summary-value"><?= (int) $counts['registered'] ?></div>
-        <div class="summary-label">Registered</div>
-    </div>
-    <div class="summary-card investigating">
-        <div class="summary-value"><?= (int) $counts['pending'] ?></div>
-        <div class="summary-label">Pending</div>
-    </div>
-    <div class="summary-card">
-        <div class="summary-value"><?= (int) $counts['total'] ?></div>
-        <div class="summary-label">Total</div>
-    </div>
-</div>
-
-<form method="get" class="search-bar search-bar-light mb-md" data-registry-search>
+<div class="search-bar search-bar-light mb-md" data-registry-search-wrap>
     <i data-lucide="search"></i>
-    <input type="search" name="q" value="<?= htmlspecialchars($query) ?>" placeholder="Search dogs, breeds, owners, registry ID…" style="border:none;background:transparent;flex:1;font-family:inherit;font-size:14px;">
-</form>
+    <input type="search" id="registry-search" value="<?= htmlspecialchars($filters['q']) ?>" placeholder="Search dogs by name, breed, or owner…" style="border:none;background:transparent;flex:1;font-family:inherit;font-size:14px;">
+</div>
 
-<?php if (count($dogs) === 0): ?>
-    <div class="feed-empty-state">
-        <p class="feed-empty-title">No dogs found<?= $query !== '' ? ' for \'' . htmlspecialchars($query) . '\'' : '' ?></p>
-        <?php if ($query !== ''): ?>
-            <a href="registry.php" class="btn-outline btn-sm">Clear search</a>
-        <?php elseif ($userRole === 'Dog Owner'): ?>
-            <p class="text-sm text-muted">Register your dog through your veterinarian or barangay vet clinic.</p>
-        <?php endif; ?>
-    </div>
-<?php else: ?>
-    <div class="flex flex-col gap-md" data-registry-list>
-        <?php foreach ($dogs as $dog):
-            $status = (string) ($dog['Status'] ?? 'Registered');
-            $badgeClass = $status === 'Registered' ? 'badge-verified' : 'badge-investigating';
-        ?>
-            <a href="dog-profile.php?id=<?= (int) $dog['dog_id'] ?>" class="card card-bordered card-body card-hoverable flex items-center gap-md">
-                <div class="icon-box icon-box-md <?= htmlspecialchars(string_color_class((string) ($dog['breed_label'] ?? $dog['Breed'] ?? 'dog'))) ?>">
-                    <i data-lucide="dog"></i>
-                </div>
-                <div class="flex-1">
-                    <div style="font-weight:500;font-size:15px;"><?= htmlspecialchars((string) $dog['DogName']) ?></div>
-                    <div class="text-xs text-muted">
-                        <?= htmlspecialchars((string) ($dog['breed_label'] ?? $dog['Breed'] ?? 'Unknown breed')) ?>
-                        · <?= htmlspecialchars((string) $dog['owner_name']) ?>
-                        <?php if (!empty($dog['RegistryID'])): ?>
-                            · <?= htmlspecialchars((string) $dog['RegistryID']) ?>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                <span class="badge <?= $badgeClass ?>"><?= htmlspecialchars($status) ?></span>
-                <i data-lucide="chevron-right" style="width:16px;height:16px;color:var(--air-force);"></i>
-            </a>
-        <?php endforeach; ?>
-    </div>
+<div class="chips-row mb-md" data-registry-type-chips>
+    <?php foreach (['all' => 'All', 'Owned' => 'Owned', 'Stray' => 'Stray', 'Rescued' => 'Rescued'] as $slug => $label): ?>
+        <button type="button" class="chip registry-type-chip<?= $filters['type'] === $slug ? ' chip-active' : ' chip-outline' ?>" data-type="<?= htmlspecialchars($slug) ?>"><?= htmlspecialchars($label) ?></button>
+    <?php endforeach; ?>
+</div>
+
+<div class="registry-filters flex flex-wrap gap-md mb-md">
+    <label class="text-sm flex items-center gap-sm">
+        <span class="text-muted">Barangay</span>
+        <select class="registry-filter" data-filter="barangay">
+            <option value="all">All barangays</option>
+            <?php foreach ($barangays as $brgy): ?>
+                <option value="<?= htmlspecialchars($brgy) ?>" <?= $filters['barangay'] === $brgy ? 'selected' : '' ?>><?= htmlspecialchars($brgy) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </label>
+    <label class="text-sm flex items-center gap-sm">
+        <span class="text-muted">Breed</span>
+        <select class="registry-filter" data-filter="breed">
+            <option value="all">All breeds</option>
+            <?php foreach ($breedOptions as $breed): ?>
+                <option value="<?= htmlspecialchars((string) $breed['breed_name']) ?>" <?= $filters['breed'] === $breed['breed_name'] ? 'selected' : '' ?>><?= htmlspecialchars((string) $breed['breed_name']) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </label>
+    <label class="text-sm flex items-center gap-sm">
+        <span class="text-muted">Vaccination</span>
+        <select class="registry-filter" data-filter="vaccine">
+            <?php foreach (['all' => 'All', 'Verified' => 'Verified', 'Unverified' => 'Unverified', 'Expired' => 'Expired'] as $val => $label): ?>
+                <option value="<?= htmlspecialchars($val) ?>" <?= $filters['vaccine'] === $val ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </label>
+</div>
+
+<div class="registry-grid" data-registry-grid>
+    <?php if (count($result['rows']) === 0): ?>
+        <div class="feed-empty-state" style="grid-column:1/-1;">
+            <p class="feed-empty-title">No dogs found</p>
+            <?php if ($canRegister): ?>
+                <a href="register_dog.php" class="btn-primary btn-sm">Register a dog</a>
+            <?php endif; ?>
+        </div>
+    <?php else: ?>
+        <?php foreach ($result['rows'] as $dog) {
+            require __DIR__ . '/partials/registry-dog-card.php';
+        } ?>
+    <?php endif; ?>
+</div>
+
+<div class="text-center mt-md" data-registry-load-wrap <?= ($result['total'] <= 20) ? 'hidden' : '' ?>>
+    <button type="button" class="btn-outline" data-registry-load-more>Load more</button>
+    <p class="text-xs text-muted mt-sm" data-registry-count><?= count($result['rows']) ?> of <?= (int) $result['total'] ?> dogs</p>
+</div>
+
+<?php if ($canRegister): ?>
+    <a href="register_dog.php" class="btn-primary fab hidden-desktop" style="position:fixed;bottom:80px;right:16px;z-index:40;border-radius:50%;width:56px;height:56px;padding:0;">
+        <i data-lucide="plus"></i>
+    </a>
 <?php endif; ?>
 
 <?php app_layout_end([]); ?>

@@ -18,7 +18,10 @@ $incidents = fetch_incidents($pdo, $barangay, $userId, $incidentType, 0, 10);
 $mapCounts = fetch_map_counts($pdo, $barangay);
 $mapPins = fetch_map_pins($pdo, $barangay, $incidentType);
 
-app_layout_start('feed', 'Home Feed', ['scripts' => ['assets/js/feed.js']]);
+app_layout_start('feed', 'Home Feed', [
+    'scripts' => ['assets/js/feed.js'],
+    'report_drawer' => true,
+]);
 
 $typeMap = incident_type_map();
 $chips = [['slug' => 'all', 'label' => 'All']];
@@ -38,7 +41,7 @@ if (role_can_report($userRole)) {
 }
 ?>
 
-<div class="feed-layout" data-feed-page data-csrf="<?= htmlspecialchars($_SESSION['csrf_token']) ?>" data-filter="<?= htmlspecialchars($filter) ?>" data-barangay="<?= htmlspecialchars($barangay) ?>" data-next-offset="<?= count($incidents) ?>">
+<div class="feed-grid" data-feed-page data-csrf="<?= htmlspecialchars($_SESSION['csrf_token']) ?>" data-filter="<?= htmlspecialchars($filter) ?>" data-barangay="<?= htmlspecialchars($barangay) ?>" data-next-offset="<?= count($incidents) ?>">
     <div class="feed-column">
         <div class="feed-header">
             <div>
@@ -89,41 +92,11 @@ if (role_can_report($userRole)) {
         </div>
     </div>
 
-    <aside class="map-preview-col hidden-mobile">
-        <div style="font-weight:800;font-size:15px;color:var(--air-force);">Map preview</div>
-        <div class="map-preview" data-map-preview>
-            <div style="position:absolute;top:70px;left:-10px;right:-10px;height:12px;background:#fff;transform:rotate(-7deg);"></div>
-            <div style="position:absolute;inset:0;background:var(--tea-green);opacity:.15;"></div>
-            <?php foreach ($mapPins as $pin): ?>
-                <div class="map-pin map-pin-drop <?= htmlspecialchars($pin['accent']) ?>"
-                     style="left:<?= (int) $pin['left'] ?>px;top:<?= (int) $pin['top'] ?>px;width:26px;height:26px;"></div>
-            <?php endforeach; ?>
-        </div>
-        <div class="grid-2x2" data-map-counts>
-            <div class="summary-card" style="padding:12px;border-top-color:var(--burnt-peach);">
-                <div class="summary-value" style="font-size:22px;" data-count-bites><?= (int) $mapCounts['bites'] ?></div>
-                <div class="summary-label" style="font-size:11px;">Bites</div>
-            </div>
-            <div class="summary-card" style="padding:12px;border-top-color:var(--sunlit-clay);">
-                <div class="summary-value" style="font-size:22px;" data-count-strays><?= (int) $mapCounts['strays'] ?></div>
-                <div class="summary-label" style="font-size:11px;">Strays</div>
-            </div>
-            <div class="summary-card" style="padding:12px;border-top-color:var(--air-force);">
-                <div class="summary-value" style="font-size:22px;" data-count-aggressive><?= (int) $mapCounts['aggressive'] ?></div>
-                <div class="summary-label" style="font-size:11px;">Aggressive</div>
-            </div>
-            <div class="summary-card" style="padding:12px;">
-                <div class="summary-value" style="font-size:22px;" data-count-vehicular><?= (int) $mapCounts['vehicular'] ?></div>
-                <div class="summary-label" style="font-size:11px;">Vehicular</div>
-            </div>
-        </div>
-        <a href="map.php?barangay=<?= urlencode($barangay) ?>" class="btn-outline btn-block btn-sm" style="height:42px;">
-            <i data-lucide="map"></i> Open full map
-        </a>
+    <aside class="bento-column hidden-mobile">
+        <?php require __DIR__ . '/partials/widget_funfact.php'; ?>
+        <?php require __DIR__ . '/partials/widget_firstaid.php'; ?>
+        <?php require __DIR__ . '/partials/widget_map.php'; ?>
     </aside>
 </div>
-
-<?php require __DIR__ . '/partials/report-drawer.php'; ?>
-<div class="toast-container" data-toast-container aria-live="polite"></div>
 
 <?php app_layout_end($fabOptions); ?>

@@ -3,8 +3,8 @@ $incidentTypes = incident_type_map();
 $today = date('Y-m-d');
 $now = date('H:i');
 ?>
-<div class="report-drawer-overlay" data-report-drawer-overlay hidden></div>
-<aside class="report-drawer" data-report-drawer aria-hidden="true" hidden>
+<div class="report-drawer-overlay" data-report-drawer-overlay aria-hidden="true"></div>
+<aside class="report-drawer" data-report-drawer aria-hidden="true">
     <div class="report-drawer-header">
         <h2>Report Incident</h2>
         <button type="button" class="report-drawer-close" data-close-report-drawer aria-label="Close">

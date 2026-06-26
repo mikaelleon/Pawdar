@@ -1,0 +1,27 @@
+<?php
+$pdo = db();
+$guides = $pdo->query('SELECT incident_type, severity_level, steps FROM first_aid_guides ORDER BY guide_id ASC')->fetchAll();
+$guide = null;
+$firstStep = '';
+
+if (count($guides) > 0) {
+    $week = (int) date('W');
+    $guide = $guides[$week % count($guides)];
+    $steps = json_decode((string) $guide['steps'], true);
+    $firstStep = is_array($steps) ? (string) ($steps[0] ?? '') : '';
+}
+?>
+<?php if ($guide !== null): ?>
+<div class="bento-card firstaid-card">
+    <div class="bento-card-header">
+        <span class="bento-icon" aria-hidden="true">🩹</span>
+        <span class="bento-label">First aid reminder</span>
+        <span class="severity-chip severity-<?= htmlspecialchars(strtolower((string) $guide['severity_level'])) ?>">
+            <?= htmlspecialchars((string) $guide['severity_level']) ?>
+        </span>
+    </div>
+    <p class="firstaid-type"><?= htmlspecialchars((string) $guide['incident_type']) ?></p>
+    <p class="firstaid-step">Step 1: <?= htmlspecialchars($firstStep) ?></p>
+    <a href="first-aid.php" class="bento-link">View full guide →</a>
+</div>
+<?php endif; ?>

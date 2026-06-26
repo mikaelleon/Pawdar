@@ -11,6 +11,8 @@ app_layout_start('first-aid', 'First Aid Guides', [
     'showSearch' => false,
     'topbarTitle' => 'First Aid Guides',
     'scripts' => ['assets/js/first-aid.js'],
+    'breadcrumbs' => [['label' => 'First Aid Guides']],
+    'report_drawer' => true,
 ]);
 ?>
 
@@ -78,6 +80,4 @@ app_layout_start('first-aid', 'First Aid Guides', [
     <?php endif; ?>
 </div>
 
-<?php require __DIR__ . '/partials/report-drawer.php'; ?>
-<div class="toast-container" data-toast-container aria-live="polite"></div>
 <?php app_layout_end([]); ?>

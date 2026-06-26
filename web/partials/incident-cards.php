@@ -124,7 +124,7 @@ function render_single_incident_card(array $incident, string $userRole, int $use
             <div class="flex gap-md" style="gap:11px;">
                 <div class="icon-box icon-box-md"><i data-lucide="<?= htmlspecialchars($meta['icon']) ?>"></i></div>
                 <div class="flex-1" style="min-width:0;">
-                    <div class="incident-card-title"><?= htmlspecialchars($title) ?></div>
+                    <a href="incident.php?id=<?= $incidentId ?>" class="incident-card-title"><?= htmlspecialchars($title) ?></a>
                     <div class="text-xs text-muted mt-sm flex items-center gap-sm" style="margin-top:3px;">
                         <i data-lucide="map-pin" style="width:13px;height:13px;"></i>
                         <?= htmlspecialchars((string) $incident['Location']) ?>
