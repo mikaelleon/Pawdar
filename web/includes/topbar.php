@@ -33,17 +33,20 @@ try {
                 <i data-lucide="sun"></i>
             </div>
             <div class="notification-wrap" style="position:relative;">
-                <a href="notifications.php" class="notification-bell-btn" data-notification-bell aria-label="Notifications">
+                <button type="button" class="notification-bell-btn" data-notification-bell aria-label="Notifications" aria-expanded="false" aria-haspopup="true">
                     <i data-lucide="bell"></i>
                     <?php if ($notificationCount > 0): ?>
                         <span class="notification-badge" data-notification-count><?= (int) $notificationCount ?></span>
                     <?php else: ?>
                         <span class="notification-badge is-hidden" data-notification-count>0</span>
                     <?php endif; ?>
-                </a>
+                </button>
                 <div class="notification-dropdown" data-notification-dropdown hidden>
                     <div class="notification-dropdown-header">Notifications</div>
                     <div class="notification-list" data-notification-list></div>
+                    <div class="notification-dropdown-footer">
+                        <a href="notifications.php" class="notification-read-more">Read more</a>
+                    </div>
                 </div>
             </div>
             <a href="profile.php" class="avatar avatar-md <?= htmlspecialchars($avatarClass) ?>" title="<?= $userInitials ?>"><?= $userInitials ?></a>

@@ -47,7 +47,9 @@ function initNotificationBell() {
 
     bells.forEach(function (bell) {
         bell.addEventListener('click', function (event) {
+            event.preventDefault();
             event.stopPropagation();
+
             var wrap = bell.closest('.notification-wrap');
             var dropdown = wrap ? wrap.querySelector('[data-notification-dropdown]') : null;
             if (!dropdown) {
@@ -55,27 +57,54 @@ function initNotificationBell() {
             }
 
             var isOpen = !dropdown.hasAttribute('hidden');
-            document.querySelectorAll('[data-notification-dropdown]').forEach(function (d) {
-                d.setAttribute('hidden', '');
-            });
-
             if (isOpen) {
+                closeNotificationDropdown(wrap);
                 return;
             }
 
+            closeAllNotificationDropdowns();
             dropdown.removeAttribute('hidden');
+            bell.setAttribute('aria-expanded', 'true');
             loadNotifications(dropdown, true);
         });
     });
 
-    document.addEventListener('click', function () {
-        document.querySelectorAll('[data-notification-dropdown]').forEach(function (d) {
-            d.setAttribute('hidden', '');
+    document.querySelectorAll('[data-notification-dropdown]').forEach(function (dropdown) {
+        dropdown.addEventListener('click', function (event) {
+            event.stopPropagation();
         });
+    });
+
+    document.addEventListener('click', function () {
+        closeAllNotificationDropdowns();
     });
 
     pollNotifications();
     setInterval(pollNotifications, 30000);
+}
+
+function closeNotificationDropdown(wrap) {
+    if (!wrap) {
+        return;
+    }
+
+    var dropdown = wrap.querySelector('[data-notification-dropdown]');
+    var bell = wrap.querySelector('[data-notification-bell]');
+    if (dropdown) {
+        dropdown.setAttribute('hidden', '');
+    }
+    if (bell) {
+        bell.setAttribute('aria-expanded', 'false');
+    }
+}
+
+function closeAllNotificationDropdowns() {
+    document.querySelectorAll('[data-notification-dropdown]').forEach(function (dropdown) {
+        dropdown.setAttribute('hidden', '');
+    });
+    document.querySelectorAll('[data-notification-bell]').forEach(function (bell) {
+        bell.setAttribute('aria-expanded', 'false');
+    });
 }
 
 function loadNotifications(dropdown, markRead) {
@@ -97,11 +126,10 @@ function loadNotifications(dropdown, markRead) {
                 list.innerHTML = '<p class="notification-empty text-sm text-muted">No notifications yet.</p>';
             } else {
                 list.innerHTML = data.items.map(function (item) {
-                    var href = item.link ? item.link : '#';
-                    return '<a class="notification-item' + (item.is_read ? '' : ' is-unread') + '" href="' + href + '">' +
+                    return '<div class="notification-item' + (item.is_read ? '' : ' is-unread') + '">' +
                         '<span class="notification-item-message">' + escapeHtml(item.message) + '</span>' +
                         '<span class="notification-item-time text-xs text-muted">' + escapeHtml(item.time) + '</span>' +
-                        '</a>';
+                        '</div>';
                 }).join('');
             }
 

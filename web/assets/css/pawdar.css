@@ -1654,6 +1654,35 @@ textarea.form-input {
 .notification-item.is-unread { background: var(--bg-soft); }
 .notification-item-message { display: block; font-size: 13px; font-weight: 600; }
 
+.notification-dropdown-footer {
+    padding: 10px 14px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+}
+
+.notification-read-more {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--air-force);
+    text-decoration: none;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+
+.notification-read-more:hover {
+    color: var(--taupe);
+    background: var(--bg-soft);
+}
+
+.notification-empty {
+    padding: 16px 14px;
+    margin: 0;
+}
+
 .feed-empty-state {
     text-align: center;
     padding: 40px 20px;

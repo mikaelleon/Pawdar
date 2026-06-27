@@ -30,7 +30,7 @@ try {
         </div>
         <div class="flex items-center gap-md">
             <div class="notification-wrap">
-                <button type="button" class="notification-bell-btn notification-bell-btn--light" data-notification-bell aria-label="Notifications">
+                <button type="button" class="notification-bell-btn notification-bell-btn--light" data-notification-bell aria-label="Notifications" aria-expanded="false" aria-haspopup="true">
                     <i data-lucide="bell" style="color:#fff;"></i>
                     <?php if ($notificationCount > 0): ?>
                         <span class="notification-badge" data-notification-count><?= (int) $notificationCount ?></span>
@@ -41,6 +41,9 @@ try {
                 <div class="notification-dropdown" data-notification-dropdown hidden>
                     <div class="notification-dropdown-header">Notifications</div>
                     <div class="notification-list" data-notification-list></div>
+                    <div class="notification-dropdown-footer">
+                        <a href="notifications.php" class="notification-read-more">Read more</a>
+                    </div>
                 </div>
             </div>
             <div class="avatar avatar-sm <?= htmlspecialchars($avatarClass) ?>"><?= $userInitials ?></div>
