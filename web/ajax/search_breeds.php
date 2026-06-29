@@ -6,6 +6,10 @@ require_login_active();
 $query = trim((string) ($_GET['q'] ?? ''));
 $size = trim((string) ($_GET['size'] ?? 'all'));
 
+if ($query !== '' && mb_strlen($query) < 2 && $size === 'all') {
+    json_response(['success' => true, 'breeds' => []]);
+}
+
 try {
     $pdo = db();
     $sql = 'SELECT breed_id, breed_name, size_category, temperament_notes FROM breeds WHERE 1=1';
@@ -21,7 +25,13 @@ try {
         $params[':size'] = $size;
     }
 
-    $sql .= ' ORDER BY breed_name ASC';
+    if ($query !== '') {
+        $sql .= ' ORDER BY (CASE WHEN breed_name LIKE :exact THEN 0 ELSE 1 END), breed_name ASC LIMIT 8';
+        $params[':exact'] = $query . '%';
+    } else {
+        $sql .= ' ORDER BY breed_name ASC';
+    }
+
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
 
