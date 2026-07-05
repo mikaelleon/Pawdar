@@ -30,7 +30,9 @@ require __DIR__ . '/includes/head.php';
                 Thanks, <?= htmlspecialchars((string) $_SESSION['user_name']) ?>.
                 Your <?= htmlspecialchars((string) $_SESSION['user_role']) ?> account is being reviewed.
             </p>
-            <p class="text-sm text-muted" style="margin-top:8px;">We'll notify you by email once approved.</p>
+            <p class="text-sm text-muted" style="margin-top:8px;">
+                Your account will be reviewed within 1–2 business days. You'll receive an email once approved.
+            </p>
             <a href="auth/logout.php" class="btn-outline btn-block" style="margin-top:24px;">Log out</a>
         </div>
     </div>

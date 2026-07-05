@@ -152,12 +152,22 @@ function showFieldError(input, message) {
     err.className = 'field-error';
     err.setAttribute('role', 'alert');
     err.innerHTML = escapeHtml(message);
-    input.closest('.float-field, .form-group')?.appendChild(err);
+    input.closest('.float-field, .form-group, .form-field')?.appendChild(err);
+}
+
+function showFieldErrorHtml(input, html) {
+    clearFieldError(input);
+    input.classList.add('is-invalid');
+    var err = document.createElement('p');
+    err.className = 'field-error';
+    err.setAttribute('role', 'alert');
+    err.innerHTML = html;
+    input.closest('.float-field, .form-group, .form-field')?.appendChild(err);
 }
 
 function clearFieldError(input) {
     input.classList.remove('is-invalid');
-    var wrap = input.closest('.float-field, .form-group');
+    var wrap = input.closest('.float-field, .form-group, .form-field');
     if (wrap) {
         wrap.querySelectorAll('.field-error').forEach(function (el) { el.remove(); });
     }
@@ -174,5 +184,6 @@ window.PawdarUI = {
     showToast: showToast,
     showConfirmModal: showConfirmModal,
     showFieldError: showFieldError,
+    showFieldErrorHtml: showFieldErrorHtml,
     clearFieldError: clearFieldError
 };

@@ -9,11 +9,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $name = trim((string) ($_POST['name'] ?? ''));
 $email = trim((string) ($_POST['email'] ?? ''));
-$phone = trim((string) ($_POST['phone'] ?? ''));
+$phone = preg_replace('/\s+/', '', trim((string) ($_POST['phone'] ?? '')));
 $password = (string) ($_POST['password'] ?? '');
 $passwordConfirm = (string) ($_POST['password_confirm'] ?? '');
 $role = trim((string) ($_POST['role'] ?? 'Community Reporter'));
 $barangay = trim((string) ($_POST['barangay'] ?? ''));
+$termsAccepted = !empty($_POST['terms']);
 
 $allowedRoles = [
     'Dog Owner',
@@ -23,8 +24,18 @@ $allowedRoles = [
     'Rescue Organization',
 ];
 
+if (!$termsAccepted) {
+    header('Location: ../signup.php?error=terms');
+    exit;
+}
+
 if ($name === '' || $email === '' || $password === '' || $barangay === '') {
     header('Location: ../signup.php?error=missing');
+    exit;
+}
+
+if ($phone !== '' && !preg_match('/^(\+639|09)\d{9}$/', $phone)) {
+    header('Location: ../signup.php?error=phone');
     exit;
 }
 

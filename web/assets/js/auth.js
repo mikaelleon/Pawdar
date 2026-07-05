@@ -183,52 +183,159 @@ function initSignupForm() {
     var confirm = form.querySelector('#password_confirm');
     var email = form.querySelector('#email');
     var phone = form.querySelector('#phone');
+    var name = form.querySelector('#name');
+    var barangay = form.querySelector('#barangay');
+    var terms = form.querySelector('#terms');
     var submitBtn = form.querySelector('[type="submit"]');
-    var strengthFill = document.querySelectorAll('[data-strength-seg]');
-    var strengthLabel = document.querySelector('[data-strength-label]');
+    var strengthFill = form.querySelectorAll('[data-strength-seg]');
+    var strengthLabel = form.querySelector('[data-strength-label]');
+    var strengthSr = form.querySelector('[data-strength-sr]');
+    var weakHint = form.querySelector('[data-password-weak]');
+    var approvalNote = form.querySelector('[data-approval-note]');
+    var matchMessage = form.querySelector('[data-match-message]');
+    var roleCards = Array.prototype.slice.call(document.querySelectorAll('[data-role-card]'));
     var emailTimer;
+    var emailExists = false;
 
-    document.querySelectorAll('[data-role-card]').forEach(function (card) {
+    function getPasswordScore(value) {
+        var score = 0;
+        if (value.length >= 6) {
+            score++;
+        }
+        if (/[A-Z]/.test(value) && /[a-z]/.test(value)) {
+            score++;
+        }
+        if (/\d/.test(value)) {
+            score++;
+        }
+        if (/[^A-Za-z0-9]/.test(value)) {
+            score++;
+        }
+        return score;
+    }
+
+    function normalizePhone(value) {
+        return (value || '').replace(/\s/g, '');
+    }
+
+    function isValidPhone(value) {
+        var normalized = normalizePhone(value);
+        return normalized === '' || /^(\+639|09)\d{9}$/.test(normalized);
+    }
+
+    function updateApprovalNote(roleValue) {
+        if (!approvalNote) {
+            return;
+        }
+        var card = roleCards.find(function (item) {
+            return item.getAttribute('data-role-value') === roleValue;
+        });
+        var needsApproval = card && card.getAttribute('data-requires-approval') === '1';
+        approvalNote.classList.toggle('is-visible', !!needsApproval);
+    }
+
+    function selectRoleCard(card) {
+        if (!card || card.classList.contains('is-disabled')) {
+            return;
+        }
+
+        roleCards.forEach(function (c) {
+            c.classList.remove('is-selected');
+            c.setAttribute('aria-checked', 'false');
+            c.setAttribute('tabindex', '-1');
+            var existing = c.querySelector('.role-card-check');
+            if (existing) {
+                existing.remove();
+            }
+        });
+
+        card.classList.add('is-selected');
+        card.setAttribute('aria-checked', 'true');
+        card.setAttribute('tabindex', '0');
+        card.focus();
+
+        var check = document.createElement('span');
+        check.className = 'role-card-check';
+        check.setAttribute('aria-hidden', 'true');
+        check.innerHTML = '<i data-lucide="check"></i>';
+        card.appendChild(check);
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+
+        var roleInput = document.getElementById('role-input');
+        var roleValue = card.getAttribute('data-role-value') || '';
+        if (roleInput) {
+            roleInput.value = roleValue;
+        }
+        updateApprovalNote(roleValue);
+        validateSignupForm();
+    }
+
+    roleCards.forEach(function (card, index) {
         card.addEventListener('click', function () {
-            if (card.classList.contains('is-disabled')) {
+            selectRoleCard(card);
+        });
+
+        card.addEventListener('keydown', function (event) {
+            if (event.key === ' ' || event.key === 'Enter') {
+                event.preventDefault();
+                selectRoleCard(card);
                 return;
             }
-            document.querySelectorAll('[data-role-card]').forEach(function (c) {
-                c.classList.remove('is-selected');
-                var existing = c.querySelector('.role-card-check');
-                if (existing) existing.remove();
-            });
-            card.classList.add('is-selected');
-            var check = document.createElement('span');
-            check.className = 'role-card-check';
-            check.innerHTML = '<i data-lucide="check"></i>';
-            card.appendChild(check);
-            if (window.lucide) lucide.createIcons();
-            var roleInput = document.getElementById('role-input');
-            if (roleInput) {
-                roleInput.value = card.getAttribute('data-role-value') || '';
+
+            if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+                event.preventDefault();
+                var next = roleCards[(index + 1) % roleCards.length];
+                selectRoleCard(next);
             }
-            validateSignupForm();
+
+            if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                var prev = roleCards[(index - 1 + roleCards.length) % roleCards.length];
+                selectRoleCard(prev);
+            }
         });
     });
 
+    updateApprovalNote('Dog Owner');
+
     if (password) {
         password.addEventListener('input', function () {
-            updateStrength(password.value, strengthFill, strengthLabel);
-            validateConfirm(confirm, password);
+            updateStrength(password.value, strengthFill, strengthLabel, strengthSr);
+            validateConfirm(confirm, password, false, matchMessage);
             validateSignupForm();
+        });
+        password.addEventListener('blur', function () {
+            if (password.value && getPasswordScore(password.value) < 2) {
+                if (weakHint) {
+                    weakHint.hidden = false;
+                }
+            }
         });
     }
 
     if (confirm && password) {
-        confirm.addEventListener('input', function () { validateConfirm(confirm, password); validateSignupForm(); });
-        confirm.addEventListener('blur', function () { validateConfirm(confirm, password, true); validateSignupForm(); });
+        confirm.addEventListener('input', function () {
+            validateConfirm(confirm, password, false, matchMessage);
+            validateSignupForm();
+        });
+        confirm.addEventListener('blur', function () {
+            validateConfirm(confirm, password, true, matchMessage);
+            validateSignupForm();
+        });
     }
 
     if (email) {
         email.addEventListener('blur', function () {
+            if (email.value.trim() === '') {
+                PawdarUI.clearFieldError(email);
+                emailExists = false;
+                validateSignupForm();
+                return;
+            }
             if (!email.validity.valid) {
-                PawdarUI.showFieldError(email, 'Enter a valid email address.');
+                PawdarUI.showFieldError(email, 'Please enter a valid email address.');
                 validateSignupForm();
                 return;
             }
@@ -238,8 +345,12 @@ function initSignupForm() {
                 fetch('ajax/check_email.php?email=' + encodeURIComponent(email.value))
                     .then(function (res) { return res.json(); })
                     .then(function (data) {
+                        emailExists = !!data.exists;
                         if (data.exists) {
-                            PawdarUI.showFieldError(email, 'This email is already in use.');
+                            PawdarUI.showFieldErrorHtml(
+                                email,
+                                'An account with this email already exists. <a href="login.php">Log in instead</a>'
+                            );
                         } else {
                             PawdarUI.clearFieldError(email);
                         }
@@ -256,8 +367,8 @@ function initSignupForm() {
                 validateSignupForm();
                 return;
             }
-            if (!/^(\+639|09)\d{9}$/.test(phone.value.replace(/\s/g, ''))) {
-                PawdarUI.showFieldError(phone, 'Use format 09XXXXXXXXX or +639XXXXXXXXX.');
+            if (!isValidPhone(phone.value)) {
+                PawdarUI.showFieldError(phone, 'Use Philippine mobile format: 09XX XXX XXXX.');
             } else {
                 PawdarUI.clearFieldError(phone);
             }
@@ -265,15 +376,140 @@ function initSignupForm() {
         });
     }
 
+    if (barangay) {
+        barangay.addEventListener('change', validateSignupForm);
+        barangay.addEventListener('blur', function () {
+            if (!barangay.value) {
+                PawdarUI.showFieldError(barangay, 'This field is required.');
+            } else {
+                PawdarUI.clearFieldError(barangay);
+            }
+            validateSignupForm();
+        });
+    }
+
+    if (terms) {
+        terms.addEventListener('change', validateSignupForm);
+    }
+
     form.addEventListener('input', validateSignupForm);
-    form.addEventListener('submit', function () {
+    form.addEventListener('change', validateSignupForm);
+
+    form.addEventListener('submit', function (event) {
+        var valid = validateSignupSubmit(true);
+        if (!valid) {
+            event.preventDefault();
+            return;
+        }
         PawdarUI.setButtonLoading(submitBtn, true);
     });
 
+    if (form.dataset.signupError === 'exists' && email) {
+        PawdarUI.showFieldErrorHtml(
+            email,
+            'An account with this email already exists. <a href="login.php">Log in instead</a>'
+        );
+        emailExists = true;
+    }
+
     validateSignupForm();
+
+    function validateSignupSubmit(showErrors) {
+        var valid = true;
+
+        [name, email, password, confirm, barangay].forEach(function (field) {
+            if (!field) {
+                return;
+            }
+            if (!field.value || (field === barangay && !barangay.value)) {
+                if (showErrors) {
+                    PawdarUI.showFieldError(field, 'This field is required.');
+                }
+                valid = false;
+            }
+        });
+
+        if (email && email.value.trim() && !email.validity.valid) {
+            if (showErrors) {
+                PawdarUI.showFieldError(email, 'Please enter a valid email address.');
+            }
+            valid = false;
+        }
+
+        if (emailExists) {
+            valid = false;
+        }
+
+        if (phone && phone.value.trim() && !isValidPhone(phone.value)) {
+            if (showErrors) {
+                PawdarUI.showFieldError(phone, 'Use Philippine mobile format: 09XX XXX XXXX.');
+            }
+            valid = false;
+        }
+
+        if (password && password.value && getPasswordScore(password.value) < 2) {
+            if (showErrors && weakHint) {
+                weakHint.hidden = false;
+            }
+            valid = false;
+        }
+
+        if (password && confirm && password.value !== confirm.value) {
+            if (showErrors) {
+                validateConfirm(confirm, password, true, matchMessage);
+            }
+            valid = false;
+        }
+
+        if (terms && !terms.checked) {
+            valid = false;
+        }
+
+        form.querySelectorAll('.is-invalid').forEach(function () {
+            valid = false;
+        });
+
+        return valid;
+    }
+
+    function validateSignupForm() {
+        if (!submitBtn) {
+            return;
+        }
+
+        var valid = form.checkValidity();
+        form.querySelectorAll('.is-invalid').forEach(function () { valid = false; });
+
+        if (password && confirm && confirm.value && password.value !== confirm.value) {
+            valid = false;
+        }
+
+        if (password && password.value && getPasswordScore(password.value) < 2) {
+            valid = false;
+            if (weakHint) {
+                weakHint.hidden = getPasswordScore(password.value) >= 2 || password.value === '';
+            }
+        } else if (weakHint) {
+            weakHint.hidden = true;
+        }
+
+        if (emailExists) {
+            valid = false;
+        }
+
+        if (phone && phone.value.trim() && !isValidPhone(phone.value)) {
+            valid = false;
+        }
+
+        if (terms && !terms.checked) {
+            valid = false;
+        }
+
+        submitBtn.disabled = !valid;
+    }
 }
 
-function updateStrength(value, segments, label) {
+function updateStrength(value, segments, label, srLabel) {
     var score = 0;
     if (value.length >= 6) score++;
     if (/[A-Z]/.test(value) && /[a-z]/.test(value)) score++;
@@ -281,8 +517,12 @@ function updateStrength(value, segments, label) {
     if (/[^A-Za-z0-9]/.test(value)) score++;
 
     var labels = ['', 'Weak', 'Fair', 'Strong', 'Very strong'];
+    var text = value ? labels[score] : '';
     if (label) {
-        label.textContent = value ? labels[score] : '';
+        label.textContent = text;
+    }
+    if (srLabel) {
+        srLabel.textContent = value ? 'Password strength: ' + text : '';
     }
 
     segments.forEach(function (seg, i) {
@@ -294,43 +534,54 @@ function updateStrength(value, segments, label) {
             else seg.classList.add('is-strong');
         }
     });
+
+    return score;
 }
 
-function validateConfirm(confirm, password, touched) {
+function validateConfirm(confirm, password, touched, matchMessage) {
     if (!confirm || !password) {
         return;
     }
     var wrap = confirm.closest('.float-field');
     var icon = wrap ? wrap.querySelector('[data-match-icon]') : null;
+    var feedback = matchMessage || document.querySelector('[data-match-message]');
+
+    if (feedback) {
+        feedback.textContent = '';
+        feedback.className = 'confirm-match-feedback';
+        feedback.hidden = true;
+    }
+
     if (confirm.value === '') {
-        if (icon) icon.textContent = '';
-        if (touched) PawdarUI.clearFieldError(confirm);
-        return;
-    }
-    if (confirm.value === password.value) {
-        if (icon) { icon.textContent = '✓'; icon.className = 'match-icon is-match'; }
-        PawdarUI.clearFieldError(confirm);
-    } else {
-        if (icon) { icon.textContent = '✕'; icon.className = 'match-icon is-mismatch'; }
-        if (touched) {
-            PawdarUI.showFieldError(confirm, 'Passwords do not match.');
+        if (icon) {
+            icon.textContent = '';
+            icon.className = 'match-icon';
         }
-    }
-}
-
-function validateSignupForm() {
-    var form = document.getElementById('signup-form');
-    var submitBtn = form ? form.querySelector('[type="submit"]') : null;
-    if (!form || !submitBtn) {
+        if (touched) {
+            PawdarUI.clearFieldError(confirm);
+        }
         return;
     }
 
-    var valid = form.checkValidity();
-    form.querySelectorAll('.is-invalid').forEach(function () { valid = false; });
-    var password = form.querySelector('#password');
-    var confirm = form.querySelector('#password_confirm');
-    if (password && confirm && password.value !== confirm.value) {
-        valid = false;
+    if (confirm.value === password.value) {
+        if (icon) {
+            icon.textContent = '✓';
+            icon.className = 'match-icon is-match';
+        }
+        PawdarUI.clearFieldError(confirm);
+        if (feedback) {
+            feedback.textContent = 'Passwords match.';
+            feedback.className = 'confirm-match-feedback is-match';
+            feedback.hidden = false;
+        }
+        return;
     }
-    submitBtn.disabled = !valid;
+
+    if (icon) {
+        icon.textContent = '✕';
+        icon.className = 'match-icon is-mismatch';
+    }
+    if (touched) {
+        PawdarUI.showFieldError(confirm, 'Passwords don\'t match.');
+    }
 }
