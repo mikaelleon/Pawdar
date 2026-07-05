@@ -49,9 +49,10 @@ $now = date('H:i');
                 <input class="form-input" type="text" id="report-location" name="location" required placeholder=" ">
                 <label for="report-location">Location</label>
             </div>
-            <button type="button" class="btn-outline btn-sm btn-block" data-use-location style="margin-bottom:12px;">
+            <button type="button" class="btn-outline btn-sm btn-block" data-use-location style="margin-bottom:8px;">
                 <i data-lucide="crosshair"></i> Use my current location
             </button>
+            <p class="text-xs text-muted" data-geo-status style="margin-bottom:12px;"></p>
             <div class="form-group">
                 <label class="form-label" for="report-date">Date</label>
                 <input class="form-input" type="date" id="report-date" name="report_date" value="<?= $today ?>">

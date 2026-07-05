@@ -12,8 +12,10 @@ document.addEventListener('DOMContentLoaded', function () {
     var nextBtn = form.querySelector('[data-step-next]');
     var submitBtn = form.querySelector('[data-step-submit]');
     var nameInput = form.querySelector('[name="dog_name"]');
+    var requirementsHint = form.querySelector('[data-step-requirements]');
+    var nameError = form.querySelector('[data-field-error="dog-name"]');
+    var breedError = form.querySelector('[data-field-error="breed"]');
 
-    // ── Step navigation ───────────────────────────────────────────────────
     function showStep(n) {
         step = Math.max(1, Math.min(3, n));
         steps.forEach(function (el) {
@@ -45,24 +47,59 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (step === 3) renderReview();
         checkFormReady();
+        updateRequirementsHint();
         form.querySelector('.register-form-panel:not([hidden])')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function setInlineError(el, messageEl, show, message) {
+        if (el) el.classList.toggle('is-invalid', show);
+        if (!messageEl) return;
+        if (message) messageEl.textContent = message;
+        messageEl.hidden = !show;
+    }
+
+    function getStep1Missing() {
+        var missing = [];
+        if (!nameInput.value.trim()) missing.push('Dog name');
+        if (!breedReady()) missing.push('Breed selection');
+        return missing;
+    }
+
+    function updateRequirementsHint() {
+        if (!requirementsHint || step !== 1) {
+            if (requirementsHint) requirementsHint.hidden = true;
+            return;
+        }
+
+        var missing = getStep1Missing();
+        if (!missing.length) {
+            requirementsHint.hidden = true;
+            return;
+        }
+
+        requirementsHint.hidden = false;
+        requirementsHint.innerHTML = '<strong>Before you continue:</strong> ' + missing.join(' · ');
     }
 
     function validateStep1() {
-        var valid = true;
-        nameInput.classList.remove('is-invalid');
-        if (!nameInput.value.trim()) {
-            nameInput.classList.add('is-invalid');
-            valid = false;
+        var missing = getStep1Missing();
+        var nameMissing = !nameInput.value.trim();
+        var breedMissing = !breedReady();
+
+        setInlineError(nameInput, nameError, nameMissing);
+        setInlineError(breedInput, breedError, breedMissing);
+
+        if (nameMissing || breedMissing) {
+            updateRequirementsHint();
+            (nameMissing ? nameInput : breedInput).focus();
+            if (breedMissing && breedInput.value.trim().length >= 2 && !breedDropdown.hidden) {
+                showBreedDropdown();
+            }
+            return false;
         }
-        if (!breedReady()) {
-            breedInput.classList.add('is-invalid');
-            valid = false;
-        }
-        if (!valid) {
-            (nameInput.value.trim() ? breedInput : nameInput).focus();
-        }
-        return valid;
+
+        return true;
     }
 
     var vaccineNameInput = form.querySelector('[name="vaccine_name"]');
@@ -71,28 +108,21 @@ document.addEventListener('DOMContentLoaded', function () {
     var vetNameInput = form.querySelector('[name="vet_name"]');
 
     function clearFieldError(input) {
-        if (!input) {
-            return;
-        }
+        if (!input) return;
         input.classList.remove('is-invalid');
-        var msg = input.closest('.form-field')?.querySelector('[data-field-error]');
-        if (msg) {
-            msg.remove();
-        }
+        var msg = input.closest('.form-field')?.querySelector('[data-field-error]:not([data-field-error="dog-name"]):not([data-field-error="breed"])');
+        if (msg) msg.hidden = true;
     }
 
     function showFieldError(input, message) {
-        if (!input) {
-            return;
-        }
+        if (!input) return;
         input.classList.add('is-invalid');
         var field = input.closest('.form-field');
-        if (!field) {
-            return;
-        }
+        if (!field) return;
         var existing = field.querySelector('[data-field-error]');
         if (existing) {
             existing.textContent = message;
+            existing.hidden = false;
             return;
         }
         var el = document.createElement('p');
@@ -119,12 +149,12 @@ document.addEventListener('DOMContentLoaded', function () {
         var valid = true;
 
         if (!dateGiven) {
-            showFieldError(vaccineDateInput, 'Date given is required if adding a vaccine record.');
+            showFieldError(vaccineDateInput, 'Date given is required when adding vaccination details.');
             valid = false;
         }
 
         if (!nextDue) {
-            showFieldError(vaccineDueInput, 'Next due date is required if adding a vaccine record.');
+            showFieldError(vaccineDueInput, 'Next due date is required when adding vaccination details.');
             valid = false;
         }
 
@@ -142,28 +172,58 @@ document.addEventListener('DOMContentLoaded', function () {
         return valid;
     }
 
+    function isEmptyReviewValue(value) {
+        if (!value) return true;
+        var normalized = String(value).trim().toLowerCase();
+        return normalized === 'none' || normalized === '—' || normalized === 'not specified' || normalized === 'not added';
+    }
+
+    function reviewRow(label, value, emptyLabel) {
+        var display = value || emptyLabel || '—';
+        var empty = isEmptyReviewValue(display);
+        var rowClass = 'register-review-row' + (empty ? ' register-review-row--empty' : '');
+        return '<div class="' + rowClass + '"><dt>' + esc(label) + '</dt><dd>' + esc(display) + '</dd></div>';
+    }
+
+    function reviewSection(title, stepNum, rowsHtml) {
+        return '<section class="register-review-section">' +
+            '<div class="register-review-section-head">' +
+            '<h3>' + esc(title) + '</h3>' +
+            '<button type="button" class="register-review-edit" data-edit-step="' + stepNum + '">Edit</button>' +
+            '</div>' +
+            '<dl class="register-review-list">' + rowsHtml + '</dl>' +
+            '</section>';
+    }
+
     function renderReview() {
         var box = document.getElementById('register-review');
         if (!box) return;
         var fd = new FormData(form);
-        var photoName = photoInput && photoInput.files[0] ? photoInput.files[0].name : 'None';
-        box.innerHTML =
-            '<dl class="register-review-list">' +
-            reviewRow('Dog name', fd.get('dog_name')) +
-            reviewRow('Breed', fd.get('breed_search')) +
-            reviewRow('Sex', fd.get('gender')) +
-            reviewRow('Age', fd.get('age') ? fd.get('age') + ' years' : 'Not specified') +
-            reviewRow('Dog type', fd.get('dog_type')) +
-            reviewRow('Photo', photoName) +
-            reviewRow('Vaccination', fd.get('vaccine_name') || 'None') +
-            reviewRow('Date given', fd.get('vaccine_date') || '—') +
-            reviewRow('Next due', fd.get('vaccine_due') || '—') +
-            reviewRow('Veterinarian', fd.get('vet_name') || '—') +
-            '</dl>';
-    }
+        var photoFile = photoInput && photoInput.files[0];
+        var photoValue = photoFile ? photoFile.name : 'Not added';
 
-    function reviewRow(label, value) {
-        return '<div class="register-review-row"><dt>' + esc(label) + '</dt><dd>' + esc(value || '—') + '</dd></div>';
+        box.innerHTML =
+            reviewSection('Basic info', 1,
+                reviewRow('Dog name', fd.get('dog_name')) +
+                reviewRow('Breed', fd.get('breed_search')) +
+                reviewRow('Sex', fd.get('gender')) +
+                reviewRow('Age', fd.get('age') ? fd.get('age') + ' years' : 'Not specified', 'Not specified') +
+                reviewRow('Dog type', fd.get('dog_type')) +
+                reviewRow('Photo', photoValue, 'Not added')
+            ) +
+            reviewSection('Health records', 2,
+                reviewRow('Vaccination', fd.get('vaccine_name'), 'Not added') +
+                reviewRow('Date given', fd.get('vaccine_date'), 'Not added') +
+                reviewRow('Next due', fd.get('vaccine_due'), 'Not added') +
+                reviewRow('Veterinarian', fd.get('vet_name'), 'Not added') +
+                reviewRow('Health notes', fd.get('health_notes'), 'Not added')
+            );
+
+        box.querySelectorAll('[data-edit-step]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                showStep(parseInt(btn.getAttribute('data-edit-step'), 10));
+            });
+        });
     }
 
     function esc(value) {
@@ -172,7 +232,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return node.innerHTML;
     }
 
-    // ── Breed autocomplete ────────────────────────────────────────────────
     var breedWrapper = form.querySelector('[data-breed-wrapper]');
     var breedInput = form.querySelector('[data-breed-input]');
     var breedDropdown = form.querySelector('[data-breed-dropdown]');
@@ -199,6 +258,10 @@ document.addEventListener('DOMContentLoaded', function () {
         breedTimer = setTimeout(function () {
             if (query.length < 2) {
                 hideBreedDropdown();
+                if (query.length > 0) {
+                    breedDropdown.innerHTML = '<li class="breed-dropdown-hint">Type at least 2 letters to search breeds.</li>';
+                    showBreedDropdown();
+                }
                 return;
             }
             breedDropdown.innerHTML = '<li class="breed-dropdown-loading">Searching…</li>';
@@ -209,7 +272,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     breedResults = (data && data.breeds) ? data.breeds : [];
                     renderBreeds(query);
                 })
-                .catch(hideBreedDropdown);
+                .catch(function () {
+                    breedDropdown.innerHTML = '<li class="breed-dropdown-hint">Could not load breeds. Try again.</li>';
+                    showBreedDropdown();
+                });
         }, 250);
     }
 
@@ -227,11 +293,12 @@ document.addEventListener('DOMContentLoaded', function () {
             var size = breed.size_category
                 ? '<span class="dditem-size">' + esc(breed.size_category) + '</span>'
                 : '';
-            return '<li class="breed-dropdown-item" role="option" data-index="' + i + '">' +
+            return '<li class="breed-dropdown-item" role="option" data-index="' + i + '" id="breed-option-' + i + '">' +
                 '<span class="dditem-name">' + highlight(breed.breed_name, query) + '</span>' + size + '</li>';
         }).join('');
         breedDropdown.querySelectorAll('.breed-dropdown-item').forEach(function (item) {
-            item.addEventListener('click', function () {
+            item.addEventListener('mousedown', function (e) {
+                e.preventDefault();
                 selectBreed(breedResults[parseInt(item.dataset.index, 10)]);
             });
             item.addEventListener('mouseenter', function () {
@@ -256,6 +323,7 @@ document.addEventListener('DOMContentLoaded', function () {
         breedClear.hidden = false;
         breedInput.classList.remove('is-invalid', 'breed-input--custom');
         breedInput.classList.add('breed-input--selected');
+        setInlineError(breedInput, breedError, false);
         breedSize.textContent = breed.size_category || '';
         breedSize.hidden = !breed.size_category;
         breedTemperament.textContent = breed.temperament_notes || '';
@@ -265,19 +333,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function setBreedActive(index) {
         var items = breedDropdown.querySelectorAll('.breed-dropdown-item');
-        items.forEach(function (item, i) { item.classList.toggle('active', i === index); });
+        items.forEach(function (item, i) {
+            item.classList.toggle('active', i === index);
+            item.setAttribute('aria-selected', i === index ? 'true' : 'false');
+        });
         if (items[index]) items[index].scrollIntoView({ block: 'nearest' });
         breedActive = index;
+        if (items[index]) breedInput.setAttribute('aria-activedescendant', items[index].id);
     }
 
     function showBreedDropdown() {
         breedDropdown.hidden = false;
+        breedWrapper.classList.add('is-open');
         breedInput.setAttribute('aria-expanded', 'true');
     }
 
     function hideBreedDropdown() {
         breedDropdown.hidden = true;
+        breedWrapper.classList.remove('is-open');
         breedInput.setAttribute('aria-expanded', 'false');
+        breedInput.removeAttribute('aria-activedescendant');
         breedActive = -1;
     }
 
@@ -289,8 +364,19 @@ document.addEventListener('DOMContentLoaded', function () {
             breedSelected.hidden = true;
             breedInput.classList.remove('breed-input--selected', 'breed-input--custom');
             breedClear.hidden = q.length === 0;
+            setInlineError(breedInput, breedError, false);
             fetchBreeds(q);
             checkFormReady();
+        });
+
+        breedInput.addEventListener('focus', function () {
+            var q = breedInput.value.trim();
+            if (q.length >= 2 && breedResults.length) {
+                showBreedDropdown();
+            } else if (q.length > 0 && q.length < 2) {
+                breedDropdown.innerHTML = '<li class="breed-dropdown-hint">Type at least 2 letters to search breeds.</li>';
+                showBreedDropdown();
+            }
         });
 
         breedInput.addEventListener('keydown', function (e) {
@@ -320,6 +406,8 @@ document.addEventListener('DOMContentLoaded', function () {
             breedNoMatch.hidden = true;
             breedSelected.hidden = true;
             breedInput.classList.remove('breed-input--selected', 'breed-input--custom', 'is-invalid');
+            setInlineError(breedInput, breedError, false);
+            hideBreedDropdown();
             breedInput.focus();
             checkFormReady();
         });
@@ -331,6 +419,8 @@ document.addEventListener('DOMContentLoaded', function () {
             breedClear.hidden = false;
             breedInput.classList.remove('is-invalid', 'breed-input--selected');
             breedInput.classList.add('breed-input--custom');
+            setInlineError(breedInput, breedError, false);
+            hideBreedDropdown();
             checkFormReady();
         });
 
@@ -339,35 +429,79 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // ── Continue ready state ──────────────────────────────────────────────
     function checkFormReady() {
-        if (!nextBtn) {
-            return;
-        }
+        if (!nextBtn) return;
         if (step === 1) {
             var ready = nameInput.value.trim().length > 0 && breedReady();
             nextBtn.disabled = !ready;
             nextBtn.classList.toggle('btn--ready', ready);
+            nextBtn.setAttribute('aria-disabled', ready ? 'false' : 'true');
+            updateRequirementsHint();
             return;
         }
         nextBtn.disabled = false;
         nextBtn.classList.add('btn--ready');
+        nextBtn.setAttribute('aria-disabled', 'false');
+        if (requirementsHint) requirementsHint.hidden = true;
     }
 
     nameInput.addEventListener('input', function () {
-        nameInput.classList.remove('is-invalid');
+        setInlineError(nameInput, nameError, false);
         checkFormReady();
     });
 
-    // ── Photo upload ──────────────────────────────────────────────────────
+    nameInput.addEventListener('blur', function () {
+        if (step === 1 && !nameInput.value.trim()) {
+            setInlineError(nameInput, nameError, true);
+        }
+    });
+
+    [vaccineNameInput, vetNameInput, vaccineDateInput, vaccineDueInput].forEach(function (input) {
+        if (!input) return;
+        input.addEventListener('input', function () {
+            clearFieldError(vaccineDateInput);
+            clearFieldError(vaccineDueInput);
+        });
+    });
+
     var photoInput = form.querySelector('[data-photo-input]');
     var photoPreview = form.querySelector('[data-photo-preview]');
     var photoLabel = form.querySelector('[data-photo-label]');
     var photoUpload = form.querySelector('[data-photo-upload]');
+    var photoIcon = form.querySelector('[data-photo-icon]');
+    var photoRemove = form.querySelector('[data-photo-remove]');
+    var photoError = form.querySelector('[data-photo-error]');
+
+    function clearPhotoError() {
+        if (!photoError) return;
+        photoError.hidden = true;
+        photoError.textContent = '';
+        photoUpload.classList.remove('is-invalid');
+    }
+
+    function showPhotoError(message) {
+        if (!photoError) return;
+        photoError.textContent = message;
+        photoError.hidden = false;
+        photoUpload.classList.add('is-invalid');
+    }
+
+    function resetPhoto() {
+        if (photoInput) photoInput.value = '';
+        if (photoPreview) {
+            photoPreview.src = '';
+            photoPreview.hidden = true;
+        }
+        if (photoLabel) photoLabel.textContent = 'Tap to add a photo (JPG or PNG, max 5MB)';
+        if (photoIcon) photoIcon.hidden = false;
+        if (photoRemove) photoRemove.hidden = true;
+        if (photoUpload) photoUpload.classList.remove('has-preview');
+        clearPhotoError();
+    }
 
     if (photoInput && photoUpload) {
         photoUpload.addEventListener('click', function (e) {
-            if (e.target === photoInput) return;
+            if (e.target === photoInput || e.target.closest('[data-photo-remove]')) return;
             photoInput.click();
         });
         photoUpload.addEventListener('dragover', function (e) {
@@ -387,18 +521,30 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    if (photoRemove) {
+        photoRemove.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            resetPhoto();
+        });
+    }
+
     function handlePhoto(file) {
+        clearPhotoError();
         if (!/^image\/(jpeg|png)$/.test(file.type)) {
-            alert('Only JPG and PNG files are allowed.');
+            showPhotoError('Only JPG and PNG files are allowed.');
             photoInput.value = '';
             return;
         }
         if (file.size > 5 * 1024 * 1024) {
-            alert('Photo must be under 5 MB.');
+            showPhotoError('Photo must be under 5 MB. Choose a smaller file.');
             photoInput.value = '';
             return;
         }
+
         if (photoLabel) photoLabel.textContent = file.name;
+        if (photoIcon) photoIcon.hidden = true;
+        if (photoRemove) photoRemove.hidden = false;
         if (photoPreview) {
             var reader = new FileReader();
             reader.onload = function () {
@@ -408,7 +554,6 @@ document.addEventListener('DOMContentLoaded', function () {
             };
             reader.readAsDataURL(file);
         }
-        // keep dropped file in the input for submission
         if (file && photoInput.files.length === 0) {
             var dt = new DataTransfer();
             dt.items.add(file);
@@ -416,15 +561,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // ── Buttons ───────────────────────────────────────────────────────────
     if (backBtn) backBtn.addEventListener('click', function () { showStep(step - 1); });
     if (nextBtn) nextBtn.addEventListener('click', function () {
-        if (step === 1 && !validateStep1()) {
-            return;
-        }
-        if (step === 2 && !validateStep2()) {
-            return;
-        }
+        if (step === 1 && !validateStep1()) return;
+        if (step === 2 && !validateStep2()) return;
         showStep(step + 1);
     });
     form.addEventListener('submit', function (e) {

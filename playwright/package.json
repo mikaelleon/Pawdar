@@ -1,0 +1,24 @@
+{
+  "name": "pawdar-playwright",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Playwright UI and functional tests for Pawdar",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:auth": "playwright test tests/auth.login.spec.ts tests/auth.forgot-password.spec.ts",
+    "test:feed": "playwright test tests/feed.spec.ts tests/report-incident.spec.ts",
+    "test:registry": "playwright test tests/registry.spec.ts tests/register-dog.spec.ts",
+    "test:report": "playwright test tests/report-incident.spec.ts",
+    "report": "playwright show-report",
+    "codegen": "playwright codegen"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.51.0",
+    "@types/node": "^22.13.10",
+    "dotenv": "^16.4.7",
+    "typescript": "^5.8.2"
+  }
+}

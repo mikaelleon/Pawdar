@@ -161,6 +161,36 @@ function fetch_unread_notification_count(PDO $pdo, int $userId): int
 }
 
 /**
+ * Returns count of unresolved incidents in a barangay.
+ */
+function fetch_active_incident_count(PDO $pdo, string $barangay): int
+{
+    $stmt = $pdo->prepare('
+        SELECT COUNT(*)
+        FROM incident i
+        LEFT JOIN `case` c ON c.IncidentID = i.IncidentID
+        WHERE i.Location LIKE :barangay
+          AND (c.CaseStatus IS NULL OR c.CaseStatus NOT IN (\'Resolved\'))
+    ');
+    $stmt->execute([':barangay' => '%' . $barangay . '%']);
+
+    return (int) $stmt->fetchColumn();
+}
+
+/**
+ * Returns bell badge count: unread notifications, or active incidents when none are unread.
+ */
+function fetch_bell_badge_count(PDO $pdo, int $userId, string $barangay): int
+{
+    $unread = fetch_unread_notification_count($pdo, $userId);
+    if ($unread > 0) {
+        return $unread;
+    }
+
+    return fetch_active_incident_count($pdo, $barangay);
+}
+
+/**
  * Creates notifications for users subscribed to a barangay when a new incident is reported.
  */
 function notify_barangay_of_incident(PDO $pdo, int $incidentId, string $barangay, int $reporterId, string $title): void

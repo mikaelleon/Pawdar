@@ -227,6 +227,58 @@ function request_csrf_token(): ?string
 }
 
 /**
+ * Returns Lucide icon for a severity level.
+ */
+function severity_icon_name(string $severity): string
+{
+    return match ($severity) {
+        'Severe' => 'alert-triangle',
+        'Moderate' => 'alert-circle',
+        default => 'check-circle',
+    };
+}
+
+/**
+ * Returns CSS classes for a severity badge.
+ */
+function severity_badge_class(string $severity): string
+{
+    return match ($severity) {
+        'Severe' => 'severity-badge severity-severe',
+        'Moderate' => 'severity-badge severity-moderate',
+        default => 'severity-badge severity-mild',
+    };
+}
+
+/**
+ * Renders an accessible severity badge with icon and label.
+ */
+function severity_badge_html(string $severity): string
+{
+    $class = severity_badge_class($severity);
+    $icon = severity_icon_name($severity);
+    $label = htmlspecialchars($severity, ENT_QUOTES, 'UTF-8');
+
+    return '<span class="' . $class . '" role="status" aria-label="Severity: ' . $label . '">'
+        . '<i data-lucide="' . $icon . '" aria-hidden="true"></i>'
+        . '<span class="severity-label">' . $label . '</span></span>';
+}
+
+/**
+ * Renders notification bell badge count.
+ */
+function render_bell_badge(int $count): void
+{
+    if ($count > 0) {
+        $display = $count > 99 ? '99+' : (string) $count;
+        echo '<span class="notification-badge" data-notification-count aria-label="' . (int) $count . ' unread">' . htmlspecialchars($display) . '</span>';
+        return;
+    }
+
+    echo '<span class="notification-badge is-hidden" data-notification-count aria-hidden="true">0</span>';
+}
+
+/**
  * Sends JSON response and exits.
  *
  * @param array<string, mixed> $payload

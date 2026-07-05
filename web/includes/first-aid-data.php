@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/db.php';
 
 /**
@@ -56,11 +57,7 @@ function fetch_first_aid_by_type(PDO $pdo, string $incidentType): ?array
  */
 function first_aid_severity_badge(string $severity): string
 {
-    return match ($severity) {
-        'Severe' => 'badge-bite',
-        'Moderate' => 'badge-investigating',
-        default => 'badge-verified',
-    };
+    return severity_badge_class($severity);
 }
 
 /**
@@ -71,6 +68,6 @@ function first_aid_severity_accent(string $severity): string
     return match ($severity) {
         'Severe' => 'accent-bite',
         'Moderate' => 'accent-injured',
-        default => 'accent-teal',
+        default => 'accent-resolved',
     };
 }

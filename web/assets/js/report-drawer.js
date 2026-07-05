@@ -107,15 +107,30 @@
         });
 
         var geoBtn = f.querySelector('[data-use-location]');
+        var geoStatus = f.querySelector('[data-geo-status]');
         if (geoBtn) {
             geoBtn.addEventListener('click', function () {
-                if (!navigator.geolocation) return;
+                if (!navigator.geolocation) {
+                    if (geoStatus) geoStatus.textContent = 'Geolocation is not supported on this device.';
+                    if (window.PawdarUI && PawdarUI.showToast) {
+                        PawdarUI.showToast('Geolocation is not supported on this device.', 'error');
+                    }
+                    return;
+                }
                 geoBtn.disabled = true;
+                if (geoStatus) geoStatus.textContent = 'Getting your location…';
                 navigator.geolocation.getCurrentPosition(function (pos) {
                     f.querySelector('#report-location').value =
                         pos.coords.latitude.toFixed(5) + ', ' + pos.coords.longitude.toFixed(5);
                     geoBtn.disabled = false;
-                }, function () { geoBtn.disabled = false; });
+                    if (geoStatus) geoStatus.textContent = 'Location captured.';
+                }, function () {
+                    geoBtn.disabled = false;
+                    if (geoStatus) geoStatus.textContent = 'Could not get location. Enter it manually.';
+                    if (window.PawdarUI && PawdarUI.showToast) {
+                        PawdarUI.showToast('Could not get your location. Please enter it manually.', 'error');
+                    }
+                }, { enableHighAccuracy: true, timeout: 10000 });
             });
         }
 

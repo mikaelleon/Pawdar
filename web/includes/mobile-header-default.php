@@ -1,15 +1,17 @@
 <?php
-$userInitials = htmlspecialchars((string) ($_SESSION['user_initials'] ?? '?'));
-$avatarClass = avatar_color_class((int) ($_SESSION['user_id'] ?? 0));
-$notificationCount = 0;
+$bellBadgeCount = 0;
 
 try {
     require_once __DIR__ . '/incidents.php';
     if (isset($_SESSION['user_id'])) {
-        $notificationCount = fetch_unread_notification_count(db(), (int) $_SESSION['user_id']);
+        $bellBadgeCount = fetch_bell_badge_count(
+            db(),
+            (int) $_SESSION['user_id'],
+            (string) ($_SESSION['user_barangay'] ?? '')
+        );
     }
 } catch (Throwable $exception) {
-    $notificationCount = 0;
+    $bellBadgeCount = 0;
 }
 ?>
 <header class="app-mobile-header hidden-desktop">
@@ -32,11 +34,7 @@ try {
             <div class="notification-wrap">
                 <button type="button" class="notification-bell-btn notification-bell-btn--light" data-notification-bell aria-label="Notifications" aria-expanded="false" aria-haspopup="true">
                     <i data-lucide="bell" style="color:#fff;"></i>
-                    <?php if ($notificationCount > 0): ?>
-                        <span class="notification-badge" data-notification-count><?= (int) $notificationCount ?></span>
-                    <?php else: ?>
-                        <span class="notification-badge is-hidden" data-notification-count>0</span>
-                    <?php endif; ?>
+                    <?php render_bell_badge($bellBadgeCount); ?>
                 </button>
                 <div class="notification-dropdown" data-notification-dropdown hidden>
                     <div class="notification-dropdown-header">Notifications</div>
@@ -46,7 +44,11 @@ try {
                     </div>
                 </div>
             </div>
-            <div class="avatar avatar-sm <?= htmlspecialchars($avatarClass) ?>"><?= $userInitials ?></div>
+            <?php
+            $avatarSize = 'sm';
+            $avatarLight = true;
+            require __DIR__ . '/../partials/avatar-menu.php';
+            ?>
         </div>
     </div>
     <div class="search-bar">

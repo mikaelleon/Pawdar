@@ -77,7 +77,8 @@ app_layout_start('registry', 'Register Dog', [
 
                 <div class="form-field">
                     <label class="field-label" for="dog-name">Dog name *</label>
-                    <input class="field-input" id="dog-name" type="text" name="dog_name" required autocomplete="off" placeholder="e.g. Bruno">
+                    <input class="field-input" id="dog-name" type="text" name="dog_name" required autocomplete="off" placeholder="e.g. Bruno" data-required-step="1">
+                    <p class="field-error" data-field-error="dog-name" hidden>Dog name is required.</p>
                 </div>
 
                 <div class="form-field">
@@ -96,6 +97,8 @@ app_layout_start('registry', 'Register Dog', [
                         <input type="hidden" name="breed_id" value="" data-breed-id>
                         <ul class="breed-dropdown" id="breed-dropdown" role="listbox" aria-label="Breed suggestions" data-breed-dropdown hidden></ul>
                     </div>
+                    <p class="field-hint" data-breed-hint>Type at least 2 letters, then pick a breed from the list.</p>
+                    <p class="field-error" data-field-error="breed" hidden>Select a breed from the list or use a custom name.</p>
                     <p class="field-hint breed-no-match" data-breed-no-match hidden>
                         No match found.
                         <button type="button" class="breed-use-custom" data-breed-use-custom>Use “<span data-breed-custom-label></span>” anyway</button>
@@ -144,16 +147,24 @@ app_layout_start('registry', 'Register Dog', [
                     <span class="field-label">Photo (optional)</span>
                     <label class="register-photo-upload" data-photo-upload>
                         <input type="file" name="photo" accept="image/jpeg,image/png" hidden data-photo-input>
-                        <i data-lucide="camera"></i>
+                        <i data-lucide="camera" data-photo-icon></i>
                         <span data-photo-label>Tap to add a photo (JPG or PNG, max 5MB)</span>
-                        <img class="register-photo-preview" data-photo-preview hidden alt="">
+                        <img class="register-photo-preview" data-photo-preview hidden alt="Dog photo preview">
+                        <button type="button" class="register-photo-remove" data-photo-remove hidden>Remove photo</button>
                     </label>
+                    <p class="field-error" data-photo-error hidden></p>
                 </div>
+
+                <div class="register-requirements-hint" data-step-requirements hidden role="status" aria-live="polite"></div>
             </div>
 
             <div class="register-form-panel" data-form-step="2" hidden>
                 <h2 class="register-form-title">Health records</h2>
-                <p class="register-form-desc">Optional vaccination details. You can add or verify records later.</p>
+                <p class="register-form-desc">Optional — skip this step if you do not have vaccination details yet. You can add or verify records later from the dog profile.</p>
+                <div class="register-health-callout" role="note">
+                    <i data-lucide="info"></i>
+                    <p>If you enter a <strong>vaccination name</strong> or <strong>veterinarian</strong>, both <strong>date given</strong> and <strong>next due date</strong> become required.</p>
+                </div>
 
                 <div class="form-field">
                     <label class="field-label" for="vaccine-name">Vaccination name</label>
@@ -163,11 +174,17 @@ app_layout_start('registry', 'Register Dog', [
                 <div class="register-form-row">
                     <div class="form-field">
                         <label class="field-label" for="vaccine-date">Date given</label>
-                        <input class="field-input" id="vaccine-date" type="date" name="vaccine_date">
+                        <div class="field-date">
+                            <input class="field-input field-date-input" id="vaccine-date" type="date" name="vaccine_date">
+                            <i data-lucide="calendar" class="field-date-icon" aria-hidden="true"></i>
+                        </div>
                     </div>
                     <div class="form-field">
                         <label class="field-label" for="vaccine-due">Next due date</label>
-                        <input class="field-input" id="vaccine-due" type="date" name="vaccine_due">
+                        <div class="field-date">
+                            <input class="field-input field-date-input" id="vaccine-due" type="date" name="vaccine_due">
+                            <i data-lucide="calendar" class="field-date-icon" aria-hidden="true"></i>
+                        </div>
                     </div>
                 </div>
 

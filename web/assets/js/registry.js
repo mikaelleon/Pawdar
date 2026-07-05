@@ -40,15 +40,24 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!grid) return;
         if (reset) offset = 0;
 
+        if (reset) {
+            grid.innerHTML = getRegistrySkeletonHtml(6);
+        }
+
         var params = new URLSearchParams(filters());
         params.set('offset', String(offset));
 
         fetch('ajax/registry_dogs.php?' + params.toString())
             .then(function (res) { return res.json(); })
             .then(function (data) {
-                if (!data.success) return;
+                if (!data.success) {
+                    if (reset) {
+                        grid.innerHTML = getRegistryErrorHtml('Could not load registry results.');
+                    }
+                    return;
+                }
                 if (reset) {
-                    grid.innerHTML = data.html || '<div class="registry-empty"><p class="empty-title">No dogs found</p></div>';
+                    grid.innerHTML = data.html || getRegistryEmptyHtml();
                 } else if (data.html) {
                     grid.insertAdjacentHTML('beforeend', data.html);
                 }
@@ -57,7 +66,34 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (countEl) countEl.textContent = offset + ' of ' + data.total + ' dogs';
                 if (resultsLabel) resultsLabel.textContent = 'Showing ' + offset + ' of ' + data.total + ' dogs';
                 if (window.lucide) lucide.createIcons();
+            })
+            .catch(function () {
+                if (reset) {
+                    grid.innerHTML = getRegistryErrorHtml('Network error. Check your connection and retry.');
+                }
             });
+    }
+
+    function getRegistryEmptyHtml() {
+        return '<div class="registry-empty"><p class="empty-title">No dogs found</p><p class="empty-subtitle">Try a different filter or search term.</p></div>';
+    }
+
+    function getRegistryErrorHtml(message) {
+        return '<div class="registry-empty page-error-state">' +
+            '<p class="empty-title">Something went wrong</p>' +
+            '<p class="empty-subtitle">' + message + '</p>' +
+            '<button type="button" class="btn-primary btn-sm" onclick="location.reload()">Retry</button></div>';
+    }
+
+    function getRegistrySkeletonHtml(count) {
+        var html = '';
+        for (var i = 0; i < count; i++) {
+            html += '<div class="dog-card dog-card-skeleton card-bordered" aria-hidden="true">' +
+                '<div class="skeleton-line skeleton-shimmer" style="height:120px;border-radius:12px;margin-bottom:12px;"></div>' +
+                '<div class="skeleton-line skeleton-shimmer" style="width:70%;height:16px;margin-bottom:8px;"></div>' +
+                '<div class="skeleton-line skeleton-shimmer" style="width:45%;height:12px;"></div></div>';
+        }
+        return html;
     }
 
     applyView(localStorage.getItem(viewStorageKey) || 'tiles');

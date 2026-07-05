@@ -11,14 +11,46 @@ app_layout_start('map', 'Incident Map', [
     'showSearch' => false,
     'scripts' => ['assets/js/map.js'],
     'report_drawer' => true,
+    'breadcrumbs' => [['label' => 'Map']],
 ]);
 ?>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
 
-<div class="map-full-wrap">
+<div class="map-full-wrap" data-map-page>
     <div id="pawdar-map" class="pawdar-leaflet-map"></div>
+
+    <div class="map-state-overlay map-loading-state" data-map-loading hidden aria-live="polite">
+        <div class="state-panel">
+            <div class="state-spinner" aria-hidden="true"></div>
+            <p class="state-title">Loading map…</p>
+        </div>
+    </div>
+
+    <div class="map-state-overlay map-empty-state" data-map-empty hidden>
+        <div class="state-panel">
+            <svg class="state-illustration" viewBox="0 0 200 160" aria-hidden="true">
+                <ellipse cx="100" cy="140" rx="70" ry="10" fill="#C0DAB5" opacity="0.5"/>
+                <path d="M40 110 L100 50 L160 110 Z" fill="none" stroke="#6C8B9F" stroke-width="3"/>
+                <circle cx="100" cy="95" r="18" fill="#87AFAE"/>
+                <path d="M92 95 L98 101 L110 87" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/>
+            </svg>
+            <p class="state-title">No incidents in this area</p>
+            <p class="text-sm text-muted">Try widening the date range or changing filters.</p>
+        </div>
+    </div>
+
+    <div class="map-geo-banner" data-map-geo-error hidden role="alert">
+        <i data-lucide="map-pin-off"></i>
+        <span>Location unavailable. Showing default map area.</span>
+        <button type="button" class="map-geo-dismiss" data-map-geo-dismiss aria-label="Dismiss">×</button>
+    </div>
+
+    <button type="button" class="map-locate-btn" data-map-locate aria-label="Center map on my location">
+        <i data-lucide="crosshair"></i>
+        <span class="hidden-mobile">My location</span>
+    </button>
 
     <div class="map-overlay-top hidden-mobile">
         <div class="card card-body map-toolbar">

@@ -16,10 +16,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $update = $pdo->prepare('UPDATE notifications SET is_read = 1 WHERE user_id = :user_id AND is_read = 0');
     $update->execute([':user_id' => $userId]);
 
-    json_response(['success' => true, 'count' => 0]);
+    json_response([
+        'success' => true,
+        'count' => fetch_bell_badge_count($pdo, $userId, (string) ($_SESSION['user_barangay'] ?? '')),
+    ]);
 }
 
-$count = fetch_unread_notification_count($pdo, $userId);
+$count = fetch_bell_badge_count($pdo, $userId, (string) ($_SESSION['user_barangay'] ?? ''));
 
 $stmt = $pdo->prepare('
     SELECT notification_id, message, link, created_at, is_read

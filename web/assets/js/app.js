@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     initNotificationBell();
+    initAvatarMenu();
 });
 
 function getCsrfToken() {
@@ -141,9 +142,12 @@ function loadNotifications(dropdown, markRead) {
                         'X-CSRF-Token': getCsrfToken()
                     },
                     body: JSON.stringify({ csrf_token: getCsrfToken() })
-                }).then(function () {
-                    updateNotificationBadges(0);
-                });
+                }).then(function (res) { return res.json(); })
+                    .then(function (result) {
+                        if (result.success) {
+                            updateNotificationBadges(result.count);
+                        }
+                    });
             }
         });
 }
@@ -170,8 +174,73 @@ function pollNotifications() {
 
 function updateNotificationBadges(count) {
     document.querySelectorAll('[data-notification-count]').forEach(function (badge) {
-        badge.textContent = count;
+        var display = count > 99 ? '99+' : String(count);
+        badge.textContent = display;
         badge.classList.toggle('is-hidden', count <= 0);
+        if (count > 0) {
+            badge.setAttribute('aria-label', count + ' unread');
+            badge.removeAttribute('aria-hidden');
+        } else {
+            badge.removeAttribute('aria-label');
+            badge.setAttribute('aria-hidden', 'true');
+        }
+    });
+}
+
+function initAvatarMenu() {
+    var triggers = document.querySelectorAll('[data-avatar-menu]');
+    if (!triggers.length) {
+        return;
+    }
+
+    triggers.forEach(function (trigger) {
+        trigger.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            var wrap = trigger.closest('.avatar-menu-wrap');
+            var dropdown = wrap ? wrap.querySelector('[data-avatar-dropdown]') : null;
+            if (!dropdown) {
+                return;
+            }
+
+            var isOpen = !dropdown.hasAttribute('hidden');
+            closeAllAvatarMenus();
+            if (isOpen) {
+                return;
+            }
+
+            dropdown.removeAttribute('hidden');
+            trigger.setAttribute('aria-expanded', 'true');
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        });
+    });
+
+    document.querySelectorAll('[data-avatar-dropdown]').forEach(function (dropdown) {
+        dropdown.addEventListener('click', function (event) {
+            event.stopPropagation();
+        });
+    });
+
+    document.addEventListener('click', function () {
+        closeAllAvatarMenus();
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            closeAllAvatarMenus();
+        }
+    });
+}
+
+function closeAllAvatarMenus() {
+    document.querySelectorAll('[data-avatar-dropdown]').forEach(function (dropdown) {
+        dropdown.setAttribute('hidden', '');
+    });
+    document.querySelectorAll('[data-avatar-menu]').forEach(function (trigger) {
+        trigger.setAttribute('aria-expanded', 'false');
     });
 }
 

@@ -21,6 +21,7 @@ $mapPins = fetch_map_pins($pdo, $barangay, $incidentType);
 app_layout_start('feed', 'Home Feed', [
     'scripts' => ['assets/js/feed.js'],
     'report_drawer' => true,
+    'breadcrumbs' => [['label' => 'Feed']],
 ]);
 
 $typeMap = incident_type_map();

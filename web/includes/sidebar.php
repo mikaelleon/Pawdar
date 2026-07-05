@@ -27,8 +27,9 @@ $navItems = [
             <?php if (!role_can_see_nav($key, (string) ($_SESSION['user_role'] ?? ''))) {
                 continue;
             } ?>
-            <a href="<?= htmlspecialchars($item['href']) ?>" class="sidebar-link<?= $activeNav === $key ? ' is-active' : '' ?>">
-                <i data-lucide="<?= htmlspecialchars($item['icon']) ?>"></i> <?= htmlspecialchars($item['label']) ?>
+            <a href="<?= htmlspecialchars($item['href']) ?>" class="sidebar-link<?= $activeNav === $key ? ' is-active' : '' ?>"<?= $activeNav === $key ? ' aria-current="page"' : '' ?>>
+                <span class="sidebar-link-icon"><i data-lucide="<?= htmlspecialchars($item['icon']) ?>"></i></span>
+                <span class="sidebar-link-label"><?= htmlspecialchars($item['label']) ?></span>
             </a>
         <?php endforeach; ?>
     </nav>

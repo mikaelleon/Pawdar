@@ -16,9 +16,7 @@ if (count($guides) > 0) {
     <div class="bento-card-header">
         <span class="bento-icon" aria-hidden="true">🩹</span>
         <span class="bento-label">First aid reminder</span>
-        <span class="severity-chip severity-<?= htmlspecialchars(strtolower((string) $guide['severity_level'])) ?>">
-            <?= htmlspecialchars((string) $guide['severity_level']) ?>
-        </span>
+        <?= severity_badge_html((string) $guide['severity_level']) ?>
     </div>
     <p class="firstaid-type"><?= htmlspecialchars((string) $guide['incident_type']) ?></p>
     <p class="firstaid-step">Step 1: <?= htmlspecialchars($firstStep) ?></p>

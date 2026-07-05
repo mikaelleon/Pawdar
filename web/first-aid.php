@@ -27,10 +27,8 @@ app_layout_start('first-aid', 'First Aid Guides', [
         <div class="first-aid-list scr" style="max-height:620px;overflow-y:auto;" data-guide-list>
             <?php foreach ($guides as $guide):
                 $active = (int) $guide['guide_id'] === (int) ($selected['guide_id'] ?? 0);
-                $badge = first_aid_severity_badge((string) $guide['severity_level']);
                 $accent = first_aid_severity_accent((string) $guide['severity_level']);
                 $icon = $guide['icon'] ?? 'dog';
-                $severityIcon = $guide['severity_level'] === 'Severe' ? '⚠' : ($guide['severity_level'] === 'Moderate' ? '~' : '✓');
             ?>
                 <a href="first-aid.php?id=<?= (int) $guide['guide_id'] ?>"
                    class="incident-card card-bordered first-aid-card<?= $active ? ' is-active' : '' ?> card-hoverable"
@@ -40,7 +38,7 @@ app_layout_start('first-aid', 'First Aid Guides', [
                     <div class="card-body" style="flex:1;">
                         <div class="flex justify-between items-center">
                             <div class="flex items-center gap-sm"><i data-lucide="<?= htmlspecialchars((string) $icon) ?>"></i><span style="font-weight:500;"><?= htmlspecialchars((string) $guide['incident_type']) ?></span></div>
-                            <span class="badge <?= $badge ?>"><?= $severityIcon ?> <?= htmlspecialchars((string) $guide['severity_level']) ?></span>
+                            <?= severity_badge_html((string) $guide['severity_level']) ?>
                         </div>
                         <?php if ($active): ?><div class="text-xs" style="font-weight:500;margin-top:10px;color:var(--burnt-peach);">Viewing →</div><?php endif; ?>
                     </div>
@@ -57,7 +55,7 @@ app_layout_start('first-aid', 'First Aid Guides', [
                     <div class="type-card-icon" style="background:rgba(224,118,94,.14);"><i data-lucide="<?= htmlspecialchars((string) ($selected['icon'] ?? 'dog')) ?>" style="color:var(--burnt-peach);"></i></div>
                     <h2 style="font-weight:500;font-size:24px;margin:0;"><?= htmlspecialchars((string) $selected['title']) ?></h2>
                 </div>
-                <span class="badge <?= first_aid_severity_badge((string) $selected['severity_level']) ?>"><?= htmlspecialchars((string) $selected['severity_level']) ?></span>
+                <?= severity_badge_html((string) $selected['severity_level']) ?>
             </div>
             <p class="text-xs text-muted mt-sm flex items-center gap-sm"><i data-lucide="book-open"></i> Source: <?= htmlspecialchars((string) $selected['source_citation']) ?></p>
 

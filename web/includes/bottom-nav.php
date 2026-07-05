@@ -20,9 +20,9 @@ $bottomItems = [
             }
         }
         ?>
-        <a href="<?= htmlspecialchars($item['href']) ?>" class="bottom-nav-item<?= $activeNav === $item['key'] ? ' is-active' : '' ?>">
-            <i data-lucide="<?= htmlspecialchars($item['icon']) ?>"></i>
-            <span><?= htmlspecialchars($item['label']) ?></span>
+        <a href="<?= htmlspecialchars($item['href']) ?>" class="bottom-nav-item<?= $activeNav === $item['key'] ? ' is-active' : '' ?>"<?= $activeNav === $item['key'] ? ' aria-current="page"' : '' ?>>
+            <span class="bottom-nav-icon"><i data-lucide="<?= htmlspecialchars($item['icon']) ?>"></i></span>
+            <span class="bottom-nav-label"><?= htmlspecialchars($item['label']) ?></span>
             <div class="nav-indicator"></div>
         </a>
     <?php endforeach; ?>

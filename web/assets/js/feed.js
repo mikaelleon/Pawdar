@@ -103,6 +103,9 @@ function fetchFeed(filter, offset, append) {
         .then(function (res) { return res.json(); })
         .then(function (data) {
             if (!data.success) {
+                if (!append) {
+                    incidentList.innerHTML = getFeedErrorHtml('Could not load incidents. Please try again.');
+                }
                 return;
             }
 
@@ -136,9 +139,39 @@ function fetchFeed(filter, offset, append) {
                 loadMoreBtn.textContent = 'Load more';
             }
 
-            feedPage.setAttribute('data-next-offset', String(data.next_offset || 0));
-            feedPage.setAttribute('data-filter', filter);
+            var feedPage = document.querySelector('[data-feed-page]');
+            if (feedPage) {
+                feedPage.setAttribute('data-next-offset', String(data.next_offset || 0));
+                feedPage.setAttribute('data-filter', filter);
+            }
+        })
+        .catch(function () {
+            if (!append) {
+                incidentList.innerHTML = getFeedErrorHtml('Network error. Check your connection and retry.');
+            }
+            if (loadMoreBtn) {
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.textContent = 'Load more';
+            }
         });
+}
+
+function getFeedErrorHtml(message) {
+    return '<div class="page-error-state">' +
+        '<svg class="state-illustration" viewBox="0 0 200 120" aria-hidden="true">' +
+        '<circle cx="100" cy="60" r="36" fill="none" stroke="#E0765E" stroke-width="4"/>' +
+        '<path d="M88 48 L112 72 M112 48 L88 72" stroke="#E0765E" stroke-width="4" stroke-linecap="round"/>' +
+        '</svg>' +
+        '<p class="state-title">Something went wrong</p>' +
+        '<p class="text-sm text-muted">' + escapeHtml(message) + '</p>' +
+        '<button type="button" class="btn-primary btn-sm" onclick="location.reload()">Retry</button>' +
+        '</div>';
+}
+
+function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
 }
 
 function getSkeletonHtml(count) {
