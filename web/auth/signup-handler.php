@@ -77,7 +77,7 @@ try {
         exit;
     }
 
-    $check = $pdo->prepare('SELECT UserID FROM user WHERE Email = :email LIMIT 1');
+    $check = $pdo->prepare('SELECT UserID FROM `user` WHERE Email = :email LIMIT 1');
     $check->execute([':email' => $email]);
     if ($check->fetch()) {
         header('Location: ../signup.php?error=exists');
@@ -86,7 +86,7 @@ try {
 
     $hash = password_hash($password, PASSWORD_BCRYPT);
     $insert = $pdo->prepare('
-        INSERT INTO user (
+        INSERT INTO `user` (
             Name, last_name, first_name, middle_name, name_suffix,
             Email, Password, Role, Status, Barangay, City, city_id, barangay_id, Phone
         ) VALUES (

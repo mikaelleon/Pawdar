@@ -22,7 +22,7 @@ try {
             json_response(['success' => false, 'message' => 'Invalid user'], 400);
         }
 
-        $stmt = $pdo->prepare('UPDATE user SET Status = \'active\' WHERE UserID = :id AND Status = \'pending\'');
+        $stmt = $pdo->prepare('UPDATE `user` SET Status = \'active\' WHERE UserID = :id AND Status = \'pending\'');
         $stmt->execute([':id' => $userId]);
 
         json_response(['success' => $stmt->rowCount() > 0, 'message' => $stmt->rowCount() > 0 ? 'User approved' : 'User not found']);

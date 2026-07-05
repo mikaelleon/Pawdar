@@ -13,7 +13,7 @@ function fetch_unclaimed_stray_cases(PDO $pdo, string $barangay): array
         FROM incident i
         LEFT JOIN rescue_cases rc ON rc.incident_id = i.IncidentID
         LEFT JOIN stray_sightings s ON s.incident_id = i.IncidentID
-        INNER JOIN user u ON u.UserID = i.UserID
+        INNER JOIN `user` u ON u.UserID = i.UserID
         WHERE i.IncidentType = \'Injured Stray\'
           AND rc.rescue_case_id IS NULL
           AND u.Barangay = :barangay
@@ -50,7 +50,7 @@ function fetch_adoption_listings(PDO $pdo, ?string $filter = null): array
     $sql = '
         SELECT l.*, u.Name AS org_name, u.Phone AS org_phone
         FROM adoption_listings l
-        INNER JOIN user u ON u.UserID = l.rescue_org_id
+        INNER JOIN `user` u ON u.UserID = l.rescue_org_id
         WHERE l.status = \'Available\'
     ';
 

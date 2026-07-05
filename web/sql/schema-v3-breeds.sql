@@ -1,6 +1,3 @@
--- Pawdar breeds schema v3 (run via setup.php; data via import-breeds.php)
-USE pawdar;
-
 CREATE TABLE IF NOT EXISTS breeds (
     breed_id INT AUTO_INCREMENT PRIMARY KEY,
     breed_name VARCHAR(100) NOT NULL UNIQUE,

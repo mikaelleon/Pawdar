@@ -41,7 +41,8 @@ This folder contains the production-ready HTML/PHP site converted from the Pawda
 1. Copy `.env.example` → `.env` at the **repo root** and set MySQL + Resend keys.
 2. Optional: copy `includes/db.local.php.example` → `includes/db.local.php` for DB-only overrides.
 3. Run schema: `php sql/setup.php`
-4. Import barangays: `php sql/import-barangays.php`
+4. Import barangays (local CLI): `php sql/import-barangays.php`  
+   **InfinityFree:** import `sql/schema-v5-barangays-seed.sql` in phpMyAdmin instead (no shell access).
 5. Import Kaggle breeds: `php sql/import-breeds.php` (reads `../archive/dogs_cleaned.csv`)
 6. Open `http://localhost/WS101_Aliwate/WS101-Pawdar/web/`
 

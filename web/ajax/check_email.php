@@ -11,7 +11,7 @@ if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
 
 try {
     $pdo = db();
-    $stmt = $pdo->prepare('SELECT UserID FROM user WHERE Email = :email LIMIT 1');
+    $stmt = $pdo->prepare('SELECT UserID FROM `user` WHERE Email = :email LIMIT 1');
     $stmt->execute([':email' => $email]);
     json_response(['exists' => (bool) $stmt->fetch(), 'valid' => true]);
 } catch (PDOException $exception) {

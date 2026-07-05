@@ -21,7 +21,7 @@ if (!in_array($field, $allowed, true)) {
 }
 
 $pdo = db();
-$stmt = $pdo->prepare('UPDATE user SET ' . $field . ' = :val WHERE UserID = :id');
+$stmt = $pdo->prepare('UPDATE `user` SET ' . $field . ' = :val WHERE UserID = :id');
 $stmt->execute([':val' => $value, ':id' => (int) $_SESSION['user_id']]);
 
 json_response(['success' => true]);

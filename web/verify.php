@@ -12,7 +12,7 @@ $resendError = '';
 $sendError = (string) ($_GET['send_error'] ?? '');
 
 try {
-    $stmt = db()->prepare('SELECT Email, Name, email_verified_at FROM user WHERE UserID = :id LIMIT 1');
+    $stmt = db()->prepare('SELECT Email, Name, email_verified_at FROM `user` WHERE UserID = :id LIMIT 1');
     $stmt->execute([':id' => $userId]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($row) {

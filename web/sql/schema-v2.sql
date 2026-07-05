@@ -1,6 +1,11 @@
--- Pawdar schema v2 (run after schema.sql via setup.php)
--- Adds first_aid_guides and v2 demo rows. Column migrations run in runner.php.
-USE pawdar;
+-- Pawdar schema v2: first-aid guides + dog registry demo data.
+-- Run schema.sql first. These ALTERs are safe to re-run (IF NOT EXISTS).
+
+ALTER TABLE dog ADD COLUMN IF NOT EXISTS RegistryID VARCHAR(20) NULL AFTER dog_id;
+ALTER TABLE dog ADD COLUMN IF NOT EXISTS Gender VARCHAR(20) NULL AFTER Breed;
+ALTER TABLE dog ADD COLUMN IF NOT EXISTS Size ENUM('Small', 'Medium', 'Large') NULL AFTER Gender;
+ALTER TABLE dog ADD COLUMN IF NOT EXISTS DogType VARCHAR(50) NULL AFTER Size;
+ALTER TABLE dog ADD COLUMN IF NOT EXISTS Status ENUM('Registered', 'Pending', 'Inactive') NOT NULL DEFAULT 'Registered' AFTER DogType;
 
 UPDATE dog SET RegistryID = CONCAT('PWD-2024-', LPAD(dog_id, 5, '0'))
 WHERE RegistryID IS NULL OR RegistryID = '';

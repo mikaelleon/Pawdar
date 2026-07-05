@@ -97,7 +97,7 @@ function send_email_verification(PDO $pdo, int $userId, string $email, string $n
     $expires = date('Y-m-d H:i:s', time() + 86400);
 
     $stmt = $pdo->prepare('
-        UPDATE user
+        UPDATE `user`
         SET email_verify_token = :token, email_verify_expires = :expires
         WHERE UserID = :id
     ');
@@ -165,7 +165,7 @@ function verify_email_by_token(PDO $pdo, string $token): ?array
 
     $stmt = $pdo->prepare('
         SELECT UserID, Name, Email, Role, Barangay, Status, email_verified_at
-        FROM user
+        FROM `user`
         WHERE email_verify_token = :token
           AND email_verify_expires > NOW()
         LIMIT 1
@@ -177,7 +177,7 @@ function verify_email_by_token(PDO $pdo, string $token): ?array
     }
 
     $update = $pdo->prepare('
-        UPDATE user
+        UPDATE `user`
         SET email_verified_at = NOW(), email_verify_token = NULL, email_verify_expires = NULL
         WHERE UserID = :id
     ');

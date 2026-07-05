@@ -1,5 +1,6 @@
 -- Pawdar v5: normalized city/barangay reference tables (Batangas Province)
--- Seed via: php sql/import-barangays.php
+-- Seed data: import schema-v5-barangays-seed.sql via phpMyAdmin (InfinityFree)
+-- Or locally: php sql/import-barangays.php
 
 CREATE TABLE IF NOT EXISTS city (
     city_id INT AUTO_INCREMENT PRIMARY KEY,

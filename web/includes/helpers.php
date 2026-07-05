@@ -239,7 +239,7 @@ function fetch_login_stats(PDO $pdo): array
         $dogs = (int) $pdo->query('SELECT COUNT(*) FROM dog')->fetchColumn();
         $resolved = (int) $pdo->query('SELECT COUNT(*) FROM `case` WHERE CaseStatus = \'Resolved\'')->fetchColumn();
         $barangays = (int) $pdo->query('
-            SELECT COUNT(DISTINCT Barangay) FROM user
+            SELECT COUNT(DISTINCT Barangay) FROM `user`
             WHERE Barangay IS NOT NULL AND Barangay != \'\'
         ')->fetchColumn();
 

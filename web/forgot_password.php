@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         try {
             $pdo = db();
-            $stmt = $pdo->prepare('SELECT UserID, Name, Email FROM user WHERE Email = :email LIMIT 1');
+            $stmt = $pdo->prepare('SELECT UserID, Name, Email FROM `user` WHERE Email = :email LIMIT 1');
             $stmt->execute([':email' => $email]);
             $user = $stmt->fetch();
 
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $expires = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
                 $update = $pdo->prepare('
-                    UPDATE user SET reset_token = :token, reset_token_expires = :expires
+                    UPDATE `user` SET reset_token = :token, reset_token_expires = :expires
                     WHERE UserID = :id
                 ');
                 $update->execute([

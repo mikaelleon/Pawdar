@@ -16,7 +16,7 @@ if ($token !== '') {
     try {
         $pdo = db();
         $stmt = $pdo->prepare('
-            SELECT UserID FROM user
+            SELECT UserID FROM `user`
             WHERE reset_token = :token AND reset_token_expires > NOW()
             LIMIT 1
         ');
@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user) {
             $pdo = db();
             $hashed = password_hash($password, PASSWORD_BCRYPT);
             $update = $pdo->prepare('
-                UPDATE user SET Password = :password, reset_token = NULL, reset_token_expires = NULL
+                UPDATE `user` SET Password = :password, reset_token = NULL, reset_token_expires = NULL
                 WHERE UserID = :id
             ');
             $update->execute([

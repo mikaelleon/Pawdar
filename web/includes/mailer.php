@@ -11,7 +11,7 @@
  */
 function pawdar_resend_configured(): bool
 {
-    return (getenv('RESEND_API_KEY') ?: '') !== '';
+    return (pawdar_env('RESEND_API_KEY', '') ?: '') !== '';
 }
 
 /**
@@ -19,13 +19,13 @@ function pawdar_resend_configured(): bool
  */
 function pawdar_send_email(string $to, string $subject, string $html, ?string $text = null): bool
 {
-    $apiKey = getenv('RESEND_API_KEY') ?: '';
+    $apiKey = pawdar_env('RESEND_API_KEY', '') ?: '';
     if ($apiKey === '') {
         error_log('pawdar_send_email: RESEND_API_KEY is not set');
         return false;
     }
 
-    $from = getenv('RESEND_FROM') ?: 'Pawdar <onboarding@resend.dev>';
+    $from = pawdar_env('RESEND_FROM', 'Pawdar <onboarding@resend.dev>') ?: 'Pawdar <onboarding@resend.dev>';
     $payload = [
         'from' => $from,
         'to' => [$to],

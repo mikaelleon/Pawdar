@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/includes/bootstrap.php';
 $pageTitle = SITE_NAME . ' — Community Dog Registry';
+$bodyClass = 'landing-page';
 require __DIR__ . '/includes/head.php';
 require __DIR__ . '/includes/landing-header.php';
 ?>
@@ -26,12 +27,24 @@ require __DIR__ . '/includes/landing-header.php';
             <div style="position:absolute;right:-30px;bottom:-30px;width:220px;height:140px;border-radius:50%;background:var(--air-force);"></div>
         </div>
         <div class="illo-phone">
-            <div style="height:34px;background:var(--air-force);display:flex;align-items:center;padding:0 12px;gap:6px;color:#fff;font-weight:800;font-size:11px;">
-                <i data-lucide="paw-print" style="width:13px;height:13px;"></i> Pawdar
+            <div class="illo-phone-header">
+                <i data-lucide="paw-print"></i> Pawdar
             </div>
-            <div style="padding:9px;display:flex;flex-direction:column;gap:7px;">
-                <div class="incident-card"><div class="accent accent-bite"></div><div class="card-body" style="padding:8px;"><div style="width:30px;height:6px;border-radius:3px;background:var(--burnt-peach);margin-bottom:6px;"></div><div style="width:80%;height:5px;border-radius:3px;background:var(--tea-green);margin-bottom:4px;"></div></div></div>
-                <div class="incident-card"><div class="accent accent-injured"></div><div class="card-body" style="padding:8px;"><div style="width:30px;height:6px;border-radius:3px;background:var(--sunlit-clay);margin-bottom:6px;"></div><div style="width:75%;height:5px;border-radius:3px;background:var(--tea-green);"></div></div></div>
+            <div class="illo-phone-body">
+                <div class="incident-card illo-phone-card">
+                    <div class="accent accent-bite"></div>
+                    <div class="card-body illo-phone-card-body">
+                        <div class="illo-phone-bar illo-phone-bar-accent"></div>
+                        <div class="illo-phone-bar illo-phone-bar-muted"></div>
+                    </div>
+                </div>
+                <div class="incident-card illo-phone-card">
+                    <div class="accent accent-injured"></div>
+                    <div class="card-body illo-phone-card-body">
+                        <div class="illo-phone-bar illo-phone-bar-warm"></div>
+                        <div class="illo-phone-bar illo-phone-bar-muted"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -44,35 +57,37 @@ require __DIR__ . '/includes/landing-header.php';
             <div class="feature-icon" style="background:var(--tea-green);"><i data-lucide="book-marked"></i></div>
             <h3 style="font-weight:800;font-size:18px;">Dog Registry</h3>
             <p class="text-sm" style="font-weight:500;line-height:1.55;margin-top:8px;">Every dog gets a profile, QR tag, and verified vaccination record.</p>
-            <a href="dog-profile.php" class="text-muted" style="font-weight:800;font-size:13px;margin-top:14px;display:inline-block;">Learn More →</a>
+            <a href="dog-profile.php" class="feature-card-link">Learn More →</a>
         </div>
         <div class="feature-card">
             <div class="feature-icon" style="background:rgba(224,118,94,.16);"><i data-lucide="alert-triangle" style="color:var(--burnt-peach);"></i></div>
             <h3 style="font-weight:800;font-size:18px;">Incident Reporting</h3>
             <p class="text-sm" style="font-weight:500;line-height:1.55;margin-top:8px;">File a bite, stray, or accident report in under two minutes.</p>
-            <a href="report.php" class="text-muted" style="font-weight:800;font-size:13px;margin-top:14px;display:inline-block;">Learn More →</a>
+            <a href="report.php" class="feature-card-link">Learn More →</a>
         </div>
         <div class="feature-card">
             <div class="feature-icon" style="background:rgba(108,139,159,.18);"><i data-lucide="map-pin" style="color:var(--air-force);"></i></div>
             <h3 style="font-weight:800;font-size:18px;">Live Incident Map</h3>
             <p class="text-sm" style="font-weight:500;line-height:1.55;margin-top:8px;">See geotagged incidents and hotspots across your barangay.</p>
-            <a href="map.php" class="text-muted" style="font-weight:800;font-size:13px;margin-top:14px;display:inline-block;">Learn More →</a>
+            <a href="map.php" class="feature-card-link">Learn More →</a>
         </div>
         <div class="feature-card">
             <div class="feature-icon" style="background:rgba(248,188,114,.22);"><i data-lucide="folder-check" style="color:var(--sunlit-clay);"></i></div>
             <h3 style="font-weight:800;font-size:18px;">Case Management</h3>
             <p class="text-sm" style="font-weight:500;line-height:1.55;margin-top:8px;">Officials track status and run the 14-day rabies watch.</p>
-            <a href="cases.php" class="text-muted" style="font-weight:800;font-size:13px;margin-top:14px;display:inline-block;">Learn More →</a>
+            <a href="cases.php" class="feature-card-link">Learn More →</a>
         </div>
         <div class="feature-card">
             <div class="feature-icon" style="background:rgba(135,175,174,.25);"><i data-lucide="heart-handshake" style="color:var(--muted-teal);"></i></div>
             <h3 style="font-weight:800;font-size:18px;">Rescue Board</h3>
             <p class="text-sm" style="font-weight:500;line-height:1.55;margin-top:8px;">Connect strays with rescue orgs, sponsors, and adopters.</p>
+            <a href="rescue.php" class="feature-card-link">Learn More →</a>
         </div>
         <div class="feature-card">
             <div class="feature-icon" style="background:var(--tea-green);"><i data-lucide="badge-check"></i></div>
             <h3 style="font-weight:800;font-size:18px;">Vet Verification</h3>
             <p class="text-sm" style="font-weight:500;line-height:1.55;margin-top:8px;">Licensed vets confirm vaccines and flag at-risk dogs.</p>
+            <a href="signup.php" class="feature-card-link">Learn More →</a>
         </div>
     </div>
 </section>
@@ -89,6 +104,7 @@ require __DIR__ . '/includes/landing-header.php';
 
 <section class="section" id="about">
     <h2 class="section-title">Built for everyone in the community</h2>
+    <p class="section-lead text-sm text-muted text-center">Pawdar connects dog owners, reporters, barangay officials, veterinarians, and rescue groups across Batangas — a WS101 civic tech project for safer communities.</p>
     <div class="audience-grid">
         <div class="audience-card"><div class="icon-box icon-box-sm"><i data-lucide="dog"></i></div><div><div style="font-weight:800;font-size:15px;">Dog Owners</div><div class="text-xs text-muted">Register &amp; manage your dogs</div></div></div>
         <div class="audience-card"><div class="icon-box icon-box-sm"><i data-lucide="megaphone"></i></div><div><div style="font-weight:800;font-size:15px;">Community Reporters</div><div class="text-xs text-muted">Flag incidents as they happen</div></div></div>

@@ -7,14 +7,14 @@ $userId = (int) $_SESSION['user_id'];
 $userRole = current_user_role();
 $message = '';
 
-$stmt = $pdo->prepare('SELECT * FROM user WHERE UserID = :id LIMIT 1');
+$stmt = $pdo->prepare('SELECT * FROM `user` WHERE UserID = :id LIMIT 1');
 $stmt->execute([':id' => $userId]);
 $user = $stmt->fetch();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && validate_csrf((string) ($_POST['csrf_token'] ?? ''))) {
     $action = (string) ($_POST['action'] ?? 'profile');
     if ($action === 'profile') {
-        $pdo->prepare('UPDATE user SET Name = :name, Email = :email, Phone = :phone, Barangay = :barangay WHERE UserID = :id')
+        $pdo->prepare('UPDATE `user` SET Name = :name, Email = :email, Phone = :phone, Barangay = :barangay WHERE UserID = :id')
             ->execute([
                 ':name' => trim((string) $_POST['name']),
                 ':email' => trim((string) $_POST['email']),
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && validate_csrf((string) ($_POST['csr
         $current = (string) ($_POST['current_password'] ?? '');
         $new = (string) ($_POST['new_password'] ?? '');
         if (password_verify($current, (string) $user['Password']) && strlen($new) >= 8) {
-            $pdo->prepare('UPDATE user SET Password = :pass WHERE UserID = :id')
+            $pdo->prepare('UPDATE `user` SET Password = :pass WHERE UserID = :id')
                 ->execute([':pass' => password_hash($new, PASSWORD_DEFAULT), ':id' => $userId]);
             $message = 'Password updated.';
         } else {

@@ -1,6 +1,13 @@
--- Pawdar schema v4 — screens support (run after v3 via setup.php)
--- Column migrations run in runner.php.
-USE pawdar;
+-- Pawdar schema v4: screen features + demo map data.
+-- Run schema.sql, v2, and v3 first. Column ALTERs are safe to re-run (IF NOT EXISTS).
+
+ALTER TABLE `case` ADD COLUMN IF NOT EXISTS RabiesMonitoring TINYINT NOT NULL DEFAULT 0 AFTER CaseStatus;
+
+ALTER TABLE incident ADD COLUMN IF NOT EXISTS latitude DECIMAL(10, 7) NULL AFTER Location;
+ALTER TABLE incident ADD COLUMN IF NOT EXISTS longitude DECIMAL(10, 7) NULL AFTER latitude;
+ALTER TABLE incident ADD COLUMN IF NOT EXISTS photo_path VARCHAR(255) NULL AFTER Description;
+ALTER TABLE incident ADD COLUMN IF NOT EXISTS edited_at DATETIME NULL AFTER photo_path;
+ALTER TABLE incident ADD COLUMN IF NOT EXISTS area_regular TINYINT NOT NULL DEFAULT 0 AFTER edited_at;
 
 ALTER TABLE `case`
     MODIFY CaseStatus ENUM(

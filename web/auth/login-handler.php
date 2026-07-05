@@ -51,7 +51,7 @@ if ($email === '' || $password === '') {
 
 try {
     $pdo = db();
-    $stmt = $pdo->prepare('SELECT UserID, Name, Email, Password, Role, Barangay, Status, email_verified_at FROM user WHERE Email = :email LIMIT 1');
+    $stmt = $pdo->prepare('SELECT UserID, Name, Email, Password, Role, Barangay, Status, email_verified_at FROM `user` WHERE Email = :email LIMIT 1');
     $stmt->execute([':email' => $email]);
     $user = $stmt->fetch();
 } catch (PDOException $exception) {

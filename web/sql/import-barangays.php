@@ -8,6 +8,8 @@ declare(strict_types=1);
  */
 
 $root = dirname(__DIR__);
+require_once $root . '/includes/env.php';
+pawdar_load_env();
 require_once $root . '/includes/helpers.php';
 require_once __DIR__ . '/runner.php';
 
@@ -21,10 +23,10 @@ if (!is_readable($mdPath)) {
     exit(1);
 }
 
-$host = getenv('PAWDAR_DB_HOST') ?: 'localhost';
-$user = getenv('PAWDAR_DB_USER') ?: 'root';
-$pass = getenv('PAWDAR_DB_PASS') ?: '';
-$dbName = getenv('PAWDAR_DB_NAME') ?: 'pawdar';
+$host = pawdar_env('PAWDAR_DB_HOST', 'localhost') ?? 'localhost';
+$user = pawdar_env('PAWDAR_DB_USER', 'root') ?? 'root';
+$pass = pawdar_env('PAWDAR_DB_PASS', '') ?? '';
+$dbName = pawdar_env('PAWDAR_DB_NAME', 'pawdar') ?? 'pawdar';
 
 /**
  * @return list<array{name: string, barangays: list<string>}>

@@ -30,6 +30,27 @@ function pawdar_load_env(): void
 }
 
 /**
+ * Reads a config value from $_ENV first (InfinityFree-safe when putenv is disabled).
+ */
+function pawdar_env(string $key, ?string $default = null): ?string
+{
+    if (array_key_exists($key, $_ENV)) {
+        $value = $_ENV[$key];
+
+        return $value === '' && $default !== null ? $default : (string) $value;
+    }
+
+    if (function_exists('getenv')) {
+        $value = getenv($key);
+        if ($value !== false) {
+            return (string) $value;
+        }
+    }
+
+    return $default;
+}
+
+/**
  * @param string $path Absolute path to a .env file
  */
 function pawdar_parse_env_file(string $path): void
@@ -64,7 +85,9 @@ function pawdar_parse_env_file(string $path): void
             $value = substr($value, 1, -1);
         }
 
-        putenv($key . '=' . $value);
         $_ENV[$key] = $value;
+        if (function_exists('putenv')) {
+            putenv($key . '=' . $value);
+        }
     }
 }

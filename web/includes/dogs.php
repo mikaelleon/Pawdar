@@ -13,7 +13,7 @@ function fetch_dog_profile(PDO $pdo, int $dogId): ?array
     $stmt = $pdo->prepare('
         SELECT d.*, u.Name AS owner_name, u.Phone AS owner_phone, u.Barangay AS owner_barangay, u.Role AS owner_role, u.UserID AS owner_id
         FROM dog d
-        INNER JOIN user u ON u.UserID = d.UserID
+        INNER JOIN `user` u ON u.UserID = d.UserID
         WHERE d.dog_id = :dog_id
         LIMIT 1
     ');
@@ -65,7 +65,7 @@ function fetch_dogs_by_breed_id(PDO $pdo, int $breedId): array
     $stmt = $pdo->prepare('
         SELECT d.dog_id, d.DogName, d.DogType, d.Status, d.RegistryID, u.Name AS owner_name
         FROM dog d
-        INNER JOIN user u ON u.UserID = d.UserID
+        INNER JOIN `user` u ON u.UserID = d.UserID
         WHERE d.breed_id = :breed_id
         ORDER BY d.DogName ASC
         LIMIT 20
@@ -85,7 +85,7 @@ function fetch_dogs_by_breed(PDO $pdo, string $breedName): array
     $stmt = $pdo->prepare('
         SELECT d.dog_id, d.DogName, d.DogType, d.Status, d.RegistryID, u.Name AS owner_name
         FROM dog d
-        INNER JOIN user u ON u.UserID = d.UserID
+        INNER JOIN `user` u ON u.UserID = d.UserID
         LEFT JOIN breeds b ON b.breed_id = d.breed_id
         WHERE b.breed_name = :breed OR d.Breed = :breed_text
         ORDER BY d.DogName ASC
@@ -111,7 +111,7 @@ function fetch_registry_dogs(PDO $pdo, string $role, int $userId, string $barang
                u.Name AS owner_name, u.Barangay AS owner_barangay,
                COALESCE(b.breed_name, d.Breed) AS breed_label
         FROM dog d
-        INNER JOIN user u ON u.UserID = d.UserID
+        INNER JOIN `user` u ON u.UserID = d.UserID
         LEFT JOIN breeds b ON b.breed_id = d.breed_id
         WHERE 1=1
     ';
@@ -154,7 +154,7 @@ function fetch_registry_counts(PDO $pdo, string $role, int $userId, string $bara
             SUM(CASE WHEN d.Status = \'Registered\' THEN 1 ELSE 0 END) AS registered,
             SUM(CASE WHEN d.Status = \'Pending\' THEN 1 ELSE 0 END) AS pending
         FROM dog d
-        INNER JOIN user u ON u.UserID = d.UserID
+        INNER JOIN `user` u ON u.UserID = d.UserID
         WHERE 1=1
     ';
     $params = [];
@@ -185,7 +185,7 @@ function fetch_pending_users(PDO $pdo): array
 {
     $stmt = $pdo->query('
         SELECT UserID, Name, Email, Role, Barangay, Phone, created_at
-        FROM user
+        FROM `user`
         WHERE Status = \'pending\'
         ORDER BY created_at ASC
     ');
@@ -202,7 +202,7 @@ function fetch_pending_dogs(PDO $pdo): array
         SELECT d.dog_id, d.DogName, d.Breed, d.RegistryID, d.Status, d.DogType,
                u.Name AS owner_name, u.Barangay AS owner_barangay
         FROM dog d
-        INNER JOIN user u ON u.UserID = d.UserID
+        INNER JOIN `user` u ON u.UserID = d.UserID
         WHERE d.Status = \'Pending\'
         ORDER BY d.dog_id ASC
     ');
@@ -219,7 +219,7 @@ function fetch_rescue_stray_incidents(PDO $pdo, string $barangay, int $limit = 2
         SELECT i.IncidentID, i.IncidentType, i.Date, i.Location, i.Description,
                c.CaseStatus, u.Name AS reporter_name
         FROM incident i
-        INNER JOIN user u ON u.UserID = i.UserID
+        INNER JOIN `user` u ON u.UserID = i.UserID
         LEFT JOIN `case` c ON c.IncidentID = i.IncidentID
         WHERE i.IncidentType = \'Injured Stray\'
           AND u.Barangay = :barangay
@@ -243,7 +243,7 @@ function fetch_registry_list(PDO $pdo, array $filters, int $offset = 0, int $lim
 {
     $sql = '
         FROM dog d
-        INNER JOIN user u ON u.UserID = d.UserID
+        INNER JOIN `user` u ON u.UserID = d.UserID
         LEFT JOIN breeds b ON b.breed_id = d.breed_id
         LEFT JOIN vaccinerecord v ON v.dog_id = d.dog_id AND v.VaccineID = (
             SELECT VaccineID FROM vaccinerecord WHERE dog_id = d.dog_id ORDER BY DateGiven DESC LIMIT 1
@@ -426,7 +426,7 @@ function registry_avatar_color(string $dogName): string
  */
 function fetch_registry_barangays(PDO $pdo): array
 {
-    $stmt = $pdo->query('SELECT DISTINCT Barangay FROM user ORDER BY Barangay ASC');
+    $stmt = $pdo->query('SELECT DISTINCT Barangay FROM `user` ORDER BY Barangay ASC');
 
     return array_column($stmt->fetchAll(), 'Barangay');
 }
@@ -440,7 +440,7 @@ function fetch_dog_by_registry_id(PDO $pdo, string $registryId): ?array
         SELECT d.*, u.Name AS owner_name, u.Phone AS owner_phone, u.Barangay AS owner_barangay,
                v.VaccineName, v.DateGiven, v.NextDueDate, v.vax_status
         FROM dog d
-        LEFT JOIN user u ON u.UserID = d.UserID
+        LEFT JOIN `user` u ON u.UserID = d.UserID
         LEFT JOIN vaccinerecord v ON v.dog_id = d.dog_id AND v.VaccineID = (
             SELECT VaccineID FROM vaccinerecord WHERE dog_id = d.dog_id ORDER BY DateGiven DESC LIMIT 1
         )

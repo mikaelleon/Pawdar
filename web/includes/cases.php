@@ -15,7 +15,7 @@ function fetch_cases_for_barangay(PDO $pdo, string $barangay, ?string $status = 
                d.dog_id, d.DogName
         FROM `case` c
         INNER JOIN incident i ON c.IncidentID = i.IncidentID
-        INNER JOIN user u ON i.UserID = u.UserID
+        INNER JOIN `user` u ON i.UserID = u.UserID
         LEFT JOIN dog d ON i.dog_id = d.dog_id
         WHERE i.Location LIKE :barangay
     ';
@@ -75,7 +75,7 @@ function fetch_case_detail(PDO $pdo, int $caseId): ?array
                d.dog_id, d.DogName, d.Breed, d.RegistryID
         FROM `case` c
         INNER JOIN incident i ON c.IncidentID = i.IncidentID
-        INNER JOIN user u ON i.UserID = u.UserID
+        INNER JOIN `user` u ON i.UserID = u.UserID
         LEFT JOIN dog d ON i.dog_id = d.dog_id
         WHERE c.CaseID = :id
         LIMIT 1
@@ -94,7 +94,7 @@ function fetch_case_history(PDO $pdo, int $caseId): array
     $stmt = $pdo->prepare('
         SELECT h.*, u.Name AS updater_name
         FROM case_history h
-        LEFT JOIN user u ON u.UserID = h.updated_by
+        LEFT JOIN `user` u ON u.UserID = h.updated_by
         WHERE h.CaseID = :case_id
         ORDER BY h.created_at ASC
     ');

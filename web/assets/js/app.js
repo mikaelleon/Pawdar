@@ -8,7 +8,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (menuBtn && mobileNav) {
         menuBtn.addEventListener('click', function () {
-            mobileNav.classList.toggle('is-open');
+            var isOpen = mobileNav.hasAttribute('hidden');
+            if (isOpen) {
+                mobileNav.removeAttribute('hidden');
+                menuBtn.setAttribute('aria-expanded', 'true');
+            } else {
+                mobileNav.setAttribute('hidden', '');
+                menuBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        mobileNav.querySelectorAll('a').forEach(function (link) {
+            link.addEventListener('click', function () {
+                mobileNav.setAttribute('hidden', '');
+                menuBtn.setAttribute('aria-expanded', 'false');
+            });
         });
     }
 

@@ -35,7 +35,7 @@ function fetch_incidents(
                    WHERE uc.incident_id = i.IncidentID AND uc.user_id = :current_user_exists
                ) AS user_corroborated
         FROM incident i
-        INNER JOIN user u ON i.UserID = u.UserID
+        INNER JOIN `user` u ON i.UserID = u.UserID
         LEFT JOIN `case` c ON c.IncidentID = i.IncidentID
         LEFT JOIN corroborations corr ON corr.incident_id = i.IncidentID
         LEFT JOIN dog d ON d.dog_id = i.dog_id
@@ -196,7 +196,7 @@ function fetch_bell_badge_count(PDO $pdo, int $userId, string $barangay): int
 function notify_barangay_of_incident(PDO $pdo, int $incidentId, string $barangay, int $reporterId, string $title): void
 {
     $stmt = $pdo->prepare('
-        SELECT UserID FROM user
+        SELECT UserID FROM `user`
         WHERE Barangay = :barangay AND UserID != :reporter_id
     ');
     $stmt->execute([
@@ -263,7 +263,7 @@ function fetch_incident_detail(PDO $pdo, int $incidentId, int $currentUserId = 0
                    WHERE uc.incident_id = i.IncidentID AND uc.user_id = :uid
                ) AS user_corroborated
         FROM incident i
-        INNER JOIN user u ON i.UserID = u.UserID
+        INNER JOIN `user` u ON i.UserID = u.UserID
         LEFT JOIN `case` c ON c.IncidentID = i.IncidentID
         LEFT JOIN dog d ON d.dog_id = i.dog_id
         LEFT JOIN corroborations corr ON corr.incident_id = i.IncidentID
@@ -285,7 +285,7 @@ function fetch_incident_corroborators(PDO $pdo, int $incidentId, int $limit = 5)
     $stmt = $pdo->prepare('
         SELECT u.UserID, u.Name
         FROM corroborations c
-        INNER JOIN user u ON u.UserID = c.user_id
+        INNER JOIN `user` u ON u.UserID = c.user_id
         WHERE c.incident_id = :id
         ORDER BY c.created_at ASC
         LIMIT :limit
@@ -305,7 +305,7 @@ function fetch_related_incidents(PDO $pdo, string $barangay, int $excludeId, int
     $stmt = $pdo->prepare('
         SELECT i.IncidentID, i.IncidentType, i.Location, i.Date, c.CaseStatus
         FROM incident i
-        INNER JOIN user u ON u.UserID = i.UserID
+        INNER JOIN `user` u ON u.UserID = i.UserID
         LEFT JOIN `case` c ON c.IncidentID = i.IncidentID
         WHERE u.Barangay = :barangay AND i.IncidentID != :exclude
         ORDER BY i.Date DESC
@@ -334,7 +334,7 @@ function fetch_map_incidents(
                c.CaseStatus, i.Description
         FROM incident i
         LEFT JOIN `case` c ON c.IncidentID = i.IncidentID
-        INNER JOIN user u ON u.UserID = i.UserID
+        INNER JOIN `user` u ON u.UserID = i.UserID
         WHERE u.Barangay = :barangay
     ';
     $params = [':barangay' => $barangay];
@@ -399,7 +399,7 @@ function notify_matching_dog_owners(PDO $pdo, int $incidentId, ?string $breed, s
     $stmt = $pdo->prepare('
         SELECT DISTINCT u.UserID
         FROM dog d
-        INNER JOIN user u ON u.UserID = d.UserID
+        INNER JOIN `user` u ON u.UserID = d.UserID
         WHERE d.Breed = :breed AND u.Barangay = :barangay
     ');
     $stmt->execute([
