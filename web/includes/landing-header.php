@@ -1,13 +1,13 @@
 <nav class="landing-nav">
-    <a href="index.php" class="logo">
+    <a href="index.html" class="logo">
         <div class="logo-mark"><i data-lucide="paw-print"></i></div>
         <span class="logo-text"><?= SITE_NAME ?></span>
     </a>
     <div class="landing-nav-links">
-        <a href="index.php">Home</a>
-        <a href="index.php#features">Features</a>
-        <a href="index.php#how-it-works">How It Works</a>
-        <a href="index.php#about">About</a>
+        <a href="index.html">Home</a>
+        <a href="index.html#features">Features</a>
+        <a href="index.html#how-it-works">How It Works</a>
+        <a href="index.html#about">About</a>
     </div>
     <div class="landing-nav-actions">
         <a href="login.php" class="btn-outline btn-sm">Log In</a>

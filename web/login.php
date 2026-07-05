@@ -19,7 +19,7 @@ require __DIR__ . '/includes/head.php';
 
 <div class="auth-page">
     <div class="auth-panel auth-desktop-only auth-panel-pattern">
-        <a href="index.php" class="flex items-center gap-sm auth-panel-logo">
+        <a href="index.html" class="flex items-center gap-sm auth-panel-logo">
             <div class="logo-mark"><i data-lucide="paw-print"></i></div>
             <span class="logo-text">Pawdar</span>
         </a>
@@ -47,7 +47,7 @@ require __DIR__ . '/includes/head.php';
 
     <div class="auth-form-side auth-form-side-padded">
         <div class="auth-mobile-header hidden-desktop">
-            <a href="index.php" aria-label="Back to home"><i data-lucide="arrow-left"></i></a>
+            <a href="index.html" aria-label="Back to home"><i data-lucide="arrow-left"></i></a>
             <div class="flex-1 text-center auth-mobile-title">Log In</div>
         </div>
 
@@ -105,11 +105,11 @@ require __DIR__ . '/includes/head.php';
             <p class="auth-role-note">Logging in as a Vet or LGU Official? You'll see your dashboard automatically.</p>
 
             <nav class="auth-footer-links" aria-label="Legal and help">
-                <a href="index.php">Terms</a>
+                <a href="index.html">Terms</a>
                 <span aria-hidden="true">·</span>
-                <a href="index.php#about">Privacy</a>
+                <a href="index.html#about">Privacy</a>
                 <span aria-hidden="true">·</span>
-                <a href="index.php#how-it-works">Help</a>
+                <a href="index.html#how-it-works">Help</a>
             </nav>
 
             <div class="auth-demo-fallback">

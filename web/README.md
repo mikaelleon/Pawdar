@@ -8,7 +8,7 @@ This folder contains the production-ready HTML/PHP site converted from the Pawda
 2. Open **File Manager** (or connect via FTP using the credentials in your panel).
 3. Go to **`htdocs`** (this is your website root).
 4. Upload **all files and folders** from this `web/` directory into `htdocs`:
-   - `index.php`
+   - `index.html`
    - `feed.php`, `map.php`, `dog-profile.php`, etc.
    - `includes/`
    - `partials/`
@@ -19,7 +19,7 @@ This folder contains the production-ready HTML/PHP site converted from the Pawda
 
 | File | Description |
 |------|-------------|
-| `index.php` | Landing / marketing page |
+| `index.html` | Landing / marketing page (PHP-powered via `.htaccess`) |
 | `login.php` | Log in |
 | `signup.php` | Create account (3-step wizard) |
 | `verify.php` | Email verification — check inbox / resend |

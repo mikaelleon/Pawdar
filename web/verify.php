@@ -60,7 +60,7 @@ $resendConfigured = pawdar_resend_configured();
 
 <div class="auth-page">
     <div class="auth-panel auth-desktop-only auth-panel-pattern">
-        <a href="index.php" class="flex items-center gap-sm auth-panel-logo">
+        <a href="index.html" class="flex items-center gap-sm auth-panel-logo">
             <div class="logo-mark"><i data-lucide="paw-print"></i></div>
             <span class="logo-text">Pawdar</span>
         </a>

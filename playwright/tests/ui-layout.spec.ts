@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Public and auth UI shell', () => {
   test('landing page loads marketing content', async ({ page }) => {
-    await page.goto('/index.php');
+    await page.goto('/index.html');
     await expect(page.locator('body')).toContainText(/pawdar/i);
     await expect(page.locator('a[href="login.php"], a[href="signup.php"]').first()).toBeVisible();
   });

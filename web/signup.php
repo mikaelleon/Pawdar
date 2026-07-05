@@ -36,7 +36,7 @@ $stepLabels = [1 => 'Account', 2 => 'Role & location', 3 => 'Verify'];
 
 <div class="auth-page">
     <div class="auth-panel auth-desktop-only auth-panel-pattern">
-        <a href="index.php" class="flex items-center gap-sm auth-panel-logo">
+        <a href="index.html" class="flex items-center gap-sm auth-panel-logo">
             <div class="logo-mark"><i data-lucide="paw-print"></i></div>
             <span class="logo-text">Pawdar</span>
         </a>
@@ -192,7 +192,7 @@ $stepLabels = [1 => 'Account', 2 => 'Role & location', 3 => 'Verify'];
 
                     <label class="signup-terms">
                         <input type="checkbox" id="terms" name="terms" value="1" required>
-                        <span>I agree to the <a href="index.php">Terms of Service</a> and <a href="index.php#about">Privacy Policy</a>. Pawdar processes your data in compliance with the Philippine Data Privacy Act (RA 10173).</span>
+                        <span>I agree to the <a href="index.html">Terms of Service</a> and <a href="index.html#about">Privacy Policy</a>. Pawdar processes your data in compliance with the Philippine Data Privacy Act (RA 10173).</span>
                     </label>
                 </div>
 

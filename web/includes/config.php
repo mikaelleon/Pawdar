@@ -13,7 +13,7 @@ define('SITE_DESCRIPTION', 'Community dog registry and incident reporting for ba
  */
 function current_page(): string
 {
-    return basename($_SERVER['PHP_SELF'] ?? 'index.php');
+    return basename($_SERVER['PHP_SELF'] ?? 'index.html');
 }
 
 /**

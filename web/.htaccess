@@ -1,0 +1,7 @@
+# Run PHP in .html landing page (index.html uses PHP includes)
+<FilesMatch "\.html$">
+    SetHandler application/x-httpd-php
+</FilesMatch>
+
+# Prefer index.html over index.php for directory requests
+DirectoryIndex index.html index.php

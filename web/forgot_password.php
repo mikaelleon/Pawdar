@@ -59,7 +59,7 @@ require __DIR__ . '/includes/head.php';
 
 <div class="auth-page">
     <div class="auth-panel auth-desktop-only auth-panel-pattern">
-        <a href="index.php" class="flex items-center gap-sm">
+        <a href="index.html" class="flex items-center gap-sm">
             <div class="logo-mark"><i data-lucide="paw-print"></i></div>
             <span class="logo-text">Pawdar</span>
         </a>
