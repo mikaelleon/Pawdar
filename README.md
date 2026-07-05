@@ -49,7 +49,7 @@ Current state: core auth, registry, feed, map, cases, and sign-up wizard are imp
 | M4 | Incident feed, map pins, report drawer, case management | Done |
 | M5 | Sign-up wizard (Account → Role & location → Verify) + Batangas city/barangay data | Done |
 | M6 | Resend email verification + password reset | Done (API integration) |
-| M7 | Production hardening, full E2E pass, compliance depth | In progress |
+| M7 | Production hardening, manual QA pass, compliance depth | In progress |
 
 ### Completed Highlights
 
@@ -61,12 +61,10 @@ Current state: core auth, registry, feed, map, cases, and sign-up wizard are imp
 - Incident feed and map with barangay-scoped pins and severity badges.
 - LGU case board, first-aid guides, breed directory, and admin approval queue.
 - Normalized **city/barangay** reference tables (5 Batangas cities, 287 barangays).
-- Playwright E2E test suite for auth flows.
 
 ### In Progress
 
-- Playwright CI stability against local XAMPP `BASE_URL` configuration.
-- Broader automated test coverage beyond auth.
+- Manual QA checklist and release sign-off per page.
 - Role-specific sign-up fields (license number, LGU office) — planned.
 - SMS OTP for approval-required roles — optional future enhancement.
 
@@ -140,7 +138,6 @@ See `docs/Batangas_Cities_and_Barangays.md` for the canonical barangay reference
 - Backend: PHP 7.4+ with PDO (MySQL/MariaDB).
 - Database: MySQL (XAMPP local; InfinityFree or similar for hosting).
 - Email: [Resend](https://resend.com) REST API (cURL).
-- E2E tests: Playwright (`playwright/`).
 
 ### Key Runtime Requirements
 
@@ -150,7 +147,6 @@ See `docs/Batangas_Cities_and_Barangays.md` for the canonical barangay reference
 
 ### Dev and QA Tooling
 
-- `@playwright/test` — end-to-end browser testing.
 - `php sql/setup.php` — schema and seed data.
 - `php sql/import-barangays.php` — city/barangay reference import.
 - `php sql/import-breeds.php` — Kaggle breed CSV import.
@@ -209,8 +205,7 @@ See `docs/Batangas_Cities_and_Barangays.md` for the canonical barangay reference
 | `web/assets/` | CSS, JavaScript, images |
 | `web/sql/` | Schema, migrations, import scripts |
 | `web/auth/` | Login, signup, verify-email handlers |
-| `docs/` | Barangay reference, email setup |
-| `playwright/` | E2E tests and Playwright config |
+| `docs/` | Barangay reference, email setup, feature audit |
 | `Pawdar Design System/` | Original design canvas reference |
 
 ## Important Documents
@@ -224,7 +219,7 @@ See `docs/Batangas_Cities_and_Barangays.md` for the canonical barangay reference
 ## Roadmap Priorities
 
 - Verify Resend domain for production email to all sign-up addresses.
-- Fix and expand Playwright E2E coverage (auth + core flows).
+- Complete manual QA checklist for all inventory pages.
 - Add role-specific sign-up fields for Vet/LGU/Rescue.
 - Privacy/consent depth aligned with RA 10173 for production.
 - Deployment hardening for InfinityFree or institutional hosting.
@@ -275,5 +270,5 @@ See `docs/Batangas_Cities_and_Barangays.md` for the canonical barangay reference
 
 **Testing & quality**
 
-- Green Playwright suite against configured `BASE_URL`.
+- Manual QA checklist per inventory page.
 - Cross-browser QA and load testing for barangay-scale usage.

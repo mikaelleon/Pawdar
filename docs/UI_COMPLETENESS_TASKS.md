@@ -1,9 +1,9 @@
 # UI Completeness Tasks — Pawdar
 
 ## Summary
-- Total subtasks: `198`
-- Completed: `128 (65%)`
-- Effort breakdown: `S×118 + M×68 + L×12`
+- Total subtasks: `188`
+- Completed: `121 (64%)`
+- Effort breakdown: `S×116 + M×60 + L×12`
 
 | Main task | % complete |
 |---|---:|
@@ -17,7 +17,7 @@
 | `T-UI-08` | 84% |
 | `T-UI-09` | 38% |
 | `T-UI-10` | 72% |
-| `T-UI-11` | 48% |
+| `T-UI-11` | 0% |
 
 | Page | % complete |
 |---|---:|
@@ -361,28 +361,17 @@
 
 ## T-UI-11
 **ID** — `T-UI-11`  
-**Goal** — Quality gates: Playwright E2E, manual QA checklist, release sign-off.  
-**Source ref** — `playwright/tests/*.spec.ts`, course deliverable rubric.
+**Goal** — Manual QA checklist and release sign-off for every inventory page.  
+**Source ref** — course deliverable rubric, `docs/FEATURES.md`.
 
 **Subtasks**
-- [x] (M) Playwright auth login spec — artifact: `playwright/tests/auth.login.spec.ts`.
-- [x] (M) Playwright forgot-password spec — artifact: `playwright/tests/auth.forgot-password.spec.ts`.
-- [x] (S) Playwright theme toggle spec — artifact: `playwright/tests/theme.spec.ts`.
-- [x] (S) Playwright landing layout spec — artifact: `playwright/tests/ui-layout.spec.ts`.
-- [x] (M) Playwright feed spec — artifact: `playwright/tests/feed.spec.ts`.
-- [x] (M) Playwright registry + register-dog specs — artifact: `registry.spec.ts`, `register-dog.spec.ts`.
-- [x] (M) Playwright cases + report + rescue specs — artifact: respective spec files.
-- [ ] (M) Playwright signup wizard full-path spec (with test mail mock) — artifact: new spec file.
-- [ ] (M) Playwright dark mode landing regression spec — artifact: extend `theme.spec.ts` for footer/cards.
-- [ ] (M) CI workflow running Playwright on push — artifact: `.github/workflows/e2e.yml` or local CI doc.
 - [ ] (M) Manual QA checklist per inventory page — artifact: `docs/qa/MANUAL_QA_CHECKLIST.md`.
 - [ ] (S) Demo account matrix documented for evaluators — artifact: README or QA doc table.
 - [ ] (M) Full page QA gate pass recorded for each page in inventory table — artifact: signed QA log.
 
-**Completion** — `7 / 13 subtasks (54%)` → **48%** weighted (QA log not started)  
+**Completion** — `0 / 3 subtasks (0%)`  
 **Dependencies** — `T-UI-01`–`T-UI-10`  
 **Done when**
-- Playwright suite green against local XAMPP `BASE_URL`.
 - Each page in inventory table has recorded pass/fail.
 - Blockers linked to task IDs before final submission.
 
@@ -390,15 +379,15 @@
 
 ## Page-level checklist (quick reference)
 
-| Page | Load | Empty | Error | Live data | Dark | A11y | E2E |
+| Page | Load | Empty | Error | Live data | Dark | A11y | QA |
 |---|---|---|---|---|---|---|---|
-| `index.html` | ✓ | n/a | ✓ | n/a | ✓ | ◐ | ✓ |
-| `login.php` | ✓ | n/a | ✓ | ✓ | ◐ | ◐ | ✓ |
+| `index.html` | ✓ | n/a | ✓ | n/a | ✓ | ◐ | ◐ |
+| `login.php` | ✓ | n/a | ✓ | ✓ | ◐ | ◐ | ◐ |
 | `signup.php` | ✓ | ◐ | ✓ | ✓ | ◐ | ◐ | ◐ |
-| `feed.php` | ✓ | ◐ | ◐ | ✓ | ✓ | ◐ | ✓ |
-| `registry.php` | ✓ | ◐ | ◐ | ✓ | ✓ | ◐ | ✓ |
+| `feed.php` | ✓ | ◐ | ◐ | ✓ | ✓ | ◐ | ◐ |
+| `registry.php` | ✓ | ◐ | ◐ | ✓ | ✓ | ◐ | ◐ |
 | `map.php` | ✓ | ◐ | ◐ | ✓ | ✓ | ◐ | ◐ |
-| `cases.php` | ✓ | ◐ | ◐ | ✓ | ✓ | ◐ | ✓ |
+| `cases.php` | ✓ | ◐ | ◐ | ✓ | ✓ | ◐ | ◐ |
 | `case-detail.php` | ◐ | ◐ | ◐ | ✗ | ◐ | ✗ | ✗ |
 | `analytics.php` | ◐ | ◐ | ◐ | ◐ | ✓ | ✗ | ✗ |
 
@@ -413,7 +402,7 @@
 3. **`T-UI-02`** — empty/loading states on feed, map, registry AJAX paths.
 4. **`T-UI-08`** — auth page dark mode parity + screenshot sign-off.
 5. **`T-UI-09`** — report drawer focus trap + signup/login a11y pass.
-6. **`T-UI-11`** — signup E2E + manual QA log for submission.
+6. **`T-UI-11`** — manual QA log for submission.
 
 ---
 

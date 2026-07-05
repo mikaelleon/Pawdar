@@ -1,7 +1,7 @@
 # Pawdar — Feature Audit
 
 **Last updated:** July 2026  
-**Scope:** `web/` PHP application, MySQL schema, JS modules, Playwright E2E  
+**Scope:** `web/` PHP application, MySQL schema, JS modules  
 **Related:** [UI_COMPLETENESS_TASKS.md](./UI_COMPLETENESS_TASKS.md) (UI task tracker), [README.md](../README.md) (project overview)
 
 ---
@@ -18,7 +18,7 @@ Pawdar is a **PHP + MySQL** civic platform for dog registration, incident report
 | LGU / admin tools | **Partial** — case board live; analytics + advisories + case-detail page incomplete |
 | Rescue & adoption | **Partial** — rescue board + claim/status live; adoption listings often empty |
 | Infrastructure | **Mostly complete** — env loader, Resend mail, InfinityFree-compatible SQL seeds |
-| QA / E2E | **Partial** — 13 Playwright specs; no CI; signup flow untested E2E |
+| QA / manual testing | **Not started** — no automated E2E; manual QA checklist pending |
 
 **Overall product readiness:** ~**70%** of stated README goals are functional end-to-end. Remaining gaps are concentrated in analytics, advisories, desktop report wizard, interactive rabies checklist, and several profile/admin polish items.
 
@@ -230,26 +230,6 @@ Pawdar is a **PHP + MySQL** civic platform for dog registration, incident report
 
 ---
 
-### 16. Automated Testing (Playwright)
-
-| Spec | Coverage |
-|---|---|
-| `auth.login.spec.ts` | Login UI, invalid creds, all 6 role redirects |
-| `auth.forgot-password.spec.ts` | Forgot form, invalid reset token |
-| `feed.spec.ts` | Filters, incident links, notification bell |
-| `registry.spec.ts` | Summary, view modes, profile nav |
-| `register-dog.spec.ts` | Wizard validation |
-| `dog-profile.spec.ts` | Profile, cosign (conditional), call owner |
-| `cases.spec.ts` | LGU case board, admin sections |
-| `report-incident.spec.ts` | Drawer open/validate/submit/Escape |
-| `rescue.spec.ts` | Panels, status update (conditional) |
-| `breeds.spec.ts` | Grid, search, size filter |
-| `navigation.spec.ts` | Sidebar routes, incident, map, first-aid |
-| `theme.spec.ts` | Toggle + persistence |
-| `ui-layout.spec.ts` | Landing, signup roles, login shell, mobile |
-
----
-
 ## Missing or Incomplete Features
 
 ### Critical gaps (blocks stated product goals)
@@ -378,23 +358,22 @@ Post-login landing from `redirect_after_login()` in `web/includes/auth.php`. Nav
 
 ---
 
-## Testing Gaps
+## Manual QA Gaps
 
-| Area | Covered? |
+No automated browser test suite is in the repository. The following flows need manual QA sign-off before release:
+
+| Area | Status |
 |---|---|
-| Login + role redirects | ✓ |
-| Forgot password UI | ✓ |
-| Feed, registry, cases, breeds, rescue | ✓ |
-| Report drawer | ✓ |
-| Theme + landing layout | ✓ |
-| Signup full path (with email) | ✗ |
-| Email verify flow | ✗ |
-| Pending approval page | ✗ |
-| Analytics page | ✗ |
-| Case detail page | ✗ |
-| Admin approve action | ✗ |
-| Notifications page | ✗ |
-| CI on push | ✗ (no `.github/workflows/`) |
+| Login + role redirects | Needs manual pass |
+| Signup full path (with email) | Needs manual pass |
+| Email verify flow | Needs manual pass |
+| Pending approval page | Needs manual pass |
+| Feed, registry, cases, breeds, rescue | Needs manual pass |
+| Report drawer | Needs manual pass |
+| Analytics page | Needs manual pass |
+| Case detail page | Needs manual pass |
+| Admin approve action | Needs manual pass |
+| Notifications page | Needs manual pass |
 
 ---
 
@@ -407,7 +386,7 @@ Post-login landing from `redirect_after_login()` in `web/includes/auth.php`. Nav
 5. **Rabies checklist AJAX** — mark days Checked/Flagged.
 6. **LGU advisories CRUD** — use `advisories` table; wire Publish Advisory.
 7. **Role-specific signup fields** — DB columns + wizard step conditionals.
-8. **Signup E2E + CI workflow** — close M7 milestone gap.
+8. **Manual QA checklist** — record pass/fail per inventory page.
 9. **Production `.env` + schema v5/v6 on host** — InfinityFree deploy checklist.
 
 ---
