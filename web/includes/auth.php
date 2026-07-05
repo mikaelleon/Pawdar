@@ -52,6 +52,90 @@ function login_user(array $user): void
     $_SESSION['user_initials'] = user_initials_from_name((string) $user['Name']);
     $_SESSION['user_barangay'] = (string) $user['Barangay'];
     $_SESSION['user_status'] = (string) ($user['Status'] ?? 'active');
+    $_SESSION['email_verified'] = !empty($user['email_verified_at']) || !empty($user['EmailVerified']);
+}
+
+/**
+ * Returns post-signup / post-login redirect based on account state.
+ */
+function redirect_after_signup(array $user): string
+{
+    $status = (string) ($user['Status'] ?? 'active');
+    $verified = !empty($user['email_verified_at']);
+
+    if (!$verified) {
+        return 'verify.php';
+    }
+
+    if ($status === 'pending') {
+        return 'pending.php';
+    }
+
+    return redirect_after_login((string) ($user['Role'] ?? ''));
+}
+
+/**
+ * Issues a new email verification token and sends the message.
+ */
+function send_email_verification(PDO $pdo, int $userId, string $email, string $name): void
+{
+    $token = bin2hex(random_bytes(32));
+    $expires = date('Y-m-d H:i:s', time() + 86400);
+
+    $stmt = $pdo->prepare('
+        UPDATE user
+        SET email_verify_token = :token, email_verify_expires = :expires
+        WHERE UserID = :id
+    ');
+    $stmt->execute([
+        ':token' => $token,
+        ':expires' => $expires,
+        ':id' => $userId,
+    ]);
+
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = (string) ($_SERVER['HTTP_HOST'] ?? 'localhost');
+    $basePath = rtrim(dirname((string) ($_SERVER['SCRIPT_NAME'] ?? '/web')), '/\\');
+    if (str_ends_with($basePath, '/auth')) {
+        $basePath = dirname($basePath);
+    }
+    $link = $scheme . '://' . $host . $basePath . '/auth/verify-email.php?token=' . urlencode($token);
+    $body = "Hi {$name},\n\nConfirm your Pawdar account by opening this link (valid 24 hours):\n{$link}\n\nIf you did not sign up, ignore this email.";
+    @mail($email, 'Confirm your Pawdar account', $body, 'From: noreply@pawdar.local');
+}
+
+/**
+ * @return array<string, mixed>|null
+ */
+function verify_email_by_token(PDO $pdo, string $token): ?array
+{
+    $token = trim($token);
+    if ($token === '') {
+        return null;
+    }
+
+    $stmt = $pdo->prepare('
+        SELECT UserID, Name, Email, Role, Barangay, Status, email_verified_at
+        FROM user
+        WHERE email_verify_token = :token
+          AND email_verify_expires > NOW()
+        LIMIT 1
+    ');
+    $stmt->execute([':token' => $token]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$user) {
+        return null;
+    }
+
+    $update = $pdo->prepare('
+        UPDATE user
+        SET email_verified_at = NOW(), email_verify_token = NULL, email_verify_expires = NULL
+        WHERE UserID = :id
+    ');
+    $update->execute([':id' => (int) $user['UserID']]);
+    $user['email_verified_at'] = date('Y-m-d H:i:s');
+
+    return $user;
 }
 
 /**

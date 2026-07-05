@@ -134,6 +134,17 @@ function pawdar_apply_column_migrations(PDO $pdo): void
 
     pawdar_add_column($pdo, 'user', 'reset_token', 'VARCHAR(64) NULL AFTER Phone');
     pawdar_add_column($pdo, 'user', 'reset_token_expires', 'DATETIME NULL AFTER reset_token');
+
+    pawdar_add_column($pdo, 'user', 'last_name', 'VARCHAR(80) NULL AFTER Name');
+    pawdar_add_column($pdo, 'user', 'first_name', 'VARCHAR(80) NULL AFTER last_name');
+    pawdar_add_column($pdo, 'user', 'middle_name', 'VARCHAR(80) NULL AFTER first_name');
+    pawdar_add_column($pdo, 'user', 'name_suffix', 'VARCHAR(20) NULL AFTER middle_name');
+    pawdar_add_column($pdo, 'user', 'City', 'VARCHAR(100) NULL AFTER Barangay');
+    pawdar_add_column($pdo, 'user', 'city_id', 'INT NULL AFTER City');
+    pawdar_add_column($pdo, 'user', 'barangay_id', 'INT NULL AFTER city_id');
+    pawdar_add_column($pdo, 'user', 'email_verified_at', 'DATETIME NULL AFTER barangay_id');
+    pawdar_add_column($pdo, 'user', 'email_verify_token', 'VARCHAR(64) NULL AFTER email_verified_at');
+    pawdar_add_column($pdo, 'user', 'email_verify_expires', 'DATETIME NULL AFTER email_verify_token');
 }
 
 /**

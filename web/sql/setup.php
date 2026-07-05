@@ -45,6 +45,7 @@ try {
     pawdar_run_sql_file($pdo, __DIR__ . '/schema-v2.sql', true);
     pawdar_run_sql_file($pdo, __DIR__ . '/schema-v3-breeds.sql', true);
     pawdar_run_sql_file($pdo, __DIR__ . '/schema-v4-screens.sql', true);
+    pawdar_run_sql_file($pdo, __DIR__ . '/schema-v5-locations.sql', true);
     pawdar_ensure_breed_foreign_key($pdo);
 
     $breedCount = 0;
@@ -64,6 +65,21 @@ try {
         echo "Breeds table is empty — run: php sql/import-breeds.php\n";
     } else {
         echo "Breeds loaded: {$breedCount}\n";
+    }
+
+    $cityCount = 0;
+    $cityTable = (int) $pdo->query(
+        "SELECT COUNT(*) FROM information_schema.TABLES
+         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'city'"
+    )->fetchColumn();
+    if ($cityTable > 0) {
+        $cityCount = (int) $pdo->query('SELECT COUNT(*) FROM city')->fetchColumn();
+    }
+
+    if ($cityCount === 0) {
+        echo "City/barangay tables empty — run: php sql/import-barangays.php\n";
+    } else {
+        echo "Cities loaded: {$cityCount}\n";
     }
 } catch (Throwable $e) {
     echo 'Setup failed: ' . $e->getMessage() . "\n";

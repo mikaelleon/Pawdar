@@ -24,7 +24,14 @@ function initFloatingLabels() {
 
 function initPasswordToggles() {
     document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
+        if (btn.dataset.toggleBound === '1') {
+            return;
+        }
+        btn.dataset.toggleBound = '1';
+
+        btn.addEventListener('click', function (event) {
+            event.preventDefault();
+
             var targetId = btn.getAttribute('data-toggle-password');
             var input = document.getElementById(targetId);
             if (!input) {
@@ -37,8 +44,12 @@ function initPasswordToggles() {
             btn.setAttribute('aria-pressed', show ? 'true' : 'false');
 
             var icon = btn.querySelector('[data-lucide]');
-            if (icon && window.lucide) {
+            if (!icon) {
+                btn.innerHTML = '<i data-lucide="' + (show ? 'eye-off' : 'eye') + '" aria-hidden="true"></i>';
+            } else {
                 icon.setAttribute('data-lucide', show ? 'eye-off' : 'eye');
+            }
+            if (window.lucide) {
                 lucide.createIcons();
             }
         });
@@ -152,7 +163,7 @@ function showFieldError(input, message) {
     err.className = 'field-error';
     err.setAttribute('role', 'alert');
     err.innerHTML = escapeHtml(message);
-    input.closest('.float-field, .form-group, .form-field')?.appendChild(err);
+    input.closest('.float-field, .form-group, .form-field, .phone-input-group')?.appendChild(err);
 }
 
 function showFieldErrorHtml(input, html) {
@@ -162,12 +173,12 @@ function showFieldErrorHtml(input, html) {
     err.className = 'field-error';
     err.setAttribute('role', 'alert');
     err.innerHTML = html;
-    input.closest('.float-field, .form-group, .form-field')?.appendChild(err);
+    input.closest('.float-field, .form-group, .form-field, .phone-input-group')?.appendChild(err);
 }
 
 function clearFieldError(input) {
     input.classList.remove('is-invalid');
-    var wrap = input.closest('.float-field, .form-group, .form-field');
+    var wrap = input.closest('.float-field, .form-group, .form-field, .phone-input-group');
     if (wrap) {
         wrap.querySelectorAll('.field-error').forEach(function (el) { el.remove(); });
     }

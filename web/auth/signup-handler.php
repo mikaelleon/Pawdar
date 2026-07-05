@@ -1,19 +1,24 @@
 <?php
 
 require_once __DIR__ . '/../includes/bootstrap.php';
+require_once __DIR__ . '/../includes/locations.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: ../signup.php');
     exit;
 }
 
-$name = trim((string) ($_POST['name'] ?? ''));
+$lastName = trim((string) ($_POST['last_name'] ?? ''));
+$firstName = trim((string) ($_POST['first_name'] ?? ''));
+$middleName = trim((string) ($_POST['middle_name'] ?? ''));
+$nameSuffix = trim((string) ($_POST['name_suffix'] ?? ''));
 $email = trim((string) ($_POST['email'] ?? ''));
-$phone = preg_replace('/\s+/', '', trim((string) ($_POST['phone'] ?? '')));
+$phoneLocal = preg_replace('/\D+/', '', trim((string) ($_POST['phone_local'] ?? '')));
 $password = (string) ($_POST['password'] ?? '');
 $passwordConfirm = (string) ($_POST['password_confirm'] ?? '');
 $role = trim((string) ($_POST['role'] ?? 'Community Reporter'));
-$barangay = trim((string) ($_POST['barangay'] ?? ''));
+$cityId = (int) ($_POST['city_id'] ?? 0);
+$barangayId = (int) ($_POST['barangay_id'] ?? 0);
 $termsAccepted = !empty($_POST['terms']);
 
 $allowedRoles = [
@@ -29,13 +34,8 @@ if (!$termsAccepted) {
     exit;
 }
 
-if ($name === '' || $email === '' || $password === '' || $barangay === '') {
+if ($lastName === '' || $firstName === '' || $email === '' || $password === '' || $cityId <= 0 || $barangayId <= 0) {
     header('Location: ../signup.php?error=missing');
-    exit;
-}
-
-if ($phone !== '' && !preg_match('/^(\+639|09)\d{9}$/', $phone)) {
-    header('Location: ../signup.php?error=phone');
     exit;
 }
 
@@ -48,13 +48,37 @@ if (!in_array($role, $allowedRoles, true)) {
     $role = 'Community Reporter';
 }
 
-$status = in_array($role, roles_requiring_approval(), true) ? 'pending' : 'active';
+$phone = '';
+if ($phoneLocal !== '') {
+    if (strlen($phoneLocal) === 10 && str_starts_with($phoneLocal, '9')) {
+        $phone = '+63' . $phoneLocal;
+    } elseif (strlen($phoneLocal) === 11 && str_starts_with($phoneLocal, '09')) {
+        $phone = '+63' . substr($phoneLocal, 1);
+    } else {
+        header('Location: ../signup.php?error=phone');
+        exit;
+    }
+}
+
+    if (in_array($role, roles_requiring_phone(), true) && $phone === '') {
+        header('Location: ../signup.php?error=phone');
+        exit;
+    }
+
+    $status = in_array($role, roles_requiring_approval(), true) ? 'pending' : 'active';
+$displayName = build_user_display_name($lastName, $firstName, $middleName, $nameSuffix);
 
 try {
     $pdo = db();
+
+    $location = fetch_location_by_barangay_id($pdo, $barangayId);
+    if (!$location || (int) $location['city_id'] !== $cityId) {
+        header('Location: ../signup.php?error=location');
+        exit;
+    }
+
     $check = $pdo->prepare('SELECT UserID FROM user WHERE Email = :email LIMIT 1');
     $check->execute([':email' => $email]);
-
     if ($check->fetch()) {
         header('Location: ../signup.php?error=exists');
         exit;
@@ -62,46 +86,47 @@ try {
 
     $hash = password_hash($password, PASSWORD_BCRYPT);
     $insert = $pdo->prepare('
-        INSERT INTO user (Name, Email, Password, Role, Status, Barangay, Phone)
-        VALUES (:name, :email, :password, :role, :status, :barangay, :phone)
+        INSERT INTO user (
+            Name, last_name, first_name, middle_name, name_suffix,
+            Email, Password, Role, Status, Barangay, City, city_id, barangay_id, Phone
+        ) VALUES (
+            :name, :last_name, :first_name, :middle_name, :name_suffix,
+            :email, :password, :role, :status, :barangay, :city, :city_id, :barangay_id, :phone
+        )
     ');
     $insert->execute([
-        ':name' => $name,
+        ':name' => $displayName,
+        ':last_name' => $lastName,
+        ':first_name' => $firstName,
+        ':middle_name' => $middleName !== '' ? $middleName : null,
+        ':name_suffix' => $nameSuffix !== '' ? $nameSuffix : null,
         ':email' => $email,
         ':password' => $hash,
         ':role' => $role,
         ':status' => $status,
-        ':barangay' => $barangay,
+        ':barangay' => $location['barangay_name'],
+        ':city' => $location['name'],
+        ':city_id' => $cityId,
+        ':barangay_id' => $barangayId,
         ':phone' => $phone !== '' ? $phone : null,
     ]);
 
     $userId = (int) $pdo->lastInsertId();
+    send_email_verification($pdo, $userId, $email, $firstName);
 
-    $subject = 'Welcome to Pawdar';
-    $body = "Hi {$name},\n\nYour Pawdar account was created as {$role}.";
-    if ($status === 'pending') {
-        $body .= "\n\nYour account is pending admin approval. We'll email you when it's active.";
-    } else {
-        $body .= "\n\nYou can log in now at Pawdar.";
-    }
-    @mail($email, $subject, $body, 'From: noreply@pawdar.local');
-
-    login_user([
+    $userRow = [
         'UserID' => $userId,
-        'Name' => $name,
+        'Name' => $displayName,
         'Role' => $role,
-        'Barangay' => $barangay,
+        'Barangay' => $location['barangay_name'],
         'Status' => $status,
-    ]);
-} catch (PDOException $exception) {
+        'email_verified_at' => null,
+    ];
+    login_user($userRow);
+} catch (PDOException) {
     header('Location: ../signup.php?error=db');
     exit;
 }
 
-if ($status === 'pending') {
-    header('Location: ../pending.php');
-    exit;
-}
-
-header('Location: ../feed.php');
+header('Location: ../verify.php');
 exit;

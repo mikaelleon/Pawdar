@@ -51,7 +51,7 @@ if ($email === '' || $password === '') {
 
 try {
     $pdo = db();
-    $stmt = $pdo->prepare('SELECT UserID, Name, Email, Password, Role, Barangay, Status FROM user WHERE Email = :email LIMIT 1');
+    $stmt = $pdo->prepare('SELECT UserID, Name, Email, Password, Role, Barangay, Status, email_verified_at FROM user WHERE Email = :email LIMIT 1');
     $stmt->execute([':email' => $email]);
     $user = $stmt->fetch();
 } catch (PDOException $exception) {
@@ -81,9 +81,13 @@ if (!$user || !password_verify($password, (string) $user['Password'])) {
 clear_login_attempts();
 login_user($user);
 
-$redirect = ($user['Status'] ?? 'active') === 'pending'
-    ? 'pending.php'
-    : redirect_after_login((string) $user['Role']);
+if (empty($user['email_verified_at'])) {
+    $redirect = 'verify.php';
+} elseif (($user['Status'] ?? 'active') === 'pending') {
+    $redirect = 'pending.php';
+} else {
+    $redirect = redirect_after_login((string) $user['Role']);
+}
 
 if ($wantsJson) {
     login_json_response([

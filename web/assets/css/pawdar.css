@@ -2782,6 +2782,121 @@ body.modal-open { overflow: hidden; }
 
 .signup-form-wrap { max-width: 520px; }
 
+.signup-stepper {
+    margin: 18px 0 24px;
+}
+
+.signup-panel-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--taupe);
+    margin: 0 0 6px;
+}
+
+.signup-panel-desc {
+    font-size: 13px;
+    color: var(--air-force);
+    margin: 0 0 18px;
+}
+
+.signup-name-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.signup-name-grid .form-field:first-child {
+    grid-column: 1 / -1;
+}
+
+.phone-input-group {
+    display: flex;
+    align-items: stretch;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--white);
+}
+
+.phone-input-group:focus-within {
+    border-color: var(--air-force);
+    box-shadow: var(--shadow-sm);
+}
+
+.phone-prefix {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 12px;
+    background: rgba(192, 218, 181, 0.25);
+    color: var(--taupe);
+    font-weight: 600;
+    font-size: 14px;
+    border-right: 1px solid var(--border);
+}
+
+.phone-input-group .phone-input {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    flex: 1;
+}
+
+.phone-input-group .phone-input:focus {
+    box-shadow: none;
+}
+
+.form-field .phone-input-group.is-invalid-wrap,
+.phone-input-group:has(.is-invalid) {
+    border-color: var(--burnt-peach);
+}
+
+.signup-privacy-note {
+    margin: 8px 0 16px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(108, 139, 159, 0.08);
+    color: var(--taupe);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.signup-form-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-light);
+}
+
+.signup-form-actions-nav {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.signup-form-actions-nav .btn-outline,
+.signup-form-actions-nav .btn-primary {
+    min-width: 120px;
+}
+
+.signup-save-later {
+    align-self: flex-start;
+    font-size: 13px;
+    padding: 0;
+}
+
+.signup-verify-panel {
+    margin-top: 24px;
+}
+
+@media (max-width: 640px) {
+    .signup-name-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .breed-card {
     border: 1px solid var(--border-light);
     background: var(--white);

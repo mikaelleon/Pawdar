@@ -175,7 +175,7 @@ function escapeHtml(text) {
 
 function initSignupForm() {
     var form = document.getElementById('signup-form');
-    if (!form) {
+    if (!form || form.dataset.signupWizard === '1') {
         return;
     }
 
