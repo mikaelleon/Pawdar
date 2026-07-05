@@ -1,8 +1,14 @@
 <?php
 /**
- * Copy this file to db.local.php and set your XAMPP MySQL credentials.
+ * Optional local overrides (gitignored).
+ *
+ * Prefer repo-root `.env` for secrets — see `.env.example`.
+ * Use this file only if you need PHP-specific overrides without .env.
  */
 putenv('PAWDAR_DB_HOST=localhost');
 putenv('PAWDAR_DB_NAME=pawdar');
 putenv('PAWDAR_DB_USER=root');
 putenv('PAWDAR_DB_PASS=your_mysql_password_here');
+
+putenv('RESEND_API_KEY=re_HmKyQi1P_P51Gf6zyY3aoW9JF4qctqDMJ');
+putenv('RESEND_FROM=Pawdar <onboarding@resend.dev>');

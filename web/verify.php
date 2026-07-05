@@ -7,6 +7,9 @@ require_login();
 $userId = (int) $_SESSION['user_id'];
 $email = '';
 $name = (string) ($_SESSION['user_name'] ?? '');
+$resent = false;
+$resendError = '';
+$sendError = (string) ($_GET['send_error'] ?? '');
 
 try {
     $stmt = db()->prepare('SELECT Email, Name, email_verified_at FROM user WHERE UserID = :id LIMIT 1');
@@ -31,8 +34,19 @@ try {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['resend'])) {
-    send_email_verification(db(), $userId, $email, $name);
-    $resent = true;
+    if (!can_resend_verification_email()) {
+        $resendError = 'Please wait a minute before requesting another email.';
+    } elseif (!pawdar_resend_configured()) {
+        $resendError = 'Email delivery is not configured. Contact your administrator.';
+    } else {
+        $sent = send_email_verification(db(), $userId, $email, $name);
+        if ($sent) {
+            mark_verification_email_sent();
+            $resent = true;
+        } else {
+            $resendError = 'Could not send the email. Try again in a few minutes.';
+        }
+    }
 }
 
 $pageTitle = 'Verify Email · ' . SITE_NAME;
@@ -41,6 +55,7 @@ $pageScripts = ['assets/js/ui.js'];
 require __DIR__ . '/includes/head.php';
 
 $stepLabels = [1 => 'Account', 2 => 'Role & location', 3 => 'Verify'];
+$resendConfigured = pawdar_resend_configured();
 ?>
 
 <div class="auth-page">
@@ -76,18 +91,38 @@ $stepLabels = [1 => 'Account', 2 => 'Role & location', 3 => 'Verify'];
                     We sent a confirmation link to <strong><?= htmlspecialchars($email) ?></strong>.
                     Open it within 24 hours to activate your account.
                 </p>
-                <?php if ($error === 'invalid'): ?>
-                    <p class="field-error" role="alert">That verification link is invalid or expired.</p>
+
+                <?php if (!$resendConfigured): ?>
+                    <p class="field-hint field-hint--warning" role="status" style="margin-top:12px;">
+                        Email delivery is not configured. Add <code>RESEND_API_KEY</code> to the project <code>.env</code> file.
+                        See <code>docs/EMAIL_SETUP.md</code>.
+                    </p>
                 <?php endif; ?>
-                <?php if (!empty($resent)): ?>
+
+                <?php if ($sendError === '1'): ?>
+                    <p class="field-error" role="alert">Your account was created, but we could not send the verification email. Use resend below.</p>
+                <?php endif; ?>
+
+                <?php if ($error === 'invalid'): ?>
+                    <p class="field-error" role="alert">That verification link is invalid or expired. Request a new one below.</p>
+                <?php endif; ?>
+
+                <?php if ($resent): ?>
                     <p class="field-hint field-hint--success" role="status">Verification email sent again.</p>
                 <?php endif; ?>
+
+                <?php if ($resendError !== ''): ?>
+                    <p class="field-error" role="alert"><?= htmlspecialchars($resendError) ?></p>
+                <?php endif; ?>
+
                 <p class="text-sm text-muted signup-privacy-note" style="margin-top:12px;">
                     Pawdar processes your data in compliance with the Philippine Data Privacy Act (RA 10173).
                 </p>
 
                 <form method="post" style="margin-top:20px;">
-                    <button type="submit" name="resend" value="1" class="btn-outline btn-block">Resend confirmation email</button>
+                    <button type="submit" name="resend" value="1" class="btn-outline btn-block" <?= $resendConfigured ? '' : 'disabled' ?>>
+                        Resend confirmation email
+                    </button>
                 </form>
                 <a href="auth/logout.php" class="btn-ghost btn-block" style="margin-top:10px;text-align:center;">Use a different email</a>
             </div>

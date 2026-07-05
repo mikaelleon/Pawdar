@@ -15,11 +15,5 @@ if (!$user) {
 }
 
 login_user($user);
-
-if (($user['Status'] ?? 'active') === 'pending') {
-    header('Location: ../pending.php?verified=1');
-    exit;
-}
-
-header('Location: ../feed.php?verified=1');
+header('Location: ../email_verified.php');
 exit;

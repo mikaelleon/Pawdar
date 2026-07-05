@@ -21,7 +21,11 @@ This folder contains the production-ready HTML/PHP site converted from the Pawda
 |------|-------------|
 | `index.php` | Landing / marketing page |
 | `login.php` | Log in |
-| `signup.php` | Create account |
+| `signup.php` | Create account (3-step wizard) |
+| `verify.php` | Email verification — check inbox / resend |
+| `email_verified.php` | Confirmation after clicking verify link |
+| `forgot_password.php` | Password reset request |
+| `reset_password.php` | Set new password from email link |
 | `feed.php` | Home incident feed |
 | `map.php` | Incident map |
 | `dog-profile.php` | Dog registry profile |
@@ -34,24 +38,29 @@ This folder contains the production-ready HTML/PHP site converted from the Pawda
 
 ## Local setup (XAMPP)
 
-1. Copy `includes/db.local.php.example` → `includes/db.local.php` and set MySQL password.
-2. Run schema: `php sql/setup.php`
-3. Import Kaggle breeds: `php sql/import-breeds.php` (reads `../archive/dogs_cleaned.csv`)
-4. Open `http://localhost/WS101_Aliwate/WS101-Pawdar/web/`
+1. Copy `.env.example` → `.env` at the **repo root** and set MySQL + Resend keys.
+2. Optional: copy `includes/db.local.php.example` → `includes/db.local.php` for DB-only overrides.
+3. Run schema: `php sql/setup.php`
+4. Import barangays: `php sql/import-barangays.php`
+5. Import Kaggle breeds: `php sql/import-breeds.php` (reads `../archive/dogs_cleaned.csv`)
+6. Open `http://localhost/WS101_Aliwate/WS101-Pawdar/web/`
 
 Demo login: any seeded account, password `password`.
 
-CSV column mapping documented in `sql/BREEDS_CSV_HEADERS.md`.
+## Email (Resend)
+
+Verification and password reset use [Resend](https://resend.com). Configure `RESEND_API_KEY` in root `.env`. Full setup: **`docs/EMAIL_SETUP.md`**.
 
 ## Requirements
 
-- **PHP 7.4+** with PDO MySQL
+- **PHP 7.4+** with PDO MySQL and **cURL**
 - **MariaDB/MySQL** (XAMPP or InfinityFree)
 - Lucide icons and Google Fonts load from CDN (internet required)
 
 ## Notes
 
-- Login/signup forms redirect to `feed.php` as a demo (no backend yet).
+- Sign up sends a verification email; users must confirm before accessing the app.
+- Login/signup forms require a verified email for feed and other protected pages.
 - Design is **responsive**: sidebar on desktop, bottom nav on mobile.
 - Original design canvas remains in `Pawdar Design System/` for reference.
 

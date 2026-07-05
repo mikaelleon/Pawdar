@@ -1,5 +1,8 @@
 <?php
 
+require_once __DIR__ . '/env.php';
+pawdar_load_env();
+
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/helpers.php';
 
@@ -12,4 +15,5 @@ if (!isset($_SESSION['csrf_token'])) {
 }
 
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/mailer.php';
 require_once __DIR__ . '/auth.php';

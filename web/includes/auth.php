@@ -12,11 +12,23 @@ function require_login(): void
 }
 
 /**
+ * Requires login and a verified email address.
+ */
+function require_email_verified(): void
+{
+    if (empty($_SESSION['email_verified'])) {
+        header('Location: verify.php');
+        exit;
+    }
+}
+
+/**
  * Requires login and active account status.
  */
 function require_login_active(): void
 {
     require_login();
+    require_email_verified();
     require_active_account();
 }
 
@@ -75,9 +87,11 @@ function redirect_after_signup(array $user): string
 }
 
 /**
- * Issues a new email verification token and sends the message.
+ * Issues a new email verification token and sends the message via Resend.
+ *
+ * @return bool True when the email was accepted by Resend.
  */
-function send_email_verification(PDO $pdo, int $userId, string $email, string $name): void
+function send_email_verification(PDO $pdo, int $userId, string $email, string $name): bool
 {
     $token = bin2hex(random_bytes(32));
     $expires = date('Y-m-d H:i:s', time() + 86400);
@@ -93,15 +107,50 @@ function send_email_verification(PDO $pdo, int $userId, string $email, string $n
         ':id' => $userId,
     ]);
 
-    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $host = (string) ($_SERVER['HTTP_HOST'] ?? 'localhost');
-    $basePath = rtrim(dirname((string) ($_SERVER['SCRIPT_NAME'] ?? '/web')), '/\\');
-    if (str_ends_with($basePath, '/auth')) {
-        $basePath = dirname($basePath);
-    }
-    $link = $scheme . '://' . $host . $basePath . '/auth/verify-email.php?token=' . urlencode($token);
-    $body = "Hi {$name},\n\nConfirm your Pawdar account by opening this link (valid 24 hours):\n{$link}\n\nIf you did not sign up, ignore this email.";
-    @mail($email, 'Confirm your Pawdar account', $body, 'From: noreply@pawdar.local');
+    $link = pawdar_app_url('auth/verify-email.php?token=' . urlencode($token));
+    $content = pawdar_verification_email_content($name, $link);
+
+    return pawdar_send_email(
+        $email,
+        'Confirm your Pawdar account',
+        $content['html'],
+        $content['text']
+    );
+}
+
+/**
+ * Sends a password reset link via Resend.
+ *
+ * @return bool True when the email was accepted by Resend.
+ */
+function send_password_reset_email(string $email, string $name, string $resetUrl): bool
+{
+    $content = pawdar_password_reset_email_content($name, $resetUrl);
+
+    return pawdar_send_email(
+        $email,
+        'Reset your Pawdar password',
+        $content['html'],
+        $content['text']
+    );
+}
+
+/**
+ * Returns true if the current user may request another verification email (60s cooldown).
+ */
+function can_resend_verification_email(): bool
+{
+    $lastSent = (int) ($_SESSION['verify_email_last_sent'] ?? 0);
+
+    return (time() - $lastSent) >= 60;
+}
+
+/**
+ * Records a verification resend attempt timestamp.
+ */
+function mark_verification_email_sent(): void
+{
+    $_SESSION['verify_email_last_sent'] = time();
 }
 
 /**

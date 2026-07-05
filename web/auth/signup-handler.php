@@ -112,7 +112,10 @@ try {
     ]);
 
     $userId = (int) $pdo->lastInsertId();
-    send_email_verification($pdo, $userId, $email, $firstName);
+    $sent = send_email_verification($pdo, $userId, $email, $firstName);
+    if ($sent) {
+        mark_verification_email_sent();
+    }
 
     $userRow = [
         'UserID' => $userId,
@@ -128,5 +131,5 @@ try {
     exit;
 }
 
-header('Location: ../verify.php');
+header('Location: ../verify.php' . ($sent ? '' : '?send_error=1'));
 exit;

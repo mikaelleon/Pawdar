@@ -8,6 +8,7 @@ if (($_SESSION['user_status'] ?? 'active') !== 'pending') {
 }
 
 $pageTitle = 'Account Pending · ' . SITE_NAME;
+$emailVerified = isset($_GET['verified']);
 require __DIR__ . '/includes/head.php';
 ?>
 
@@ -26,6 +27,9 @@ require __DIR__ . '/includes/head.php';
                 <i data-lucide="clock"></i>
             </div>
             <h1 class="auth-title">Account pending approval</h1>
+            <?php if ($emailVerified): ?>
+                <p class="field-hint field-hint--success" role="status">Your email is verified.</p>
+            <?php endif; ?>
             <p class="text-sm text-muted" style="margin-top:12px;">
                 Thanks, <?= htmlspecialchars((string) $_SESSION['user_name']) ?>.
                 Your <?= htmlspecialchars((string) $_SESSION['user_role']) ?> account is being reviewed.

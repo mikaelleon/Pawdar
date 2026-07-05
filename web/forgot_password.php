@@ -39,26 +39,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':id' => (int) $user['UserID'],
                 ]);
 
-                $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-                $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-                $basePath = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/\\');
-                $resetLink = $scheme . '://' . $host . $basePath . '/reset_password.php?token=' . urlencode($token);
+                $resetLink = pawdar_app_url('reset_password.php?token=' . urlencode($token));
+                $sent = send_password_reset_email((string) $user['Email'], (string) $user['Name'], $resetLink);
 
-                $subject = 'Pawdar Password Reset';
-                $body = "Hi {$user['Name']},\n\n"
-                    . "We received a request to reset your Pawdar password. "
-                    . "Use the link below to set a new password. This link expires in 1 hour.\n\n"
-                    . $resetLink . "\n\n"
-                    . "If you didn't request this, you can safely ignore this email.";
-
-                $sent = @mail(
-                    (string) $user['Email'],
-                    $subject,
-                    $body,
-                    'From: no-reply@pawdar.local'
-                );
-
-                if (!$sent && preg_match('/localhost|127\.0\.0\.1/i', $host)) {
+                if (!$sent && preg_match('/localhost|127\.0\.0\.1/i', (string) ($_SERVER['HTTP_HOST'] ?? ''))) {
                     $devResetLink = $resetLink;
                 }
             }
