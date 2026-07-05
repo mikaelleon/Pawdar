@@ -10,6 +10,9 @@
         <a href="index.html#about">About</a>
     </div>
     <div class="landing-nav-actions">
+        <button type="button" class="icon-box icon-box-sm theme-toggle-btn landing-theme-toggle" id="darkModeToggle" aria-label="Switch to dark mode" title="Toggle theme">
+            <i data-lucide="sun" data-theme-icon></i>
+        </button>
         <a href="login.php" class="btn-outline btn-sm">Log In</a>
         <a href="signup.php" class="btn-primary btn-sm">Sign Up</a>
     </div>

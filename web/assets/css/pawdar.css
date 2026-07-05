@@ -678,6 +678,62 @@ textarea.form-input {
     margin-right: auto;
 }
 
+.landing-nav .landing-theme-toggle {
+    background: var(--bg-soft);
+    color: var(--taupe);
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.landing-nav .landing-theme-toggle:hover {
+    background: var(--tea-green);
+}
+
+[data-theme="dark"] .landing-nav {
+    background: #2A2626;
+}
+
+[data-theme="dark"] .feature-card,
+[data-theme="dark"] .audience-card {
+    background: var(--white);
+    border-color: var(--border);
+}
+
+[data-theme="dark"] .how-it-works {
+    background: var(--bg-map);
+}
+
+[data-theme="dark"] .step-num {
+    border-color: var(--bg-map);
+}
+
+[data-theme="dark"] .illo-phone {
+    background: var(--bg-soft);
+    border-color: var(--border);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .site-footer {
+    background: #1E1B1B;
+    color: rgba(240, 237, 234, 0.85);
+}
+
+[data-theme="dark"] .site-footer .logo-text {
+    color: #F0EDEA;
+}
+
+[data-theme="dark"] .site-footer-tagline,
+[data-theme="dark"] .footer-bottom {
+    color: rgba(240, 237, 234, 0.65);
+}
+
+[data-theme="dark"] .footer-bottom {
+    border-top-color: rgba(240, 237, 234, 0.12);
+}
+
+[data-theme="dark"] .landing-nav .landing-theme-toggle:hover {
+    background: rgba(143, 168, 136, 0.25);
+}
+
 /* ========== AUTH PAGES ========== */
 .auth-page {
     min-height: 100vh;

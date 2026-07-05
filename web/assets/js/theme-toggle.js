@@ -13,9 +13,11 @@
         }
 
         var icon = btn.querySelector('[data-theme-icon]');
-        if (icon && window.lucide) {
+        if (icon) {
             icon.setAttribute('data-lucide', theme === 'dark' ? 'moon' : 'sun');
-            lucide.createIcons();
+            if (window.lucide) {
+                lucide.createIcons();
+            }
         }
 
         btn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
