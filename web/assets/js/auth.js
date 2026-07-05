@@ -11,19 +11,31 @@ function initLoginForm() {
 
     var email = form.querySelector('#email');
     var password = form.querySelector('#password');
-    var submitBtns = document.querySelectorAll('[data-login-submit]');
+    var submitBtn = form.querySelector('[data-login-submit]');
+    var alertBox = document.querySelector('[data-login-alert]');
     var hasError = form.dataset.loginError === '1';
+    var errorType = form.dataset.loginErrorType || 'invalid';
+    var isLocked = form.dataset.locked === '1';
 
-    if (hasError) {
-        markLoginError(form, email, password);
+    if (hasError && !isLocked) {
+        if (errorType === 'missing') {
+            if (!email.value.trim()) {
+                PawdarUI.showFieldError(email, 'This field is required.');
+            }
+            if (!password.value) {
+                PawdarUI.showFieldError(password, 'This field is required.');
+            }
+        } else {
+            markLoginError(email, password);
+        }
     }
 
-    function clearError() {
-        if (email) {
-            PawdarUI.clearFieldError(email);
-        }
-        if (password) {
-            PawdarUI.clearFieldError(password);
+    function clearErrors() {
+        PawdarUI.clearFieldError(email);
+        PawdarUI.clearFieldError(password);
+        if (alertBox) {
+            alertBox.hidden = true;
+            alertBox.innerHTML = '';
         }
     }
 
@@ -31,22 +43,134 @@ function initLoginForm() {
         if (!input) {
             return;
         }
-        input.addEventListener('input', clearError);
+        input.addEventListener('input', clearErrors);
     });
 
-    form.addEventListener('submit', function () {
-        submitBtns.forEach(function (btn) { PawdarUI.setButtonLoading(btn, true); });
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        if (isLocked || !submitBtn) {
+            return;
+        }
+
+        clearErrors();
+
+        var valid = true;
+        if (!email.value.trim()) {
+            PawdarUI.showFieldError(email, 'This field is required.');
+            valid = false;
+        } else if (!email.validity.valid) {
+            PawdarUI.showFieldError(email, 'Please enter a valid email address.');
+            valid = false;
+        }
+
+        if (!password.value) {
+            PawdarUI.showFieldError(password, 'This field is required.');
+            valid = false;
+        }
+
+        if (!valid) {
+            (email.value.trim() ? password : email).focus();
+            return;
+        }
+
+        setLoginButtonLoading(submitBtn, true);
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+            },
+            body: new FormData(form),
+        })
+            .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+            .then(function (result) {
+                if (result.data.success) {
+                    showLoginSuccess(submitBtn, function () {
+                        window.location.href = result.data.redirect || 'feed.php';
+                    });
+                    return;
+                }
+
+                setLoginButtonLoading(submitBtn, false);
+
+                if (result.data.error === 'locked') {
+                    if (alertBox) {
+                        alertBox.hidden = false;
+                        alertBox.innerHTML = '<p class="field-error">' + escapeHtml(result.data.message || 'Too many attempts.') + '</p>';
+                    }
+                    isLocked = true;
+                    submitBtn.disabled = true;
+                    return;
+                }
+
+                if (result.data.error === 'missing') {
+                    if (!email.value.trim()) {
+                        PawdarUI.showFieldError(email, 'This field is required.');
+                    }
+                    if (!password.value) {
+                        PawdarUI.showFieldError(password, 'This field is required.');
+                    }
+                    return;
+                }
+
+                markLoginError(email, password);
+            })
+            .catch(function () {
+                setLoginButtonLoading(submitBtn, false);
+                if (alertBox) {
+                    alertBox.hidden = false;
+                    alertBox.innerHTML = '<p class="field-error">Network error. Please try again.</p>';
+                }
+            });
     });
 }
 
-function markLoginError(form, email, password) {
+function markLoginError(email, password) {
     if (email) {
         email.classList.add('is-invalid');
     }
     if (password) {
-        password.classList.add('is-invalid');
-        PawdarUI.showFieldError(password, 'Incorrect email or password. Please try again.');
+        PawdarUI.showFieldError(password, 'Incorrect email or password.');
     }
+}
+
+function setLoginButtonLoading(btn, loading) {
+    if (!btn) {
+        return;
+    }
+
+    if (loading) {
+        btn.dataset.originalText = btn.textContent.trim();
+        btn.classList.add('is-loading');
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        btn.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span> Logging in…';
+        return;
+    }
+
+    btn.classList.remove('is-loading', 'is-success');
+    btn.disabled = false;
+    btn.style.opacity = '';
+    btn.textContent = btn.dataset.originalText || 'Log In';
+}
+
+function showLoginSuccess(btn, callback) {
+    btn.classList.remove('is-loading');
+    btn.classList.add('is-success');
+    btn.disabled = true;
+    btn.style.opacity = '1';
+    btn.innerHTML = '<i data-lucide="check" aria-hidden="true"></i> Success';
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+    setTimeout(callback, 250);
+}
+
+function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
 }
 
 function initSignupForm() {

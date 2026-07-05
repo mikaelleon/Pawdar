@@ -150,7 +150,8 @@ function showFieldError(input, message) {
     input.classList.add('is-invalid');
     var err = document.createElement('p');
     err.className = 'field-error';
-    err.innerHTML = '<span aria-hidden="true">✕</span> ' + escapeHtml(message);
+    err.setAttribute('role', 'alert');
+    err.innerHTML = escapeHtml(message);
     input.closest('.float-field, .form-group')?.appendChild(err);
 }
 

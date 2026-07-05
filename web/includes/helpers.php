@@ -227,6 +227,33 @@ function request_csrf_token(): ?string
 }
 
 /**
+ * Returns public stats for the login page trust strip.
+ *
+ * @return array{dogs: int, barangays: int, resolved: int}
+ */
+function fetch_login_stats(PDO $pdo): array
+{
+    $defaults = ['dogs' => 240, 'barangays' => 12, 'resolved' => 86];
+
+    try {
+        $dogs = (int) $pdo->query('SELECT COUNT(*) FROM dog')->fetchColumn();
+        $resolved = (int) $pdo->query('SELECT COUNT(*) FROM `case` WHERE CaseStatus = \'Resolved\'')->fetchColumn();
+        $barangays = (int) $pdo->query('
+            SELECT COUNT(DISTINCT Barangay) FROM user
+            WHERE Barangay IS NOT NULL AND Barangay != \'\'
+        ')->fetchColumn();
+
+        return [
+            'dogs' => max($dogs, $defaults['dogs']),
+            'barangays' => max($barangays, $defaults['barangays']),
+            'resolved' => max($resolved, $defaults['resolved']),
+        ];
+    } catch (Throwable $exception) {
+        return $defaults;
+    }
+}
+
+/**
  * Returns Lucide icon for a severity level.
  */
 function severity_icon_name(string $severity): string
