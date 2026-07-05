@@ -1,36 +1,12 @@
--- Pawdar schema v2 migration (run after schema.sql)
+-- Pawdar schema v2 (run after schema.sql via setup.php)
+-- Adds first_aid_guides and v2 demo rows. Column migrations run in runner.php.
 USE pawdar;
-
-ALTER TABLE user
-    ADD COLUMN IF NOT EXISTS Status ENUM('active', 'pending') NOT NULL DEFAULT 'active' AFTER Role;
-
-UPDATE user SET Status = 'active' WHERE Status IS NULL OR Status = '';
-
-ALTER TABLE dog
-    ADD COLUMN IF NOT EXISTS RegistryID VARCHAR(20) NULL AFTER dog_id,
-    ADD COLUMN IF NOT EXISTS Gender VARCHAR(20) NULL AFTER Breed,
-    ADD COLUMN IF NOT EXISTS Size ENUM('Small', 'Medium', 'Large') NULL AFTER Gender,
-    ADD COLUMN IF NOT EXISTS DogType VARCHAR(50) NULL AFTER Size,
-    ADD COLUMN IF NOT EXISTS Status ENUM('Registered', 'Pending', 'Inactive') NOT NULL DEFAULT 'Registered' AFTER DogType;
 
 UPDATE dog SET RegistryID = CONCAT('PWD-2024-', LPAD(dog_id, 5, '0'))
 WHERE RegistryID IS NULL OR RegistryID = '';
 
 UPDATE dog SET Gender = 'Male', Size = 'Medium', DogType = 'Owned'
 WHERE DogName = 'Bantay';
-
-CREATE TABLE IF NOT EXISTS breeds (
-    breed_id INT AUTO_INCREMENT PRIMARY KEY,
-    breed_name VARCHAR(120) NOT NULL UNIQUE,
-    size_category ENUM('Small', 'Medium', 'Large') NOT NULL,
-    weight_range VARCHAR(30) NULL,
-    trait_summary VARCHAR(120) NULL,
-    loyalty INT NOT NULL DEFAULT 3,
-    energy INT NOT NULL DEFAULT 3,
-    friendliness INT NOT NULL DEFAULT 3,
-    health_risks JSON NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
 
 CREATE TABLE IF NOT EXISTS first_aid_guides (
     guide_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -43,17 +19,6 @@ CREATE TABLE IF NOT EXISTS first_aid_guides (
     icon VARCHAR(40) NOT NULL DEFAULT 'dog',
     sort_order INT NOT NULL DEFAULT 0
 );
-
-INSERT INTO breeds (breed_name, size_category, weight_range, trait_summary, loyalty, energy, friendliness, health_risks) VALUES
-('Aspin (Asong Pinoy)', 'Medium', '12–18 kg', 'Loyal & alert', 4, 4, 3, '["Skin allergies & hot spots","Tick-borne disease","Heat exhaustion"]'),
-('Labrador Retriever', 'Large', '25–36 kg', 'Friendly', 5, 5, 5, '["Hip dysplasia","Obesity","Ear infections"]'),
-('Shih Tzu', 'Small', '4–7 kg', 'Affectionate', 4, 3, 4, '["Eye problems","Breathing issues","Dental disease"]'),
-('German Shepherd', 'Large', '30–40 kg', 'Protective', 5, 4, 3, '["Hip dysplasia","Degenerative myelopathy","Bloat"]'),
-('Beagle', 'Medium', '9–11 kg', 'Curious & merry', 4, 4, 5, '["Epilepsy","Hypothyroidism","Obesity"]'),
-('Chihuahua', 'Small', '1.5–3 kg', 'Bold & alert', 3, 4, 3, '["Patellar luxation","Heart disease","Low blood sugar"]'),
-('Golden Retriever', 'Large', '25–34 kg', 'Gentle & loyal', 5, 4, 5, '["Cancer risk","Hip dysplasia","Skin allergies"]'),
-('Poodle', 'Medium', '6–25 kg', 'Intelligent', 4, 4, 4, '["Eye disorders","Skin conditions","Bloat"]')
-ON DUPLICATE KEY UPDATE breed_name = VALUES(breed_name);
 
 INSERT INTO first_aid_guides (incident_type, severity_level, title, steps, warning_text, source_citation, icon, sort_order) VALUES
 ('Animal Bite', 'Severe', 'Animal Bite First Aid',

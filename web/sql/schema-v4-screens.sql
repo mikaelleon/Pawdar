@@ -1,4 +1,5 @@
--- Pawdar schema v4 — missing screens support
+-- Pawdar schema v4 — screens support (run after v3 via setup.php)
+-- Column migrations run in runner.php.
 USE pawdar;
 
 ALTER TABLE `case`
@@ -9,9 +10,6 @@ ALTER TABLE `case`
         'Resolved',
         'Referred'
     ) NOT NULL DEFAULT 'Received';
-
-ALTER TABLE `case`
-    ADD COLUMN IF NOT EXISTS RabiesMonitoring TINYINT NOT NULL DEFAULT 0 AFTER CaseStatus;
 
 CREATE TABLE IF NOT EXISTS case_history (
     history_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -95,31 +93,6 @@ CREATE TABLE IF NOT EXISTS advisories (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES user(UserID) ON DELETE CASCADE
 );
-
-ALTER TABLE incident
-    ADD COLUMN IF NOT EXISTS latitude DECIMAL(10, 7) NULL AFTER Location,
-    ADD COLUMN IF NOT EXISTS longitude DECIMAL(10, 7) NULL AFTER latitude,
-    ADD COLUMN IF NOT EXISTS photo_path VARCHAR(255) NULL AFTER Description,
-    ADD COLUMN IF NOT EXISTS edited_at DATETIME NULL AFTER photo_path,
-    ADD COLUMN IF NOT EXISTS area_regular TINYINT NOT NULL DEFAULT 0 AFTER edited_at;
-
-ALTER TABLE notifications
-    ADD COLUMN IF NOT EXISTS notification_type VARCHAR(30) NOT NULL DEFAULT 'general' AFTER message;
-
-ALTER TABLE user
-    ADD COLUMN IF NOT EXISTS notify_incidents TINYINT NOT NULL DEFAULT 1 AFTER Phone,
-    ADD COLUMN IF NOT EXISTS notify_dog_match TINYINT NOT NULL DEFAULT 1 AFTER notify_incidents,
-    ADD COLUMN IF NOT EXISTS notify_case_updates TINYINT NOT NULL DEFAULT 1 AFTER notify_dog_match,
-    ADD COLUMN IF NOT EXISTS notify_vaccine TINYINT NOT NULL DEFAULT 1 AFTER notify_case_updates;
-
-ALTER TABLE dog
-    ADD COLUMN IF NOT EXISTS Age INT NULL AFTER Breed,
-    ADD COLUMN IF NOT EXISTS photo_path VARCHAR(255) NULL AFTER Age,
-    ADD COLUMN IF NOT EXISTS health_notes TEXT NULL AFTER photo_path;
-
-ALTER TABLE vaccinerecord
-    ADD COLUMN IF NOT EXISTS NextDueDate DATE NULL AFTER DateGiven,
-    ADD COLUMN IF NOT EXISTS vax_status ENUM('Verified', 'Unverified', 'Expired') NOT NULL DEFAULT 'Unverified' AFTER VetName;
 
 -- Pseudo map coordinates for demo incidents (Batangas area)
 UPDATE incident SET latitude = 13.7568 + (IncidentID % 7) * 0.002, longitude = 121.0583 + (IncidentID % 5) * 0.003

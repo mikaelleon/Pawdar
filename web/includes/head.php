@@ -16,6 +16,13 @@ $assetVersion = static function (string $relativePath): string {
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+        (function () {
+            var saved = localStorage.getItem('pawdar-theme');
+            var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= htmlspecialchars($pageTitle) ?></title>
@@ -31,6 +38,7 @@ $assetVersion = static function (string $relativePath): string {
     <script src="<?= htmlspecialchars($assetVersion('assets/js/app.js')) ?>" defer></script>
     <script src="<?= htmlspecialchars($assetVersion('assets/js/ui.js')) ?>" defer></script>
     <script src="<?= htmlspecialchars($assetVersion('assets/js/report-drawer.js')) ?>" defer></script>
+    <script src="<?= htmlspecialchars($assetVersion('assets/js/theme-toggle.js')) ?>" defer></script>
     <?php foreach ($pageScripts as $script): ?>
         <script src="<?= htmlspecialchars($assetVersion($script)) ?>" defer></script>
     <?php endforeach; ?>

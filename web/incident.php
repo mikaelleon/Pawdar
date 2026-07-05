@@ -28,7 +28,7 @@ $rabiesChecklist = $caseId > 0 && (int) ($incident['RabiesMonitoring'] ?? 0) ===
     ? fetch_rabies_checklist($pdo, $caseId) : [];
 
 if ($isLoggedIn) {
-    require_active_account();
+    require_once __DIR__ . '/includes/app-layout.php';
     app_layout_start('feed', 'Incident Detail', [
         'showSearch' => false,
         'scripts' => ['assets/js/incident-detail.js'],

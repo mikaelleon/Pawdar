@@ -76,7 +76,7 @@ require __DIR__ . '/includes/head.php';
                 </div>
 
                 <div class="text-right" style="margin-top:8px;">
-                    <a href="#" class="text-sm link-hover forgot-link">Forgot password?</a>
+                    <a href="forgot_password.php" class="text-sm link-hover forgot-link">Forgot password?</a>
                 </div>
 
                 <button type="submit" class="btn-primary btn-block auth-desktop-only" style="margin-top:18px;" data-login-submit <?= $isLocked ? 'disabled' : '' ?>>Log In</button>

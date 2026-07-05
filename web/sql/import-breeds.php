@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 $root = dirname(__DIR__);
 require_once $root . '/includes/helpers.php';
+require_once __DIR__ . '/runner.php';
 if (file_exists($root . '/includes/db.local.php')) {
     require_once $root . '/includes/db.local.php';
 }
@@ -43,50 +44,8 @@ try {
 
     $pdo->exec('DROP TABLE IF EXISTS breeds_staging');
     $pdo->exec('DROP TABLE IF EXISTS breeds');
-    $pdo->exec("
-        CREATE TABLE breeds (
-            breed_id INT AUTO_INCREMENT PRIMARY KEY,
-            breed_name VARCHAR(100) NOT NULL UNIQUE,
-            size_category ENUM('Small', 'Medium', 'Large') NOT NULL,
-            weight_range VARCHAR(30) NULL,
-            lifespan VARCHAR(20) NULL,
-            temperament_notes VARCHAR(255) NULL,
-            common_health_risks VARCHAR(255) NULL,
-            loyalty_score TINYINT NOT NULL DEFAULT 3,
-            energy_score TINYINT NOT NULL DEFAULT 3,
-            friendliness_score TINYINT NOT NULL DEFAULT 3,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            CONSTRAINT chk_loyalty CHECK (loyalty_score BETWEEN 1 AND 5),
-            CONSTRAINT chk_energy CHECK (energy_score BETWEEN 1 AND 5),
-            CONSTRAINT chk_friendliness CHECK (friendliness_score BETWEEN 1 AND 5)
-        )
-    ");
-    $pdo->exec("
-        CREATE TABLE breeds_staging (
-            breed_name VARCHAR(120) NOT NULL,
-            dog_size VARCHAR(50) NULL,
-            weight_text VARCHAR(80) NULL,
-            weight_kg VARCHAR(30) NULL,
-            lifespan VARCHAR(40) NULL,
-            breed_group VARCHAR(120) NULL,
-            affection_family VARCHAR(20) NULL,
-            kid_friendly VARCHAR(20) NULL,
-            dog_friendly VARCHAR(20) NULL,
-            stranger_friendly VARCHAR(20) NULL,
-            general_health VARCHAR(20) NULL,
-            energy_level VARCHAR(20) NULL,
-            easy_to_train VARCHAR(20) NULL,
-            intelligence VARCHAR(20) NULL
-        )
-    ");
-
-    $colExists = (int) $pdo->query("
-        SELECT COUNT(*) FROM information_schema.COLUMNS
-        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'dog' AND COLUMN_NAME = 'breed_id'
-    ")->fetchColumn();
-    if ($colExists === 0) {
-        $pdo->exec('ALTER TABLE dog ADD COLUMN breed_id INT NULL AFTER Breed');
-    }
+    pawdar_run_sql_file($pdo, __DIR__ . '/schema-v3-breeds.sql');
+    pawdar_add_column($pdo, 'dog', 'breed_id', 'INT NULL AFTER Breed');
 
     $handle = fopen($csvPath, 'r');
     if ($handle === false) {
@@ -230,11 +189,7 @@ try {
         WHERE LOWER(TRIM(d.Breed)) LIKE \'%aspin%\'
     ');
 
-    try {
-        $pdo->exec('ALTER TABLE dog ADD CONSTRAINT fk_dog_breed FOREIGN KEY (breed_id) REFERENCES breeds(breed_id) ON DELETE SET NULL');
-    } catch (PDOException $exception) {
-        // FK may already exist.
-    }
+    pawdar_ensure_breed_foreign_key($pdo);
 
     $pdo->exec('DROP TABLE IF EXISTS breeds_staging');
 

@@ -30,6 +30,11 @@ if ($dog) {
 $registryId = (string) ($dog['RegistryID'] ?? ('PWD-2024-' . str_pad((string) ($dog['dog_id'] ?? 0), 5, '0', STR_PAD_LEFT)));
 $breedColor = string_color_class((string) ($dog['Breed'] ?? 'dog'));
 
+$canContactOwner = in_array($userRole, ['Veterinarian', 'LGU Official', 'Admin'], true);
+$canCosign = $userRole === 'Veterinarian'
+    && !empty($dog['vaccine'])
+    && (($dog['vaccine']['vax_status'] ?? '') !== 'Verified');
+
 app_layout_start('registry', 'Dog Profile', [
     'showSearch' => false,
     'mobileHeader' => 'back',
@@ -39,6 +44,7 @@ app_layout_start('registry', 'Dog Profile', [
         ['label' => 'Registry', 'url' => 'registry.php'],
         ['label' => (string) ($dog['DogName'] ?? 'Dog Profile')],
     ],
+    'scripts' => ['assets/js/dog-profile.js'],
 ]);
 ?>
 
@@ -61,7 +67,9 @@ app_layout_start('registry', 'Dog Profile', [
                     <button type="button" class="copy-btn" data-copy="<?= htmlspecialchars($registryId) ?>" title="Copy ID"><i data-lucide="copy" style="width:14px;height:14px;"></i></button>
                 </div>
                 <?php if ($isOwner): ?><a href="#" class="btn-outline btn-sm" style="margin-top:12px;">Edit Profile</a><?php endif; ?>
-                <?php if ($userRole === 'Veterinarian'): ?><button type="button" class="btn-primary btn-sm" style="margin-top:12px;">Co-sign Vaccination</button><?php endif; ?>
+                <?php if ($canCosign): ?>
+                    <button type="button" class="btn-primary btn-sm" style="margin-top:12px;" data-cosign-vaccine data-vaccine-id="<?= (int) $dog['vaccine']['VaccineID'] ?>">Co-sign Vaccination</button>
+                <?php endif; ?>
                 <?php if (in_array($userRole, ['LGU Official', 'Admin'], true)): ?><a href="cases.php" class="btn-primary btn-sm" style="margin-top:12px;">Create Case</a><?php endif; ?>
                 <?php if ($userRole === 'Admin'): ?><button type="button" class="btn-ghost btn-sm" style="margin-top:12px;">Deactivate Registry Entry</button><?php endif; ?>
             </div>
@@ -77,16 +85,24 @@ app_layout_start('registry', 'Dog Profile', [
 
         <div class="card card-bordered card-body">
             <div class="label-upper mb-md">Owner</div>
-            <div class="flex items-center gap-md">
+            <div class="flex items-center gap-md owner-card-row">
                 <div class="avatar avatar-lg"><?= htmlspecialchars(user_initials_from_name((string) $dog['owner_name'])) ?></div>
                 <div class="flex-1">
                     <div style="font-weight:500;font-size:15px;"><?= htmlspecialchars((string) $dog['owner_name']) ?></div>
                     <div class="text-xs text-muted"><?= htmlspecialchars((string) $dog['owner_role']) ?> · Brgy. <?= htmlspecialchars((string) $dog['owner_barangay']) ?></div>
+                    <?php if ($canContactOwner && !empty($dog['owner_phone'])): ?>
+                        <div class="text-xs text-muted owner-contact-line hidden-mobile" data-owner-contact-line hidden>
+                            <?= htmlspecialchars((string) $dog['owner_phone']) ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
-                <?php if (!empty($dog['owner_phone'])): ?>
-                    <a href="tel:<?= htmlspecialchars(preg_replace('/\s+/', '', (string) $dog['owner_phone'])) ?>"
-                       class="btn-outline btn-sm hidden-desktop">Call owner</a>
-                    <button type="button" class="btn-outline btn-sm hidden-mobile" title="Call: <?= htmlspecialchars((string) $dog['owner_phone']) ?>">Call owner</button>
+                <?php if ($canContactOwner): ?>
+                    <button type="button"
+                            class="btn-outline btn-sm btn-call-owner"
+                            data-owner-contact="<?= htmlspecialchars((string) ($dog['owner_phone'] ?? '')) ?>"
+                            data-owner-name="<?= htmlspecialchars((string) $dog['owner_name']) ?>">
+                        Call owner
+                    </button>
                 <?php endif; ?>
             </div>
         </div>
@@ -185,27 +201,5 @@ app_layout_start('registry', 'Dog Profile', [
         <i data-lucide="flag"></i> Flag This Dog
     </button>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('[data-copy]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            navigator.clipboard.writeText(btn.getAttribute('data-copy') || '');
-            PawdarUI.showToast('Copied!');
-        });
-    });
-    document.querySelectorAll('[data-flag-dog]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            PawdarUI.showConfirmModal({
-                title: 'Flag this dog?',
-                body: 'Are you sure you want to flag this dog? This will notify the admin for review.',
-                confirmLabel: 'Confirm'
-            }).then(function (ok) {
-                if (ok) PawdarUI.showToast('Dog flagged for review');
-            });
-        });
-    });
-});
-</script>
 
 <?php app_layout_end([]); ?>

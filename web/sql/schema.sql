@@ -1,5 +1,6 @@
--- Pawdar database schema
--- Import: mysql -u root < sql/schema.sql
+-- Pawdar database schema (base tables + demo seed data)
+-- Recommended: php sql/setup.php  (applies v2–v4 migrations automatically)
+-- Manual: mysql -u root < sql/schema.sql  (base only; run setup.php afterward)
 
 CREATE DATABASE IF NOT EXISTS pawdar CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE pawdar;

@@ -54,7 +54,7 @@ app_layout_start('rescue-board', 'Rescue Board', [
             <?php foreach ($tracked as $case): ?>
                 <div class="card card-bordered card-body mb-md">
                     <div class="flex justify-between items-center">
-                        <span class="badge badge-owned"><?= htmlspecialchars((string) $case['status']) ?></span>
+                        <span class="badge badge-owned" data-rescue-badge="<?= (int) $case['rescue_case_id'] ?>"><?= htmlspecialchars((string) $case['status']) ?></span>
                         <span class="text-xs text-muted"><?= htmlspecialchars(time_elapsed_string((string) $case['updated_at'])) ?></span>
                     </div>
                     <p class="text-sm mt-sm"><?= htmlspecialchars((string) $case['Location']) ?></p>

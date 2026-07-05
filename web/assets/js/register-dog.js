@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (submitBtn) submitBtn.hidden = step !== 3;
 
         if (step === 3) renderReview();
+        checkFormReady();
         form.querySelector('.register-form-panel:not([hidden])')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
@@ -61,6 +62,83 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!valid) {
             (nameInput.value.trim() ? breedInput : nameInput).focus();
         }
+        return valid;
+    }
+
+    var vaccineNameInput = form.querySelector('[name="vaccine_name"]');
+    var vaccineDateInput = form.querySelector('[name="vaccine_date"]');
+    var vaccineDueInput = form.querySelector('[name="vaccine_due"]');
+    var vetNameInput = form.querySelector('[name="vet_name"]');
+
+    function clearFieldError(input) {
+        if (!input) {
+            return;
+        }
+        input.classList.remove('is-invalid');
+        var msg = input.closest('.form-field')?.querySelector('[data-field-error]');
+        if (msg) {
+            msg.remove();
+        }
+    }
+
+    function showFieldError(input, message) {
+        if (!input) {
+            return;
+        }
+        input.classList.add('is-invalid');
+        var field = input.closest('.form-field');
+        if (!field) {
+            return;
+        }
+        var existing = field.querySelector('[data-field-error]');
+        if (existing) {
+            existing.textContent = message;
+            return;
+        }
+        var el = document.createElement('p');
+        el.className = 'field-error';
+        el.setAttribute('data-field-error', '');
+        el.textContent = message;
+        field.appendChild(el);
+    }
+
+    function validateStep2() {
+        var vaccineName = vaccineNameInput ? vaccineNameInput.value.trim() : '';
+        var dateGiven = vaccineDateInput ? vaccineDateInput.value : '';
+        var nextDue = vaccineDueInput ? vaccineDueInput.value : '';
+        var vetName = vetNameInput ? vetNameInput.value.trim() : '';
+        var hasPartialData = vaccineName !== '' || vetName !== '';
+
+        clearFieldError(vaccineDateInput);
+        clearFieldError(vaccineDueInput);
+
+        if (!hasPartialData) {
+            return true;
+        }
+
+        var valid = true;
+
+        if (!dateGiven) {
+            showFieldError(vaccineDateInput, 'Date given is required if adding a vaccine record.');
+            valid = false;
+        }
+
+        if (!nextDue) {
+            showFieldError(vaccineDueInput, 'Next due date is required if adding a vaccine record.');
+            valid = false;
+        }
+
+        if (dateGiven && nextDue && new Date(nextDue) <= new Date(dateGiven)) {
+            showFieldError(vaccineDueInput, 'Next due date must be after the date given.');
+            valid = false;
+        }
+
+        if (!valid && vaccineDateInput && !dateGiven) {
+            vaccineDateInput.focus();
+        } else if (!valid && vaccineDueInput) {
+            vaccineDueInput.focus();
+        }
+
         return valid;
     }
 
@@ -263,11 +341,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ── Continue ready state ──────────────────────────────────────────────
     function checkFormReady() {
-        var ready = nameInput.value.trim().length > 0 && breedReady();
-        if (nextBtn) {
+        if (!nextBtn) {
+            return;
+        }
+        if (step === 1) {
+            var ready = nameInput.value.trim().length > 0 && breedReady();
             nextBtn.disabled = !ready;
             nextBtn.classList.toggle('btn--ready', ready);
+            return;
         }
+        nextBtn.disabled = false;
+        nextBtn.classList.add('btn--ready');
     }
 
     nameInput.addEventListener('input', function () {
@@ -335,7 +419,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── Buttons ───────────────────────────────────────────────────────────
     if (backBtn) backBtn.addEventListener('click', function () { showStep(step - 1); });
     if (nextBtn) nextBtn.addEventListener('click', function () {
-        if (!validateStep1()) return;
+        if (step === 1 && !validateStep1()) {
+            return;
+        }
+        if (step === 2 && !validateStep2()) {
+            return;
+        }
         showStep(step + 1);
     });
     form.addEventListener('submit', function (e) {

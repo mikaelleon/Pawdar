@@ -79,10 +79,22 @@
 
         document.querySelectorAll('[data-report-next]').forEach(function (btn) {
             btn.addEventListener('click', function () {
+                if (currentStep === 1) {
+                    var typeChecked = f.querySelector('input[name="incident_type"]:checked');
+                    if (!typeChecked) {
+                        if (window.PawdarUI && PawdarUI.showToast) {
+                            PawdarUI.showToast('Please select an incident type.', 'error');
+                        }
+                        return;
+                    }
+                }
                 if (currentStep === 2) {
                     var location = f.querySelector('[name="location"]');
                     if (location && !location.value.trim()) {
                         location.focus();
+                        if (window.PawdarUI && PawdarUI.showToast) {
+                            PawdarUI.showToast('Location is required.', 'error');
+                        }
                         return;
                     }
                 }
@@ -194,6 +206,9 @@
                 })
                 .catch(function () {
                     if (window.PawdarUI) PawdarUI.setButtonLoading(submitBtn, false);
+                    if (window.PawdarUI && PawdarUI.showToast) {
+                        PawdarUI.showToast('Network error. Please check your connection.', 'error');
+                    }
                 });
         });
     }

@@ -22,6 +22,90 @@
     --font: 'Nunito', system-ui, sans-serif;
 }
 
+[data-theme="dark"] {
+    --taupe: #F0EDEA;
+    --tea-green: #8FA888;
+    --muted-teal: #6A9493;
+    --air-force: #A8B8BC;
+    --sunlit-clay: #C99552;
+    --burnt-peach: #E0765E;
+    --white: #3A3434;
+    --bg-soft: #322D2D;
+    --bg-map: #2A3530;
+    --border: rgba(168, 184, 188, 0.15);
+    --border-light: rgba(168, 184, 188, 0.1);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.28);
+    --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.35);
+    color-scheme: dark;
+}
+
+[data-theme="dark"] body {
+    background: #2A2626;
+    color: var(--taupe);
+}
+
+[data-theme="dark"] .card,
+[data-theme="dark"] .card-bordered,
+[data-theme="dark"] .bento-card,
+[data-theme="dark"] .dog-card,
+[data-theme="dark"] .summary-card,
+[data-theme="dark"] .register-form-card {
+    background: var(--white);
+    border-color: var(--border);
+}
+
+[data-theme="dark"] .app-sidebar {
+    background: #2F4A49;
+}
+
+[data-theme="dark"] .app-topbar,
+[data-theme="dark"] .app-content {
+    background: #2A2626;
+}
+
+[data-theme="dark"] .theme-toggle-btn {
+    background: var(--bg-soft);
+    color: var(--taupe);
+}
+
+.theme-toggle-btn {
+    border: none;
+    cursor: pointer;
+}
+
+.owner-card-row {
+    position: relative;
+}
+
+.call-tooltip {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    background: #4A4343;
+    color: #FFFFFF;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    z-index: 50;
+    box-shadow: var(--shadow-sm);
+}
+
+.call-tooltip p {
+    margin: 0 0 4px;
+    font-weight: 600;
+}
+
+.call-tooltip a {
+    color: #C0DAB5;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+[data-theme="dark"] .call-tooltip {
+    background: #1E1B1B;
+    border: 1px solid var(--border);
+}
+
 *, *::before, *::after { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; }

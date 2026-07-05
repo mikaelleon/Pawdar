@@ -29,9 +29,9 @@ try {
             <div class="flex-1"></div>
         <?php endif; ?>
         <div class="header-actions flex items-center gap-md">
-            <div class="icon-box icon-box-sm" style="background: var(--bg-soft);">
-                <i data-lucide="sun"></i>
-            </div>
+            <button type="button" class="icon-box icon-box-sm theme-toggle-btn" id="darkModeToggle" aria-label="Switch to dark mode" title="Toggle theme">
+                <i data-lucide="sun" data-theme-icon></i>
+            </button>
             <div class="notification-wrap" style="position:relative;">
                 <button type="button" class="notification-bell-btn" data-notification-bell aria-label="Notifications" aria-expanded="false" aria-haspopup="true">
                     <i data-lucide="bell"></i>

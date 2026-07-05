@@ -90,18 +90,44 @@ function claim_stray_case(PDO $pdo, int $incidentId, int $orgUserId): bool
 /**
  * Updates rescue case pipeline status.
  */
-function update_rescue_status(PDO $pdo, int $rescueCaseId, string $status, int $userId): bool
+function update_rescue_status(PDO $pdo, int $rescueCaseId, string $status, int $userId, string $userRole = ''): bool
 {
     $allowed = ['Spotted', 'Rescued', 'Under Vet Care', 'Ready for Adoption'];
     if (!in_array($status, $allowed, true)) {
         return false;
     }
 
-    $update = $pdo->prepare('UPDATE rescue_cases SET status = :status WHERE rescue_case_id = :id');
-    $update->execute([':status' => $status, ':id' => $rescueCaseId]);
+    if ($userRole === 'Admin') {
+        $update = $pdo->prepare('UPDATE rescue_cases SET status = :status WHERE rescue_case_id = :id');
+        $update->execute([':status' => $status, ':id' => $rescueCaseId]);
+    } else {
+        $update = $pdo->prepare('
+            UPDATE rescue_cases SET status = :status
+            WHERE rescue_case_id = :id AND rescue_org_id = :org_id
+        ');
+        $update->execute([':status' => $status, ':id' => $rescueCaseId, ':org_id' => $userId]);
+    }
+
+    if ($update->rowCount() === 0) {
+        $check = $pdo->prepare('SELECT status FROM rescue_cases WHERE rescue_case_id = :id LIMIT 1');
+        if ($userRole === 'Admin') {
+            $check->execute([':id' => $rescueCaseId]);
+        } else {
+            $check = $pdo->prepare('
+                SELECT status FROM rescue_cases
+                WHERE rescue_case_id = :id AND rescue_org_id = :org_id
+                LIMIT 1
+            ');
+            $check->execute([':id' => $rescueCaseId, ':org_id' => $userId]);
+        }
+        $row = $check->fetch();
+        if (!$row || (string) $row['status'] !== $status) {
+            return false;
+        }
+    }
 
     $pdo->prepare('INSERT INTO rescue_case_history (rescue_case_id, status, updated_by) VALUES (:id, :status, :user_id)')
         ->execute([':id' => $rescueCaseId, ':status' => $status, ':user_id' => $userId]);
 
-    return $update->rowCount() > 0;
+    return true;
 }
