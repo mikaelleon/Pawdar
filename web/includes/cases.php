@@ -15,7 +15,7 @@ function fetch_cases_for_barangay(
 ): array {
     $sql = '
         SELECT c.CaseID, c.CaseStatus, c.RabiesMonitoring, c.assigned_to,
-               i.IncidentID, i.IncidentType, i.Location, i.Date AS filed_date,
+               i.IncidentID, i.IncidentType, i.Location, i.Description, i.Date AS filed_date,
                u.Name AS reporter_name, u.Role AS reporter_role,
                d.dog_id, d.DogName, d.RegistryID,
                assignee.Name AS assignee_name
@@ -153,7 +153,7 @@ function fetch_rabies_checklist(PDO $pdo, int $caseId): array
 /**
  * Updates case status and logs history.
  */
-function update_case_status(PDO $pdo, int $incidentId, string $newStatus, int $updatedBy): bool
+function update_case_status(PDO $pdo, int $incidentId, string $newStatus, int $updatedBy, ?string $remarks = null): bool
 {
     $allowed = ['Received', 'Under Investigation', 'Action Taken', 'Resolved', 'Referred'];
     if (!in_array($newStatus, $allowed, true)) {
@@ -174,8 +174,14 @@ function update_case_status(PDO $pdo, int $incidentId, string $newStatus, int $u
         $caseId = (int) $pdo->lastInsertId();
     }
 
-    $log = $pdo->prepare('INSERT INTO case_history (CaseID, CaseStatus, updated_by) VALUES (:case_id, :status, :user_id)');
-    $log->execute([':case_id' => $caseId, ':status' => $newStatus, ':user_id' => $updatedBy]);
+    $notes = $remarks !== null ? trim($remarks) : '';
+    $log = $pdo->prepare('INSERT INTO case_history (CaseID, CaseStatus, updated_by, notes) VALUES (:case_id, :status, :user_id, :notes)');
+    $log->execute([
+        ':case_id' => $caseId,
+        ':status' => $newStatus,
+        ':user_id' => $updatedBy,
+        ':notes' => $notes !== '' ? $notes : null,
+    ]);
 
     $biteCheck = $pdo->prepare('SELECT IncidentType FROM incident WHERE IncidentID = :id LIMIT 1');
     $biteCheck->execute([':id' => $incidentId]);

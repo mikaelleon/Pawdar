@@ -16,14 +16,14 @@ if (!$incident) {
 
 $isLoggedIn = isset($_SESSION['user_id']);
 $userRole = current_user_role();
-$typeMap = incident_type_map();
-$meta = $typeMap[$incident['IncidentType']] ?? ['accent' => 'accent-teal', 'badge' => 'badge-received', 'label' => $incident['IncidentType']];
+$meta = incident_type_meta((string) $incident['IncidentType']);
 $title = generate_incident_title((string) $incident['IncidentType'], (string) $incident['Location']);
 $statusMeta = case_status_meta($incident['CaseStatus'] ?? null);
 $corroborators = fetch_incident_corroborators($pdo, $incidentId);
 $related = fetch_related_incidents($pdo, (string) $incident['reporter_barangay'], $incidentId);
 $canCorroborate = $isLoggedIn && $userId !== (int) $incident['UserID'] && !(int) $incident['user_corroborated'];
 $caseId = (int) ($incident['CaseID'] ?? 0);
+$caseHistory = $caseId > 0 ? fetch_case_history($pdo, $caseId) : [];
 $rabiesChecklist = $caseId > 0 && (int) ($incident['RabiesMonitoring'] ?? 0) === 1
     ? fetch_rabies_checklist($pdo, $caseId) : [];
 
@@ -108,6 +108,26 @@ if ($isLoggedIn) {
                 </select>
             <?php else: ?>
                 <span class="badge <?= htmlspecialchars($statusMeta['class']) ?>"><?= htmlspecialchars($statusMeta['label']) ?></span>
+            <?php endif; ?>
+
+            <?php if (count($caseHistory) > 0): ?>
+                <div class="label-upper mt-md mb-sm">Status timeline</div>
+                <div class="case-history-list">
+                    <?php foreach (array_reverse($caseHistory) as $entry): ?>
+                        <div class="case-history-item">
+                            <div class="flex justify-between items-center gap-sm">
+                                <span class="badge badge-received"><?= htmlspecialchars((string) $entry['CaseStatus']) ?></span>
+                                <span class="text-xs text-muted"><?= date('M j, Y g:i A', strtotime((string) $entry['created_at'])) ?></span>
+                            </div>
+                            <?php if (!empty($entry['updater_name'])): ?>
+                                <p class="text-xs text-muted" style="margin:4px 0 0;"><?= htmlspecialchars((string) $entry['updater_name']) ?></p>
+                            <?php endif; ?>
+                            <?php if (!empty($entry['notes'])): ?>
+                                <p class="text-sm" style="margin:6px 0 0;"><?= nl2br(htmlspecialchars((string) $entry['notes'])) ?></p>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
             <?php endif; ?>
 
             <?php if ($incident['IncidentType'] === 'Animal Bite' && count($rabiesChecklist) > 0): ?>

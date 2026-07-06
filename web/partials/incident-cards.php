@@ -41,7 +41,8 @@ function render_feed_empty_state(string $filter): string
         'injured_stray' => 'injured stray',
         'aggressive' => 'aggressive',
         'vehicular' => 'vehicular',
-        'trash' => 'trash disturbance',
+        'disturbance' => 'disturbance',
+        'trash' => 'disturbance',
     ];
     $label = $labels[$filter] ?? 'matching';
 
@@ -92,14 +93,8 @@ function render_feed_skeleton_cards(int $count = 3): void
  */
 function render_single_incident_card(array $incident, string $userRole, int $userId): void
 {
-    $typeMap = incident_type_map();
-    $type = (string) $incident['IncidentType'];
-    $meta = $typeMap[$type] ?? [
-        'badge' => 'badge-received',
-        'accent' => 'accent-teal',
-        'icon' => 'alert-circle',
-        'label' => $type,
-    ];
+    $type = normalize_incident_type((string) $incident['IncidentType']);
+    $meta = incident_type_meta($type);
 
     $title = generate_incident_title($type, (string) $incident['Location']);
     $timeAgo = time_elapsed_string((string) $incident['Date']);

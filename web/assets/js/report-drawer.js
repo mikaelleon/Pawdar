@@ -9,10 +9,27 @@
     function form() { return document.querySelector('[data-report-form]'); }
 
     function openReportDrawer() {
+        openReportDrawerPrefill(null);
+    }
+
+    function resetReportPrefill() {
+        var f = form();
+        if (!f) return;
+        var dogIdInput = f.querySelector('#report-dog-id');
+        var dogSearch = f.querySelector('#report-dog-search');
+        if (dogIdInput) dogIdInput.value = '';
+        if (dogSearch) {
+            dogSearch.value = '';
+            dogSearch.readOnly = false;
+        }
+    }
+
+    function openReportDrawerPrefill(options) {
         var d = drawer();
         var o = overlay();
         if (!d || !o) return;
 
+        resetReportPrefill();
         currentStep = 1;
         showReportStep(1);
         d.classList.add('is-open');
@@ -20,6 +37,33 @@
         d.setAttribute('aria-hidden', 'false');
         o.setAttribute('aria-hidden', 'false');
         document.body.classList.add('drawer-open');
+
+        if (!options) return;
+
+        var f = form();
+        if (!f) return;
+
+        var dogIdInput = f.querySelector('#report-dog-id');
+        var dogSearch = f.querySelector('#report-dog-search');
+        if (options.dogId && dogIdInput) {
+            dogIdInput.value = String(options.dogId);
+        }
+        if (dogSearch) {
+            var label = options.dogName || '';
+            if (options.registryId) {
+                label = label ? label + ' · ' + options.registryId : options.registryId;
+            }
+            dogSearch.value = label;
+            if (options.dogId) {
+                dogSearch.readOnly = true;
+            }
+        }
+        if (options.incidentType) {
+            var typeInput = f.querySelector('input[name="incident_type"][value="' + options.incidentType + '"]');
+            if (typeInput) {
+                typeInput.checked = true;
+            }
+        }
     }
 
     function closeReportDrawer() {
@@ -33,6 +77,7 @@
         o.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('drawer-open');
         currentStep = 1;
+        resetReportPrefill();
     }
 
     function showReportStep(step) {
@@ -96,6 +141,10 @@
                             PawdarUI.showToast('Location is required.', 'error');
                         }
                         return;
+                    }
+                    var desc = f.querySelector('#report-description');
+                    if (desc && charCount) {
+                        charCount.textContent = desc.value.length + ' / 280';
                     }
                 }
                 showReportStep(currentStep + 1);
@@ -259,6 +308,7 @@
     });
 
     window.openReportDrawer = openReportDrawer;
+    window.openReportDrawerPrefill = openReportDrawerPrefill;
     window.closeReportDrawer = closeReportDrawer;
     window.initReportDrawer = initReportDrawer;
 

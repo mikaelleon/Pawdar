@@ -39,7 +39,7 @@
 | `web/case-detail.php` | 64% |
 | `web/registry.php` | 87% |
 | `web/register_dog.php` | 88% |
-| `web/dog-profile.php` | 81% |
+| `web/dog-profile.php` | 95% |
 | `web/breeds.php` | 80% |
 | `web/first-aid.php` | 76% |
 | `web/rescue.php` | 75% |

@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
+    var profile = document.querySelector('[data-dog-profile]');
+
     document.querySelectorAll('[data-copy]').forEach(function (btn) {
         btn.addEventListener('click', function () {
             navigator.clipboard.writeText(btn.getAttribute('data-copy') || '');
@@ -24,6 +26,112 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     });
+
+    document.querySelectorAll('[data-report-dog-incident]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            if (!profile) return;
+            var dogId = profile.getAttribute('data-dog-id');
+            var dogName = profile.getAttribute('data-dog-name') || '';
+            var registryId = profile.getAttribute('data-registry-id') || '';
+            if (typeof window.openReportDrawerPrefill === 'function') {
+                window.openReportDrawerPrefill({
+                    dogId: dogId,
+                    dogName: dogName,
+                    registryId: registryId
+                });
+            } else if (typeof window.openReportDrawer === 'function') {
+                window.openReportDrawer();
+            }
+        });
+    });
+
+    var editModal = document.querySelector('[data-dog-edit-modal]');
+    var editForm = document.querySelector('[data-dog-edit-form]');
+    var coatSelect = document.querySelector('[data-coat-select]');
+    var coatOtherWrap = document.querySelector('[data-coat-other-wrap]');
+
+    document.querySelectorAll('[data-open-edit-dog]').forEach(function (btn) {
+        btn.addEventListener('click', function (event) {
+            event.preventDefault();
+            if (!editModal) return;
+            editModal.hidden = false;
+            document.body.classList.add('modal-open');
+        });
+    });
+
+    function closeEditModal() {
+        if (!editModal) return;
+        editModal.hidden = true;
+        document.body.classList.remove('modal-open');
+    }
+
+    document.querySelectorAll('[data-close-dog-edit]').forEach(function (btn) {
+        btn.addEventListener('click', closeEditModal);
+    });
+
+    if (editModal) {
+        editModal.addEventListener('click', function (event) {
+            if (event.target === editModal) {
+                closeEditModal();
+            }
+        });
+    }
+
+    if (coatSelect && coatOtherWrap) {
+        coatSelect.addEventListener('change', function () {
+            coatOtherWrap.hidden = coatSelect.value !== 'Other';
+        });
+    }
+
+    if (editForm && profile) {
+        editForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            var submitBtn = editForm.querySelector('[data-dog-edit-submit]');
+            if (window.PawdarUI) PawdarUI.setButtonLoading(submitBtn, true);
+
+            var payload = {
+                dog_id: parseInt(profile.getAttribute('data-dog-id'), 10),
+                dog_name: editForm.querySelector('[name="dog_name"]').value.trim(),
+                gender: editForm.querySelector('[name="gender"]').value,
+                age: parseInt(editForm.querySelector('[name="age"]').value, 10) || 0,
+                coat_color: editForm.querySelector('[name="coat_color"]').value,
+                coat_color_other: editForm.querySelector('[name="coat_color_other"]').value.trim(),
+                weight_kg: editForm.querySelector('[name="weight_kg"]').value,
+                distinguishing_marks: editForm.querySelector('[name="distinguishing_marks"]').value.trim(),
+                temperament_notes: editForm.querySelector('[name="temperament_notes"]').value.trim(),
+                health_notes: editForm.querySelector('[name="health_notes"]').value.trim()
+            };
+
+            fetch('ajax/update_dog.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': getCsrfToken()
+                },
+                body: JSON.stringify(payload)
+            })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (window.PawdarUI) PawdarUI.setButtonLoading(submitBtn, false);
+                    if (data.success) {
+                        if (window.PawdarUI && PawdarUI.showToast) {
+                            PawdarUI.showToast('Profile updated', 'success');
+                        }
+                        window.setTimeout(function () { window.location.reload(); }, 500);
+                        return;
+                    }
+                    if (window.PawdarUI && PawdarUI.showToast) {
+                        PawdarUI.showToast(data.message || 'Update failed', 'error');
+                    }
+                })
+                .catch(function () {
+                    if (window.PawdarUI) PawdarUI.setButtonLoading(submitBtn, false);
+                    if (window.PawdarUI && PawdarUI.showToast) {
+                        PawdarUI.showToast('Network error.', 'error');
+                    }
+                });
+        });
+    }
 
     document.querySelectorAll('[data-cosign-vaccine]').forEach(function (btn) {
         btn.addEventListener('click', function () {

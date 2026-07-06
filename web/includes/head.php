@@ -37,7 +37,7 @@ $assetVersion = static function (string $relativePath): string {
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
     <script src="<?= htmlspecialchars($assetVersion('assets/js/app.js')) ?>" defer></script>
     <script src="<?= htmlspecialchars($assetVersion('assets/js/ui.js')) ?>" defer></script>
-    <script src="<?= htmlspecialchars($assetVersion('assets/js/report-drawer.js')) ?>" defer></script>
+    <script src="<?= htmlspecialchars($assetVersion('assets/js/case-status-update.js')) ?>" defer></script>
     <script src="<?= htmlspecialchars($assetVersion('assets/js/theme-toggle.js')) ?>" defer></script>
     <?php foreach ($pageScripts as $script): ?>
         <script src="<?= htmlspecialchars($assetVersion($script)) ?>" defer></script>

@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/../includes/dogs.php';
 require_once __DIR__ . '/../includes/breeds.php';
+require_once __DIR__ . '/../includes/breed-media.php';
 require_role(['Dog Owner', 'Admin']);
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -23,6 +24,20 @@ $gender = trim((string) ($_POST['gender'] ?? 'Male'));
 $age = (int) ($_POST['age'] ?? 0);
 $dogType = trim((string) ($_POST['dog_type'] ?? 'Owned'));
 $healthNotes = trim((string) ($_POST['health_notes'] ?? ''));
+$coatColor = trim((string) ($_POST['coat_color'] ?? ''));
+$coatColorOther = trim((string) ($_POST['coat_color_other'] ?? ''));
+$weightKg = trim((string) ($_POST['weight_kg'] ?? ''));
+$marks = trim((string) ($_POST['distinguishing_marks'] ?? ''));
+$temperament = trim((string) ($_POST['temperament_notes'] ?? ''));
+
+if ($coatColor === 'Other' && $coatColorOther !== '') {
+    $coatColor = $coatColorOther;
+}
+
+$weightValue = null;
+if ($weightKg !== '' && is_numeric($weightKg)) {
+    $weightValue = round((float) $weightKg, 2);
+}
 
 if ($dogName === '' || $breedName === '') {
     header('Location: ../register_dog.php?step=1&error=missing');
@@ -51,8 +66,8 @@ if (!empty($_FILES['photo']['tmp_name']) && is_uploaded_file($_FILES['photo']['t
 }
 
 $insert = $pdo->prepare('
-    INSERT INTO dog (UserID, DogName, Breed, breed_id, Gender, Age, DogType, Status, health_notes, photo_path)
-    VALUES (:user_id, :name, :breed, :breed_id, :gender, :age, :dog_type, \'Pending\', :notes, :photo)
+    INSERT INTO dog (UserID, DogName, Breed, breed_id, Gender, Age, DogType, Status, health_notes, photo_path, coat_color, weight_kg, distinguishing_marks, temperament_notes)
+    VALUES (:user_id, :name, :breed, :breed_id, :gender, :age, :dog_type, \'Pending\', :notes, :photo, :coat_color, :weight_kg, :marks, :temperament)
 ');
 $insert->execute([
     ':user_id' => $userId,
@@ -64,6 +79,10 @@ $insert->execute([
     ':dog_type' => $dogType,
     ':notes' => $healthNotes !== '' ? $healthNotes : null,
     ':photo' => $photoPath,
+    ':coat_color' => $coatColor !== '' ? $coatColor : null,
+    ':weight_kg' => $weightValue,
+    ':marks' => $marks !== '' ? $marks : null,
+    ':temperament' => $temperament !== '' ? $temperament : null,
 ]);
 
 $dogId = (int) $pdo->lastInsertId();

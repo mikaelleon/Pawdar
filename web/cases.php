@@ -97,7 +97,8 @@ app_layout_start('cases', 'Case Management', [
                 Filed <?= $sort === 'filed_asc' ? '↑' : ($sort === 'filed_desc' ? '↓' : '') ?>
             </a>
         </div>
-        <div>Status</div>
+            <div>Status</div>
+        <div>Description</div>
         <div>Actions</div>
     </div>
     <?php if (count($cases) === 0): ?>
@@ -150,6 +151,9 @@ app_layout_start('cases', 'Case Management', [
                     <?= htmlspecialchars($statusMeta['label']) ?>
                 </span>
             </div>
+            <div class="text-xs text-muted cases-description-cell">
+                <?= htmlspecialchars(mb_strimwidth((string) ($case['Description'] ?? ''), 0, 80, '…')) ?: '—' ?>
+            </div>
             <div class="cases-action-cell">
                 <a href="incident.php?id=<?= (int) $case['IncidentID'] ?>" class="cases-view-link">View</a>
                 <span class="cases-action-divider" aria-hidden="true"></span>
@@ -190,6 +194,9 @@ app_layout_start('cases', 'Case Management', [
                         Unknown dog ·
                     <?php endif; ?>
                     <?= htmlspecialchars((string) $case['reporter_name']) ?>
+                </div>
+                <div class="text-xs text-muted mt-sm">
+                    <?= htmlspecialchars(mb_strimwidth((string) ($case['Description'] ?? ''), 0, 120, '…')) ?>
                 </div>
                 <div class="text-xs text-muted mt-sm">
                     Assigned: <?= ($case['assignee_name'] ?? '') !== '' ? htmlspecialchars((string) $case['assignee_name']) : 'Unassigned' ?>

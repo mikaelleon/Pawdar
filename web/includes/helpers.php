@@ -36,13 +36,48 @@ function incident_type_map(): array
             'icon' => 'car',
             'label' => 'Vehicular',
         ],
-        'Trash Disturbance' => [
-            'filter' => 'trash',
+        'Disturbance' => [
+            'filter' => 'disturbance',
             'badge' => 'badge-trash',
             'accent' => 'accent-dark',
-            'icon' => 'trash-2',
-            'label' => 'Trash',
+            'icon' => 'footprints',
+            'label' => 'Disturbance',
         ],
+    ];
+}
+
+/**
+ * Normalizes legacy incident type labels to current vocabulary.
+ */
+function normalize_incident_type(string $type): string
+{
+    if ($type === 'Trash Disturbance') {
+        return 'Disturbance';
+    }
+
+    return $type;
+}
+
+/**
+ * Returns incident type metadata, including legacy aliases.
+ *
+ * @return array<string, string>
+ */
+function incident_type_meta(string $type): array
+{
+    $map = incident_type_map();
+    $normalized = normalize_incident_type($type);
+
+    if (isset($map[$normalized])) {
+        return $map[$normalized];
+    }
+
+    return [
+        'filter' => 'all',
+        'badge' => 'badge-received',
+        'accent' => 'accent-teal',
+        'icon' => 'alert-circle',
+        'label' => $normalized,
     ];
 }
 
@@ -51,6 +86,10 @@ function incident_type_map(): array
  */
 function filter_to_incident_type(string $filter): ?string
 {
+    if ($filter === 'trash') {
+        return 'Disturbance';
+    }
+
     foreach (incident_type_map() as $type => $meta) {
         if ($meta['filter'] === $filter) {
             return $type;
@@ -70,7 +109,8 @@ function generate_incident_title(string $type, string $location): string
         'Injured Stray' => 'Injured stray spotted near',
         'Aggressive Behavior' => 'Aggressive dog reported at',
         'Vehicular Accident' => 'Dog involved in road incident near',
-        'Trash Disturbance' => 'Dog disturbing trash near',
+        'Disturbance' => 'Disturbance reported near',
+        'Trash Disturbance' => 'Disturbance reported near',
     ];
 
     return ($phrases[$type] ?? 'Incident reported near') . ' ' . $location;
@@ -151,6 +191,7 @@ function incident_type_dot_color(string $incidentType): string
         'Injured Stray' => 'var(--air-force)',
         'Aggressive Behavior' => 'var(--sunlit-clay)',
         'Vehicular Accident' => 'var(--muted-teal)',
+        'Disturbance' => 'var(--taupe)',
         'Trash Disturbance' => 'var(--taupe)',
     ];
 

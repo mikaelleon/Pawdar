@@ -36,60 +36,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function postCaseUpdate(incidentIds, status, onSuccess) {
-        return fetch('ajax/update_case.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': getCsrfToken()
-            },
-            body: JSON.stringify({ incident_ids: incidentIds, status: status })
-        }).then(function (res) { return res.json(); }).then(function (data) {
-            if (data.success) {
-                if (typeof onSuccess === 'function') {
-                    onSuccess(data);
-                }
-                if (window.PawdarUI && PawdarUI.showToast) {
-                    PawdarUI.showToast(data.message || 'Case status updated.', 4000);
-                }
-                window.setTimeout(function () { window.location.reload(); }, 600);
-                return;
-            }
-            if (window.PawdarUI && PawdarUI.showToast) {
-                PawdarUI.showToast(data.message || 'Update failed.', 4000);
-            }
-        }).catch(function () {
-            if (window.PawdarUI && PawdarUI.showToast) {
-                PawdarUI.showToast('Network error. Please try again.', 4000);
-            }
-        });
+    if (window.PawdarCaseStatus) {
+        PawdarCaseStatus.bindSelects(document);
     }
 
-    document.querySelectorAll('.case-status-select[data-case-status]').forEach(function (select) {
-        select.addEventListener('focus', function () {
-            select.dataset.previousValue = select.value;
-        });
-
-        select.addEventListener('change', function () {
-            var incidentId = select.getAttribute('data-case-status');
-            var status = select.value;
-            var previousValue = select.dataset.previousValue || status;
-
-            if (!incidentId) return;
-
-            if ((status === 'Resolved' || status === 'Referred') && !window.confirm('Mark this case as ' + status + '?')) {
-                select.value = previousValue;
-                return;
-            }
-
-            select.disabled = true;
-            postCaseUpdate([parseInt(incidentId, 10)], status).finally(function () {
-                select.disabled = false;
-            });
-        });
-    });
-
-    if (bulkApply && bulkStatus) {
+    if (bulkApply && bulkStatus && window.PawdarCaseStatus) {
         bulkApply.addEventListener('click', function () {
             var ids = getSelectedIncidentIds();
             var status = bulkStatus.value;
@@ -100,17 +51,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            bulkApply.disabled = true;
-            postCaseUpdate(ids, status).finally(function () {
-                bulkApply.disabled = false;
+            PawdarCaseStatus.promptRemarks(status, bulkStatus.value).then(function (result) {
+                if (result.cancelled) return;
+                bulkApply.disabled = true;
+                PawdarCaseStatus.postCaseUpdate(ids, status, result.remarks).finally(function () {
+                    bulkApply.disabled = false;
+                });
             });
         });
     }
 
     refreshBulkBar();
 });
-
-function getCsrfToken() {
-    var meta = document.querySelector('meta[name="csrf-token"]');
-    return meta ? meta.getAttribute('content') : '';
-}

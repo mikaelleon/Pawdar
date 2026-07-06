@@ -67,6 +67,11 @@ $now = date('H:i');
                 <input type="hidden" name="dog_id" id="report-dog-id" value="">
                 <div class="dog-search-results" data-dog-search-results hidden></div>
             </div>
+            <div class="form-group">
+                <label class="form-label" for="report-description">Description <span class="text-muted">(optional)</span></label>
+                <textarea class="form-input" id="report-description" name="description" rows="4" maxlength="280" placeholder="Add context — e.g. limping on left hind leg, bit near basketball court…" style="height:auto;padding:12px;"></textarea>
+                <div class="text-xs text-muted" data-char-count>0 / 280</div>
+            </div>
             <div class="report-nav-row">
                 <button type="button" class="link-hover" data-report-back>Back</button>
                 <button type="button" class="btn-primary" data-report-next>Next</button>
@@ -75,12 +80,7 @@ $now = date('H:i');
 
         <div class="report-drawer-panel" data-report-step="3" hidden>
             <p class="label-upper">Step 3</p>
-            <h3>Details and photo</h3>
-            <div class="form-group">
-                <label class="form-label" for="report-description">Description</label>
-                <textarea class="form-input" id="report-description" name="description" rows="4" maxlength="280" placeholder="Describe what you saw…" style="height:auto;padding:12px;"></textarea>
-                <div class="text-xs text-muted" data-char-count>0 / 280</div>
-            </div>
+            <h3>Photo evidence</h3>
             <div class="photo-dropzone" data-photo-dropzone>
                 <input type="file" id="report-photo" name="photo" accept="image/jpeg,image/png" hidden>
                 <i data-lucide="camera"></i>

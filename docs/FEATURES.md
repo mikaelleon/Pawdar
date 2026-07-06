@@ -2,7 +2,7 @@
 
 **Last updated:** July 2026  
 **Scope:** `web/` PHP application, MySQL schema, JS modules  
-**Related:** [UI_COMPLETENESS_TASKS.md](./UI_COMPLETENESS_TASKS.md) (UI task tracker), [README.md](../README.md) (project overview)
+**Related:** [UI_COMPLETENESS_TASKS.md](./UI_COMPLETENESS_TASKS.md) (UI task tracker), [UI_FEEDBACK_SPEC.md](./UI_FEEDBACK_SPEC.md) (professor feedback fixes), [README.md](../README.md) (project overview)
 
 ---
 
@@ -13,8 +13,8 @@ Pawdar is a **PHP + MySQL** civic platform for dog registration, incident report
 | Area | Status |
 |---|---|
 | Auth & onboarding | **Mostly complete** — login, 3-step signup, email verify, password reset, pending approval |
-| Dog registry & QR | **Complete** — browse, filter, register wizard, profile, vet co-sign |
-| Incidents & feed | **Mostly complete** — feed, map, report drawer, corroborate, LGU case updates |
+| Dog registry & QR | **Complete** — browse, filter, register wizard, profile (edit, photos, physical fields), vet co-sign |
+| Incidents & feed | **Mostly complete** — feed, map, report drawer (description step 2, dog pre-fill), corroborate, LGU case updates + remarks |
 | LGU / admin tools | **Partial** — case board live; analytics + advisories + case-detail page incomplete |
 | Rescue & adoption | **Partial** — rescue board + claim/status live; adoption listings often empty |
 | Infrastructure | **Mostly complete** — env loader, Resend mail, InfinityFree-compatible SQL seeds |

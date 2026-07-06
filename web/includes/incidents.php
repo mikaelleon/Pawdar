@@ -384,6 +384,7 @@ function incident_pin_colors(): array
         'Aggressive Behavior' => '#6C8B9F',
         'Vehicular Accident' => '#87AFAE',
         'Trash Disturbance' => '#4A4343',
+        'Disturbance' => '#4A4343',
     ];
 }
 

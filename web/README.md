@@ -46,7 +46,9 @@ This folder contains the production-ready HTML/PHP site converted from the Pawda
 5. Import breeds (local CLI): `php sql/import-breeds.php`  
    **InfinityFree:** import `sql/schema-v3-breeds-seed.sql` in phpMyAdmin after `schema-v3-breeds.sql`  
    Regenerate from `archive/dogs_cleaned.csv`: `php sql/generate-breeds-seed.php`
-6. Open `http://localhost/WS101_Aliwate/WS101-Pawdar/web/`
+6. **UI feedback migration:** import `sql/schema-v8-ui-fixes.sql` in phpMyAdmin after v7 (or run `php sql/setup.php` locally)  
+   See `docs/UI_FEEDBACK_SPEC.md` for professor-feedback fixes.
+7. Open `http://localhost/WS101_Aliwate/WS101-Pawdar/web/`
 
 Demo login: any seeded account, password `password`.
 

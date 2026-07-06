@@ -46,8 +46,8 @@ app_layout_start('cases', 'Report Incident', [
             <span style="font-weight:800;font-size:14px;">Vehicular</span>
         </div>
         <div class="type-card">
-            <div class="type-card-icon" style="background:rgba(74,67,67,.1);"><i data-lucide="trash-2"></i></div>
-            <span style="font-weight:800;font-size:14px;">Trash Disturbance</span>
+            <div class="type-card-icon" style="background:rgba(74,67,67,.1);"><i data-lucide="footprints"></i></div>
+            <span style="font-weight:800;font-size:14px;">Disturbance</span>
         </div>
         <div class="type-card" style="border:1.5px dashed var(--muted-teal);background:transparent;box-shadow:none;">
             <i data-lucide="plus" style="color:var(--air-force);"></i>

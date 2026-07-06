@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/includes/app-layout.php';
 require_once __DIR__ . '/includes/breeds.php';
+require_once __DIR__ . '/includes/breed-media.php';
 require_once __DIR__ . '/includes/dogs.php';
 
 $pdo = db();
@@ -49,6 +50,7 @@ app_layout_start('breeds', 'Breed Directory', [
                 <?php foreach ($breeds as $breed):
                     $active = $selected && (int) $breed['breed_id'] === (int) $selected['breed_id'];
                     $color = string_color_class((string) $breed['breed_name']);
+                    $breedImg = breed_card_image_url($breed);
                 ?>
                     <button type="button"
                        class="breed-card card-hoverable<?= $active ? ' is-selected' : '' ?>"
@@ -57,7 +59,13 @@ app_layout_start('breeds', 'Breed Directory', [
                        data-size="<?= htmlspecialchars((string) $breed['size_category']) ?>"
                        data-name="<?= htmlspecialchars(strtolower((string) $breed['breed_name'])) ?>">
                         <?php if ($active): ?><span class="role-card-check"><i data-lucide="check"></i></span><?php endif; ?>
-                        <div class="breed-card-image <?= $color ?>"><i data-lucide="dog" style="width:46px;height:46px;color:var(--air-force);"></i></div>
+                        <div class="breed-card-image <?= $color ?>">
+                            <?php if ($breedImg): ?>
+                                <img src="<?= htmlspecialchars($breedImg) ?>" alt="" class="breed-card-photo" loading="lazy">
+                            <?php else: ?>
+                                <i data-lucide="dog" style="width:46px;height:46px;color:var(--air-force);"></i>
+                            <?php endif; ?>
+                        </div>
                         <div class="card-body">
                             <div style="font-weight:500;font-size:16px;"><?= htmlspecialchars((string) $breed['breed_name']) ?></div>
                             <div class="flex items-center gap-sm mt-sm">
@@ -76,6 +84,12 @@ app_layout_start('breeds', 'Breed Directory', [
     <aside class="split-panel" data-breed-detail>
         <a href="breeds.php" class="registry-back hidden-desktop"><i data-lucide="arrow-left"></i> Back to list</a>
         <div class="card card-bordered card-body">
+            <?php $detailImg = breed_card_image_url($selected); ?>
+            <?php if ($detailImg): ?>
+                <div class="breed-detail-hero mb-md">
+                    <img src="<?= htmlspecialchars($detailImg) ?>" alt="<?= htmlspecialchars((string) $selected['breed_name']) ?>" class="breed-detail-photo" loading="lazy">
+                </div>
+            <?php endif; ?>
             <h2 style="font-weight:500;font-size:22px;margin:0;" data-breed-name><?= htmlspecialchars((string) $selected['breed_name']) ?></h2>
             <span class="badge badge-owned mt-sm" data-breed-meta>
                 <?= htmlspecialchars((string) $selected['size_category']) ?>

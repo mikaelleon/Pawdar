@@ -112,7 +112,7 @@ FROM user u WHERE u.Email = 'rosa.castillo@email.com'
 AND NOT EXISTS (SELECT 1 FROM incident i WHERE i.Location = 'National Hwy, Brgy. San Roque');
 
 INSERT INTO incident (UserID, dog_id, IncidentType, Date, Location, Description)
-SELECT u.UserID, d.dog_id, 'Trash Disturbance', DATE_SUB(NOW(), INTERVAL 1 DAY), 'Barangay Hall area, Brgy. San Roque', 'Dogs scattering garbage bins.'
+SELECT u.UserID, d.dog_id, 'Disturbance', DATE_SUB(NOW(), INTERVAL 1 DAY), 'Barangay Hall area, Brgy. San Roque', 'Dogs causing disturbance near public area.'
 FROM user u
 LEFT JOIN dog d ON d.UserID = u.UserID
 WHERE u.Email = 'rosa.castillo@email.com'

@@ -249,6 +249,11 @@ function handleCorroborate(btn, csrfToken) {
 }
 
 function handleCaseStatusUpdate(select, csrfToken) {
+    if (window.PawdarCaseStatus) {
+        PawdarCaseStatus.handleStatusSelectChange(select);
+        return;
+    }
+
     var incidentId = select.getAttribute('data-case-status');
     var status = select.value;
 

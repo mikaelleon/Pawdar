@@ -16,6 +16,7 @@ if (!validate_csrf(request_csrf_token())) {
 
 $input = json_decode(file_get_contents('php://input') ?: '{}', true);
 $newStatus = trim((string) ($input['status'] ?? ''));
+$remarks = trim((string) ($input['remarks'] ?? ''));
 $userId = (int) $_SESSION['user_id'];
 
 $incidentIds = [];
@@ -40,7 +41,7 @@ if ($incidentIds === [] || $newStatus === '') {
 $pdo = db();
 $updated = 0;
 foreach ($incidentIds as $incidentId) {
-    if (!update_case_status($pdo, $incidentId, $newStatus, $userId)) {
+    if (!update_case_status($pdo, $incidentId, $newStatus, $userId, $remarks !== '' ? $remarks : null)) {
         continue;
     }
     notify_case_status_change($pdo, $incidentId, $newStatus);

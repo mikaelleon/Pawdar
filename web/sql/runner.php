@@ -108,6 +108,12 @@ function pawdar_apply_column_migrations(PDO $pdo): void
     pawdar_add_column($pdo, 'dog', 'Age', 'INT NULL AFTER Status');
     pawdar_add_column($pdo, 'dog', 'photo_path', 'VARCHAR(255) NULL AFTER Age');
     pawdar_add_column($pdo, 'dog', 'health_notes', 'TEXT NULL AFTER photo_path');
+    pawdar_add_column($pdo, 'dog', 'coat_color', 'VARCHAR(80) NULL AFTER health_notes');
+    pawdar_add_column($pdo, 'dog', 'weight_kg', 'DECIMAL(6, 2) NULL AFTER coat_color');
+    pawdar_add_column($pdo, 'dog', 'distinguishing_marks', 'TEXT NULL AFTER weight_kg');
+    pawdar_add_column($pdo, 'dog', 'temperament_notes', 'TEXT NULL AFTER distinguishing_marks');
+
+    pawdar_add_column($pdo, 'breeds', 'image_url', 'VARCHAR(512) NULL AFTER friendliness_score');
 
     pawdar_add_column($pdo, 'case', 'RabiesMonitoring', 'TINYINT NOT NULL DEFAULT 0 AFTER CaseStatus');
     pawdar_add_column($pdo, 'case', 'assigned_to', 'INT NULL AFTER RabiesMonitoring');

@@ -3,6 +3,7 @@
 require_once __DIR__ . '/includes/app-layout.php';
 require_once __DIR__ . '/includes/dogs.php';
 require_once __DIR__ . '/includes/breeds.php';
+require_once __DIR__ . '/includes/breed-media.php';
 require_role(['Dog Owner', 'Admin']);
 
 $pdo = db();
@@ -127,6 +128,38 @@ app_layout_start('registry', 'Register Dog', [
                 <div class="form-field form-field--half">
                     <label class="field-label" for="dog-age">Age (years)</label>
                     <input class="field-input" id="dog-age" type="number" name="age" min="0" max="30" placeholder="0">
+                </div>
+
+                <div class="form-field">
+                    <label class="field-label" for="coat-color">Coat color</label>
+                    <select class="field-input" id="coat-color" name="coat_color" data-coat-select>
+                        <option value="">— Select —</option>
+                        <?php foreach (dog_coat_color_options() as $color): ?>
+                            <option value="<?= htmlspecialchars($color) ?>"><?= htmlspecialchars($color) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="form-field" data-coat-other-wrap hidden>
+                    <label class="field-label" for="coat-color-other">Specify color</label>
+                    <input class="field-input" id="coat-color-other" type="text" name="coat_color_other" placeholder="e.g. tri-color">
+                </div>
+
+                <div class="register-form-row">
+                    <div class="form-field">
+                        <label class="field-label" for="dog-weight">Weight (kg)</label>
+                        <input class="field-input" id="dog-weight" type="number" name="weight_kg" min="0" step="0.1" placeholder="e.g. 12.5">
+                    </div>
+                </div>
+
+                <div class="form-field">
+                    <label class="field-label" for="distinguishing-marks">Distinguishing marks</label>
+                    <textarea class="field-input" id="distinguishing-marks" name="distinguishing_marks" rows="2" placeholder="Scar on left ear, white patch on chest…" style="height:auto;padding:12px;"></textarea>
+                </div>
+
+                <div class="form-field">
+                    <label class="field-label" for="temperament-notes">Temperament notes</label>
+                    <textarea class="field-input" id="temperament-notes" name="temperament_notes" rows="2" placeholder="Friendly with kids, nervous around loud noises…" style="height:auto;padding:12px;"></textarea>
                 </div>
 
                 <div class="form-field">

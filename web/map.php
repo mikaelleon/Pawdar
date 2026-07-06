@@ -64,7 +64,7 @@ app_layout_start('map', 'Incident Map', [
                 <button type="button" class="chip chip-outline map-type-chip" data-filter="injured_stray">Injured</button>
                 <button type="button" class="chip chip-outline map-type-chip" data-filter="aggressive">Aggressive</button>
                 <button type="button" class="chip chip-outline map-type-chip" data-filter="vehicular">Vehicular</button>
-                <button type="button" class="chip chip-outline map-type-chip" data-filter="trash">Trash</button>
+                <button type="button" class="chip chip-outline map-type-chip" data-filter="disturbance">Disturbance</button>
             </div>
             <select id="map-range" class="registry-filter">
                 <option value="today">Today</option>

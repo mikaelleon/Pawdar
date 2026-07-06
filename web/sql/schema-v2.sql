@@ -42,10 +42,10 @@ INSERT INTO first_aid_guides (incident_type, severity_level, title, steps, warni
  '["Do not run — stand still or back away slowly without turning your back.","Put an object (bag, jacket, bike) between you and the dog.","If bitten, follow animal bite first aid steps immediately.","Report the incident on Pawdar so your barangay can respond."]',
  'Never attempt to physically confront or punish an aggressive dog.',
  'CDC Dog Bite Prevention Guidelines (2024)', 'alert-triangle', 4),
-('Trash Disturbance', 'Mild', 'Trash Disturbance First Aid',
- '["Do not approach the dog while it is actively foraging.","Secure trash bins with lids or weights to prevent repeat incidents.","If the dog appears sick or injured, report it as an Injured Stray instead.","Contact the barangay if stray dogs are regularly disturbing waste areas."]',
+('Disturbance', 'Mild', 'Disturbance First Aid',
+ '["Stay calm and keep a safe distance from the dog.","Avoid chasing or cornering the animal.","If the dog appears sick or injured, report it as an Injured Stray instead.","Contact the barangay if stray dogs are regularly causing disturbances in the area."]',
  'Trash-disturbing dogs are usually hungry strays — avoid feeding them directly as it encourages return.',
- 'Local Barangay Animal Control Advisory (2024)', 'trash-2', 5)
+ 'Local Barangay Animal Control Advisory (2024)', 'footprints', 5)
 ON DUPLICATE KEY UPDATE title = VALUES(title);
 
 INSERT INTO dog (UserID, RegistryID, DogName, Breed, Gender, Size, DogType, Status)

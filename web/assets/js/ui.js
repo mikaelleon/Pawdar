@@ -125,6 +125,48 @@ function showToast(message, durationMs) {
     }, durationMs);
 }
 
+function showRemarksModal(options) {
+    return new Promise(function (resolve) {
+        var overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        overlay.innerHTML =
+            '<div class="modal-card remarks-modal" role="dialog" aria-modal="true">' +
+            '<h3 class="modal-title">' + escapeHtml(options.title || 'Add remarks') + '</h3>' +
+            '<p class="modal-body">' + escapeHtml(options.body || '') + '</p>' +
+            '<textarea class="form-input remarks-modal-input" rows="3" placeholder="' + escapeHtml(options.placeholder || '') + '" style="height:auto;padding:12px;margin-bottom:16px;"></textarea>' +
+            '<div class="modal-actions">' +
+            '<button type="button" class="btn-outline btn-sm" data-modal-cancel>Cancel</button>' +
+            '<button type="button" class="btn-primary btn-sm" data-modal-confirm>' + escapeHtml(options.confirmLabel || 'Save') + '</button>' +
+            '</div></div>';
+        document.body.appendChild(overlay);
+        document.body.classList.add('modal-open');
+
+        var textarea = overlay.querySelector('.remarks-modal-input');
+
+        function close(result) {
+            overlay.remove();
+            document.body.classList.remove('modal-open');
+            resolve(result);
+        }
+
+        overlay.querySelector('[data-modal-cancel]').addEventListener('click', function () {
+            close({ confirmed: false, remarks: '' });
+        });
+        overlay.querySelector('[data-modal-confirm]').addEventListener('click', function () {
+            close({ confirmed: true, remarks: textarea ? textarea.value.trim() : '' });
+        });
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) {
+                close({ confirmed: false, remarks: '' });
+            }
+        });
+
+        if (textarea) {
+            textarea.focus();
+        }
+    });
+}
+
 function showConfirmModal(options) {
     return new Promise(function (resolve) {
         var overlay = document.createElement('div');
@@ -194,6 +236,7 @@ window.PawdarUI = {
     setButtonLoading: setButtonLoading,
     showToast: showToast,
     showConfirmModal: showConfirmModal,
+    showRemarksModal: showRemarksModal,
     showFieldError: showFieldError,
     showFieldErrorHtml: showFieldErrorHtml,
     clearFieldError: clearFieldError

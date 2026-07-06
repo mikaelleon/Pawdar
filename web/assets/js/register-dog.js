@@ -15,6 +15,14 @@ document.addEventListener('DOMContentLoaded', function () {
     var requirementsHint = form.querySelector('[data-step-requirements]');
     var nameError = form.querySelector('[data-field-error="dog-name"]');
     var breedError = form.querySelector('[data-field-error="breed"]');
+    var coatSelect = form.querySelector('[data-coat-select]');
+    var coatOtherWrap = form.querySelector('[data-coat-other-wrap]');
+
+    if (coatSelect && coatOtherWrap) {
+        coatSelect.addEventListener('change', function () {
+            coatOtherWrap.hidden = coatSelect.value !== 'Other';
+        });
+    }
 
     function showStep(n) {
         step = Math.max(1, Math.min(3, n));
