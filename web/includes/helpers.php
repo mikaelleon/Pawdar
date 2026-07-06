@@ -142,6 +142,22 @@ function string_color_class(string $value): string
 }
 
 /**
+ * Dot color for incident type in case tables.
+ */
+function incident_type_dot_color(string $incidentType): string
+{
+    $map = [
+        'Animal Bite' => 'var(--burnt-peach)',
+        'Injured Stray' => 'var(--air-force)',
+        'Aggressive Behavior' => 'var(--sunlit-clay)',
+        'Vehicular Accident' => 'var(--muted-teal)',
+        'Trash Disturbance' => 'var(--taupe)',
+    ];
+
+    return $map[$incidentType] ?? 'var(--air-force)';
+}
+
+/**
  * Case status display label and badge class.
  *
  * @return array{label: string, class: string}

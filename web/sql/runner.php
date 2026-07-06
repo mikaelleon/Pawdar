@@ -110,6 +110,7 @@ function pawdar_apply_column_migrations(PDO $pdo): void
     pawdar_add_column($pdo, 'dog', 'health_notes', 'TEXT NULL AFTER photo_path');
 
     pawdar_add_column($pdo, 'case', 'RabiesMonitoring', 'TINYINT NOT NULL DEFAULT 0 AFTER CaseStatus');
+    pawdar_add_column($pdo, 'case', 'assigned_to', 'INT NULL AFTER RabiesMonitoring');
 
     pawdar_add_column($pdo, 'incident', 'latitude', 'DECIMAL(10, 7) NULL AFTER Location');
     pawdar_add_column($pdo, 'incident', 'longitude', 'DECIMAL(10, 7) NULL AFTER latitude');

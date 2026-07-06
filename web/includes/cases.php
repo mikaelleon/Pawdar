@@ -6,17 +6,24 @@ require_once __DIR__ . '/helpers.php';
 /**
  * @return list<array<string, mixed>>
  */
-function fetch_cases_for_barangay(PDO $pdo, string $barangay, ?string $status = null, ?string $type = null): array
-{
+function fetch_cases_for_barangay(
+    PDO $pdo,
+    string $barangay,
+    ?string $status = null,
+    ?string $type = null,
+    ?string $sort = 'urgent'
+): array {
     $sql = '
-        SELECT c.CaseID, c.CaseStatus, c.RabiesMonitoring,
+        SELECT c.CaseID, c.CaseStatus, c.RabiesMonitoring, c.assigned_to,
                i.IncidentID, i.IncidentType, i.Location, i.Date AS filed_date,
                u.Name AS reporter_name, u.Role AS reporter_role,
-               d.dog_id, d.DogName
+               d.dog_id, d.DogName, d.RegistryID,
+               assignee.Name AS assignee_name
         FROM `case` c
         INNER JOIN incident i ON c.IncidentID = i.IncidentID
         INNER JOIN `user` u ON i.UserID = u.UserID
         LEFT JOIN dog d ON i.dog_id = d.dog_id
+        LEFT JOIN `user` assignee ON assignee.UserID = c.assigned_to
         WHERE i.Location LIKE :barangay
     ';
     $params = [':barangay' => '%' . $barangay . '%'];
@@ -31,12 +38,37 @@ function fetch_cases_for_barangay(PDO $pdo, string $barangay, ?string $status = 
         $params[':type'] = $type;
     }
 
-    $sql .= ' ORDER BY i.Date DESC';
+    $sort = $sort ?? 'urgent';
+    if ($sort === 'filed_asc') {
+        $sql .= ' ORDER BY i.Date ASC';
+    } elseif ($sort === 'filed_desc') {
+        $sql .= ' ORDER BY i.Date DESC';
+    } elseif ($sort === 'status') {
+        $sql .= ' ORDER BY c.CaseStatus ASC, i.Date DESC';
+    } else {
+        $sql .= '
+            ORDER BY
+                CASE WHEN c.RabiesMonitoring = 1 AND c.CaseStatus NOT IN (\'Resolved\', \'Referred\') THEN 0 ELSE 1 END,
+                CASE WHEN c.CaseStatus IN (\'Received\', \'Under Investigation\', \'Action Taken\') THEN 0 ELSE 1 END,
+                i.Date DESC
+        ';
+    }
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
 
     return $stmt->fetchAll();
+}
+
+/**
+ * Whether case is on active rabies watch.
+ *
+ * @param array<string, mixed> $case
+ */
+function case_is_rabies_watch(array $case): bool
+{
+    return (int) ($case['RabiesMonitoring'] ?? 0) === 1
+        && !in_array((string) ($case['CaseStatus'] ?? ''), ['Resolved', 'Referred'], true);
 }
 
 /**

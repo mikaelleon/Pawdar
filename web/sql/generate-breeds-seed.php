@@ -3,9 +3,19 @@
 declare(strict_types=1);
 
 /**
- * Generates schema-v3-breeds-seed.sql from archive/dogs_cleaned.csv.
- * Run on XAMPP: php sql/generate-breeds-seed.php
- * Import via phpMyAdmin after schema-v3-breeds.sql (InfinityFree — no CLI).
+ * =============================================================================
+ * NOT A SQL FILE — DO NOT IMPORT THIS FILE IN phpMyAdmin
+ * =============================================================================
+ *
+ * This is a PHP generator script (XAMPP / local CLI only).
+ *
+ * phpMyAdmin: import schema-v3-breeds-seed.sql instead (same folder).
+ *
+ * Local regenerate:
+ *   c:\xampp\php\php.exe web\sql\generate-breeds-seed.php
+ *
+ * Writes: web/sql/schema-v3-breeds-seed.sql from archive/dogs_cleaned.csv
+ * =============================================================================
  */
 
 $root = dirname(__DIR__);

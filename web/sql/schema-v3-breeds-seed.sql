@@ -1,6 +1,9 @@
+-- =============================================================================
+-- IMPORT THIS FILE in phpMyAdmin (NOT generate-breeds-seed.php — that is PHP)
+-- =============================================================================
 -- Pawdar v3 breed seed data (Kaggle archive/dogs_cleaned.csv + Aspin)
 -- Source: archive/dogs_cleaned.csv (392 breeds including Aspin)
--- Regenerate locally: php sql/generate-breeds-seed.php
+-- Regenerate locally only: php sql/generate-breeds-seed.php
 -- Run AFTER schema-v3-breeds.sql (creates breeds table).
 -- Safe to re-run: uses ON DUPLICATE KEY UPDATE on breed_name.
 

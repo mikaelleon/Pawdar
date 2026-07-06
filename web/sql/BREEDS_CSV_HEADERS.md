@@ -30,7 +30,15 @@ Source datasets live in **`archive/`** at the repo root:
 
 ## SQL seed (phpMyAdmin / InfinityFree)
 
-No CLI on shared hosting? Use the pre-built seed file instead of CSV:
+**Import `schema-v3-breeds-seed.sql` in phpMyAdmin — not `generate-breeds-seed.php`.**
+
+| File | Use in phpMyAdmin? | Purpose |
+|---|---|---|
+| **`schema-v3-breeds-seed.sql`** | **Yes — import this** | 392 breed rows + link demo dogs |
+| `generate-breeds-seed.php` | **No — PHP script** | Regenerates the `.sql` file on XAMPP only |
+| `import-breeds.php` | **No — PHP script** | Loads seed into MySQL via CLI |
+
+If phpMyAdmin shows `#1064` near `<?php declare`, you opened the **`.php`** file by mistake.
 
 1. Run **`schema-v3-breeds.sql`** (creates `breeds` table).
 2. Import **`schema-v3-breeds-seed.sql`** — 392 breeds (391 Kaggle + Aspin).

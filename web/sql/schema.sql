@@ -136,6 +136,12 @@ FROM incident i
 WHERE i.Location = 'Acacia Ave, Brgy. San Roque'
 AND NOT EXISTS (SELECT 1 FROM `case` c WHERE c.IncidentID = i.IncidentID);
 
+INSERT INTO `case` (IncidentID, CaseStatus)
+SELECT i.IncidentID, 'Resolved'
+FROM incident i
+WHERE i.Location = 'Barangay Hall area, Brgy. San Roque'
+AND NOT EXISTS (SELECT 1 FROM `case` c WHERE c.IncidentID = i.IncidentID);
+
 INSERT INTO corroborations (incident_id, user_id)
 SELECT i.IncidentID, u.UserID
 FROM incident i

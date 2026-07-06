@@ -50,6 +50,7 @@ try {
     pawdar_run_sql_file($pdo, __DIR__ . '/schema-v4-screens.sql', true);
     pawdar_run_sql_file($pdo, __DIR__ . '/schema-v5-locations.sql', true);
     pawdar_run_sql_file($pdo, __DIR__ . '/schema-v6-auth-user.sql', true);
+    pawdar_run_sql_file($pdo, __DIR__ . '/schema-v7-cases-demo.sql', true);
     pawdar_ensure_breed_foreign_key($pdo);
 
     $breedCount = 0;
