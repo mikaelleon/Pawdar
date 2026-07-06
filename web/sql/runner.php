@@ -114,6 +114,15 @@ function pawdar_apply_column_migrations(PDO $pdo): void
     pawdar_add_column($pdo, 'dog', 'temperament_notes', 'TEXT NULL AFTER distinguishing_marks');
 
     pawdar_add_column($pdo, 'breeds', 'image_url', 'VARCHAR(512) NULL AFTER friendliness_score');
+    pawdar_add_column($pdo, 'breeds', 'slug', 'VARCHAR(120) NULL AFTER breed_name');
+    pawdar_add_column($pdo, 'breeds', 'breed_group', 'VARCHAR(120) NULL AFTER lifespan');
+    pawdar_add_column($pdo, 'breeds', 'known_for', 'TEXT NULL AFTER breed_group');
+    pawdar_add_column($pdo, 'breeds', 'grooming_notes', 'VARCHAR(255) NULL AFTER known_for');
+    pawdar_add_column($pdo, 'breeds', 'adoption_notes', 'TEXT NULL AFTER grooming_notes');
+    pawdar_add_column($pdo, 'breeds', 'legal_global', 'TEXT NULL AFTER adoption_notes');
+    pawdar_add_column($pdo, 'breeds', 'legal_philippines', 'TEXT NULL AFTER legal_global');
+    pawdar_add_column($pdo, 'breeds', 'is_local_breed', 'TINYINT NOT NULL DEFAULT 0 AFTER legal_philippines');
+    pawdar_add_column($pdo, 'breeds', 'gallery_urls', 'TEXT NULL AFTER image_url');
 
     pawdar_add_column($pdo, 'case', 'RabiesMonitoring', 'TINYINT NOT NULL DEFAULT 0 AFTER CaseStatus');
     pawdar_add_column($pdo, 'case', 'assigned_to', 'INT NULL AFTER RabiesMonitoring');

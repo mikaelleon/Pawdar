@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/../includes/incidents.php';
+require_once __DIR__ . '/../includes/geocoding.php';
 
 require_login();
 
@@ -23,14 +24,35 @@ $description = trim((string) ($_POST['description'] ?? ''));
 $dogId = (int) ($_POST['dog_id'] ?? 0);
 $userId = (int) $_SESSION['user_id'];
 $barangay = (string) $_SESSION['user_barangay'];
+$latitude = trim((string) ($_POST['latitude'] ?? ''));
+$longitude = trim((string) ($_POST['longitude'] ?? ''));
 
 $allowedTypes = array_keys(incident_type_map());
 if (!in_array($incidentType, $allowedTypes, true) || $location === '') {
     json_response(['success' => false, 'message' => 'Missing required fields'], 400);
 }
 
-if (stripos($location, $barangay) === false) {
-    $location = $location . ', Brgy. ' . $barangay;
+$coords = null;
+if ($latitude !== '' && $longitude !== '' && is_numeric($latitude) && is_numeric($longitude)) {
+    $coords = ['lat' => (float) $latitude, 'lng' => (float) $longitude];
+} else {
+    $coords = parse_coordinates_from_text($location);
+}
+
+$barangaySuffix = extract_barangay_suffix($location);
+if ($barangaySuffix === '' && stripos($location, $barangay) === false) {
+    $barangaySuffix = ', Brgy. ' . $barangay;
+}
+
+if ($coords !== null && (location_is_coordinate_string($location) || $latitude !== '')) {
+    $readable = reverse_geocode_label($coords['lat'], $coords['lng']);
+    if ($readable !== null) {
+        $location = $readable . $barangaySuffix;
+    } elseif (stripos($location, 'Brgy.') === false) {
+        $location = $location . $barangaySuffix;
+    }
+} elseif (stripos($location, $barangay) === false) {
+    $location = $location . $barangaySuffix;
 }
 
 $pdo = db();
@@ -76,8 +98,8 @@ if ($description === '' && $photoPath !== null) {
 }
 
 $insert = $pdo->prepare('
-    INSERT INTO incident (UserID, dog_id, IncidentType, Date, Location, Description)
-    VALUES (:user_id, :dog_id, :incident_type, NOW(), :location, :description)
+    INSERT INTO incident (UserID, dog_id, IncidentType, Date, Location, Description, latitude, longitude)
+    VALUES (:user_id, :dog_id, :incident_type, NOW(), :location, :description, :latitude, :longitude)
 ');
 $insert->execute([
     ':user_id' => $userId,
@@ -85,10 +107,12 @@ $insert->execute([
     ':incident_type' => $incidentType,
     ':location' => $location,
     ':description' => $description !== '' ? $description : null,
+    ':latitude' => $coords['lat'] ?? null,
+    ':longitude' => $coords['lng'] ?? null,
 ]);
 
 $incidentId = (int) $pdo->lastInsertId();
-$title = generate_incident_title($incidentType, $location);
+$title = generate_incident_title($incidentType, $location, $coords['lat'] ?? null, $coords['lng'] ?? null);
 
 $caseInsert = $pdo->prepare('INSERT INTO `case` (IncidentID, CaseStatus) VALUES (:incident_id, \'Received\')');
 $caseInsert->execute([':incident_id' => $incidentId]);

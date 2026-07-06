@@ -17,7 +17,17 @@ if (!$incident) {
 $isLoggedIn = isset($_SESSION['user_id']);
 $userRole = current_user_role();
 $meta = incident_type_meta((string) $incident['IncidentType']);
-$title = generate_incident_title((string) $incident['IncidentType'], (string) $incident['Location']);
+$locationParts = incident_location_display(
+    (string) $incident['Location'],
+    isset($incident['latitude']) ? (float) $incident['latitude'] : null,
+    isset($incident['longitude']) ? (float) $incident['longitude'] : null
+);
+$title = generate_incident_title(
+    (string) $incident['IncidentType'],
+    (string) $incident['Location'],
+    isset($incident['latitude']) ? (float) $incident['latitude'] : null,
+    isset($incident['longitude']) ? (float) $incident['longitude'] : null
+);
 $statusMeta = case_status_meta($incident['CaseStatus'] ?? null);
 $corroborators = fetch_incident_corroborators($pdo, $incidentId);
 $related = fetch_related_incidents($pdo, (string) $incident['reporter_barangay'], $incidentId);
@@ -51,7 +61,7 @@ if ($isLoggedIn) {
             <h1 class="feed-title" style="font-size:24px;"><?= htmlspecialchars($title) ?></h1>
             <div class="text-sm text-muted flex items-center gap-sm mt-sm">
                 <i data-lucide="map-pin" style="width:14px;height:14px;"></i>
-                <?= htmlspecialchars((string) $incident['Location']) ?> · Brgy. <?= htmlspecialchars((string) $incident['reporter_barangay']) ?>
+                <?= htmlspecialchars($locationParts['display']) ?> · Brgy. <?= htmlspecialchars((string) $incident['reporter_barangay']) ?>
             </div>
             <p class="text-sm text-muted mt-sm"><?= date('F j, Y · g:i A', strtotime((string) $incident['Date'])) ?></p>
             <p class="text-xs text-muted">Reported by <?= htmlspecialchars((string) $incident['reporter_name']) ?> · <?= htmlspecialchars((string) $incident['reporter_role']) ?></p>

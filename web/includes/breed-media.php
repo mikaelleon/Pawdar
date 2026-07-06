@@ -79,6 +79,36 @@ function breed_to_dog_ceo_slug(string $breedName): string
 }
 
 /**
+ * Quick HEAD check — broken dog.ceo caches caused empty thumbnails.
+ */
+function breed_image_url_is_valid(string $url): bool
+{
+    if ($url === '' || filter_var($url, FILTER_VALIDATE_URL) === false) {
+        return false;
+    }
+
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'HEAD',
+            'timeout' => 3,
+            'user_agent' => 'Pawdar/1.0',
+            'ignore_errors' => true,
+        ],
+        'ssl' => [
+            'verify_peer' => true,
+            'verify_peer_name' => true,
+        ],
+    ]);
+
+    $headers = @get_headers($url, true, $context);
+    if ($headers === false || !isset($headers[0])) {
+        return false;
+    }
+
+    return str_contains((string) $headers[0], '200');
+}
+
+/**
  * Fetches and caches a breed image URL from dog.ceo.
  */
 function resolve_breed_image_url(PDO $pdo, int $breedId, string $breedName): ?string
@@ -88,7 +118,12 @@ function resolve_breed_image_url(PDO $pdo, int $breedId, string $breedName): ?st
     $existing = $stmt->fetchColumn();
 
     if (is_string($existing) && $existing !== '') {
-        return $existing;
+        if (breed_image_url_is_valid($existing)) {
+            return $existing;
+        }
+
+        $clear = $pdo->prepare('UPDATE breeds SET image_url = NULL WHERE breed_id = :id');
+        $clear->execute([':id' => $breedId]);
     }
 
     $slug = breed_to_dog_ceo_slug($breedName);
@@ -109,7 +144,7 @@ function resolve_breed_image_url(PDO $pdo, int $breedId, string $breedName): ?st
     $data = json_decode($response, true);
     $imageUrl = is_array($data) ? ($data['message'] ?? null) : null;
 
-    if (!is_string($imageUrl) || $imageUrl === '') {
+    if (!is_string($imageUrl) || $imageUrl === '' || !breed_image_url_is_valid($imageUrl)) {
         return null;
     }
 
@@ -162,6 +197,55 @@ function breed_card_image_url(array $breed): ?string
     }
 
     return null;
+}
+
+/**
+ * Silhouette fallback tinted by dominant trait.
+ *
+ * @param array<string, mixed> $breed
+ */
+function breed_silhouette_url(array $breed): string
+{
+    return 'ajax/breed-silhouette.php?id=' . (int) ($breed['breed_id'] ?? 0);
+}
+
+/**
+ * List/detail thumbnail — always via proxy so broken caches fall back to silhouette.
+ *
+ * @param array<string, mixed> $breed
+ */
+function breed_thumbnail_url(array $breed): string
+{
+    if (!empty($breed['breed_id'])) {
+        return 'ajax/breed-image.php?id=' . (int) $breed['breed_id'];
+    }
+
+    return breed_silhouette_url(['breed_id' => 0, 'energy_score' => 3, 'loyalty_score' => 3, 'friendliness_score' => 3]);
+}
+
+/**
+ * Dominant trait color for silhouette fallback.
+ *
+ * @param array<string, mixed> $breed
+ */
+function breed_trait_accent_color(array $breed): string
+{
+    $loyalty = (int) ($breed['loyalty_score'] ?? 3);
+    $energy = (int) ($breed['energy_score'] ?? 3);
+    $friendliness = (int) ($breed['friendliness_score'] ?? 3);
+    $dominant = max($loyalty, $energy, $friendliness);
+
+    if ($dominant === $energy && $energy >= 4) {
+        return '#F8BC72';
+    }
+    if ($dominant === $loyalty && $loyalty >= 4) {
+        return '#87AFAE';
+    }
+    if ($dominant === $friendliness && $friendliness >= 4) {
+        return '#C0DAB5';
+    }
+
+    return '#6C8B9F';
 }
 
 /**

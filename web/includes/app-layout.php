@@ -4,12 +4,13 @@ require_login_active();
 
 function app_layout_start(string $activeNav, string $pageTitle, array $options = []): void
 {
-    global $bodyClass, $pageScripts, $breadcrumbs, $adminContext, $includeReportDrawer;
+    global $bodyClass, $pageScripts, $breadcrumbs, $adminContext, $includeReportDrawer, $showMobileSearch;
     $bodyClass = 'app-page';
     $pageTitle = $pageTitle . ' · ' . SITE_NAME;
     $activeNav = $activeNav;
     $topbarTitle = $options['topbarTitle'] ?? '';
     $showSearch = $options['showSearch'] ?? true;
+    $showMobileSearch = $options['showMobileSearch'] ?? $showSearch;
     $searchPlaceholder = $options['searchPlaceholder'] ?? 'Search incidents or dogs…';
     $mobileHeader = $options['mobileHeader'] ?? 'default';
     $backTitle = $options['backTitle'] ?? 'Back';

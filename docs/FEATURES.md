@@ -2,7 +2,7 @@
 
 **Last updated:** July 2026  
 **Scope:** `web/` PHP application, MySQL schema, JS modules  
-**Related:** [UI_COMPLETENESS_TASKS.md](./UI_COMPLETENESS_TASKS.md) (UI task tracker), [UI_FEEDBACK_SPEC.md](./UI_FEEDBACK_SPEC.md) (professor feedback fixes), [README.md](../README.md) (project overview)
+**Related:** [UI_COMPLETENESS_TASKS.md](./UI_COMPLETENESS_TASKS.md) (UI task tracker), [UI_FEEDBACK_SPEC.md](./UI_FEEDBACK_SPEC.md) (professor feedback fixes), [FEED_UI_FIXES.md](./FEED_UI_FIXES.md) (feed addendum), [CASE_STATUS_TAXONOMY.md](./CASE_STATUS_TAXONOMY.md), [README.md](../README.md) (project overview)
 
 ---
 

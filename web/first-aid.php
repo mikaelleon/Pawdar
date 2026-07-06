@@ -22,7 +22,7 @@ app_layout_start('first-aid', 'First Aid Guides', [
         <p class="text-sm text-muted mt-sm" style="margin-bottom:12px;">Know what to do before help arrives.</p>
         <div class="search-bar search-bar-light mb-md">
             <i data-lucide="search"></i>
-            <input type="search" id="guide-search" placeholder="Search guides..." style="border:none;background:transparent;flex:1;font-family:inherit;font-size:14px;">
+            <input type="search" id="guide-search" placeholder="Search guides...">
         </div>
         <div class="first-aid-list scr" style="max-height:620px;overflow-y:auto;" data-guide-list>
             <?php foreach ($guides as $guide):

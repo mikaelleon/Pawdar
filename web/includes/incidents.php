@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/helpers.php';
+require_once __DIR__ . '/geocoding.php';
 
 /**
  * Fetches incidents for the feed with corroboration and case data.
@@ -21,6 +22,8 @@ function fetch_incidents(
                i.IncidentType,
                i.Date,
                i.Location,
+               i.latitude,
+               i.longitude,
                i.UserID AS reporter_id,
                i.dog_id,
                i.Description,
@@ -53,7 +56,7 @@ function fetch_incidents(
     }
 
     $sql .= '
-        GROUP BY i.IncidentID, i.IncidentType, i.Date, i.Location, i.UserID, i.dog_id,
+        GROUP BY i.IncidentID, i.IncidentType, i.Date, i.Location, i.latitude, i.longitude, i.UserID, i.dog_id,
                  i.Description, u.Name, c.CaseID, c.CaseStatus, d.DogName, d.Breed
         ORDER BY i.Date DESC
         LIMIT :limit OFFSET :offset
@@ -84,7 +87,8 @@ function fetch_map_counts(PDO $pdo, string $barangay): array
             SUM(CASE WHEN i.IncidentType = \'Animal Bite\' THEN 1 ELSE 0 END) AS bites,
             SUM(CASE WHEN i.IncidentType = \'Injured Stray\' THEN 1 ELSE 0 END) AS strays,
             SUM(CASE WHEN i.IncidentType = \'Aggressive Behavior\' THEN 1 ELSE 0 END) AS aggressive,
-            SUM(CASE WHEN i.IncidentType = \'Vehicular Accident\' THEN 1 ELSE 0 END) AS vehicular
+            SUM(CASE WHEN i.IncidentType = \'Vehicular Accident\' THEN 1 ELSE 0 END) AS vehicular,
+            SUM(CASE WHEN i.IncidentType IN (\'Disturbance\', \'Trash Disturbance\') THEN 1 ELSE 0 END) AS disturbance
         FROM incident i
         WHERE i.Location LIKE :barangay
     ';
@@ -98,6 +102,7 @@ function fetch_map_counts(PDO $pdo, string $barangay): array
         'strays' => (int) ($row['strays'] ?? 0),
         'aggressive' => (int) ($row['aggressive'] ?? 0),
         'vehicular' => (int) ($row['vehicular'] ?? 0),
+        'disturbance' => (int) ($row['disturbance'] ?? 0),
     ];
 }
 
@@ -106,10 +111,10 @@ function fetch_map_counts(PDO $pdo, string $barangay): array
  *
  * @return list<array<string, mixed>>
  */
-function fetch_map_pins(PDO $pdo, string $barangay, ?string $incidentType = null, int $limit = 20): array
+function fetch_map_pins(PDO $pdo, string $barangay, ?string $incidentType = null, int $limit = 30): array
 {
     $sql = '
-        SELECT i.IncidentID, i.IncidentType, i.Location
+        SELECT i.IncidentID, i.IncidentType, i.Location, i.latitude, i.longitude
         FROM incident i
         WHERE i.Location LIKE :barangay
     ';
@@ -132,17 +137,54 @@ function fetch_map_pins(PDO $pdo, string $barangay, ?string $incidentType = null
     $stmt->execute();
 
     $rows = $stmt->fetchAll();
-    $typeMap = incident_type_map();
+    $colors = incident_pin_colors();
+    $coordsList = [];
+
+    foreach ($rows as $row) {
+        $resolved = resolve_incident_coordinates($row);
+        if ($resolved === null) {
+            $id = (int) $row['IncidentID'];
+            $resolved = [
+                'lat' => 13.7568 + ($id % 7) * 0.002,
+                'lng' => 121.0583 + ($id % 5) * 0.003,
+            ];
+        }
+        $coordsList[] = $resolved;
+    }
+
+    if ($coordsList === []) {
+        return [];
+    }
+
+    $lats = array_column($coordsList, 'lat');
+    $lngs = array_column($coordsList, 'lng');
+    $minLat = min($lats);
+    $maxLat = max($lats);
+    $minLng = min($lngs);
+    $maxLng = max($lngs);
+    $latSpan = max(0.0008, $maxLat - $minLat);
+    $lngSpan = max(0.0008, $maxLng - $minLng);
+    $previewWidth = 260;
+    $previewHeight = 120;
     $pins = [];
 
     foreach ($rows as $index => $row) {
-        $meta = $typeMap[$row['IncidentType']] ?? null;
+        $coords = $coordsList[$index];
+        $type = normalize_incident_type((string) $row['IncidentType']);
+        $meta = incident_type_meta($type);
+        $countKey = incident_map_count_key($type);
+        $left = (int) round((($coords['lng'] - $minLng) / $lngSpan) * ($previewWidth - 24) + 12);
+        $top = (int) round((1 - (($coords['lat'] - $minLat) / $latSpan)) * ($previewHeight - 24) + 12);
+
         $pins[] = [
             'id' => (int) $row['IncidentID'],
-            'type' => $row['IncidentType'],
-            'accent' => $meta['accent'] ?? 'accent-teal',
-            'left' => 20 + (($index * 37) % 220),
-            'top' => 30 + (($index * 53) % 170),
+            'type' => $type,
+            'label' => $meta['label'],
+            'accent' => $meta['accent'],
+            'color' => $colors[$type] ?? '#87AFAE',
+            'count_key' => $countKey,
+            'left' => $left,
+            'top' => $top,
         ];
     }
 

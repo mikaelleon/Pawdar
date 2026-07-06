@@ -190,14 +190,8 @@ function getSkeletonHtml(count) {
 
 function updateMapPreview(counts, pins) {
     if (counts) {
-        var map = {
-            bites: '[data-count-bites]',
-            strays: '[data-count-strays]',
-            aggressive: '[data-count-aggressive]',
-            vehicular: '[data-count-vehicular]'
-        };
-        Object.keys(map).forEach(function (key) {
-            var el = document.querySelector(map[key]);
+        ['bites', 'strays', 'aggressive', 'vehicular', 'disturbance'].forEach(function (key) {
+            var el = document.querySelector('[data-count-' + key + ']');
             if (el) {
                 el.textContent = counts[key] || 0;
             }
@@ -209,11 +203,15 @@ function updateMapPreview(counts, pins) {
         return;
     }
 
-    var baseHtml = '<div style="position:absolute;top:70px;left:-10px;right:-10px;height:12px;background:#fff;transform:rotate(-7deg);"></div>' +
-        '<div style="position:absolute;inset:0;background:var(--tea-green);opacity:.15;"></div>';
+    if (!pins.length) {
+        preview.innerHTML = '<div class="map-preview-empty text-xs text-muted">No incidents in this barangay yet.</div>';
+        return;
+    }
 
-    preview.innerHTML = baseHtml + pins.map(function (pin) {
-        return '<div class="map-pin map-pin-drop ' + pin.accent + '" style="left:' + pin.left + 'px;top:' + pin.top + 'px;width:26px;height:26px;"></div>';
+    preview.innerHTML = pins.map(function (pin) {
+        return '<div class="map-pin map-pin-dot" style="left:' + pin.left + 'px;top:' + pin.top + 'px;background:' +
+            (pin.color || '#87AFAE') + ';" title="' + escapeHtml(pin.label || pin.type || 'Incident') +
+            '" data-pin-type="' + escapeHtml(pin.count_key || '') + '"></div>';
     }).join('');
 }
 

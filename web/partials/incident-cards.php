@@ -95,8 +95,20 @@ function render_single_incident_card(array $incident, string $userRole, int $use
 {
     $type = normalize_incident_type((string) $incident['IncidentType']);
     $meta = incident_type_meta($type);
+    $locationParts = incident_location_display(
+        (string) $incident['Location'],
+        isset($incident['latitude']) ? (float) $incident['latitude'] : null,
+        isset($incident['longitude']) ? (float) $incident['longitude'] : null
+    );
+    $displayLocation = $locationParts['display'];
+    $rawCoordinates = $locationParts['coordinates'];
 
-    $title = generate_incident_title($type, (string) $incident['Location']);
+    $title = generate_incident_title(
+        $type,
+        (string) $incident['Location'],
+        isset($incident['latitude']) ? (float) $incident['latitude'] : null,
+        isset($incident['longitude']) ? (float) $incident['longitude'] : null
+    );
     $timeAgo = time_elapsed_string((string) $incident['Date']);
     $statusMeta = case_status_meta($incident['CaseStatus'] ?? null);
     $corroborateCount = (int) ($incident['corroborate_count'] ?? 0);
@@ -108,13 +120,18 @@ function render_single_incident_card(array $incident, string $userRole, int $use
     $dogId = isset($incident['dog_id']) ? (int) $incident['dog_id'] : 0;
     $fullTimestamp = date('M j, Y g:i A', strtotime((string) $incident['Date']));
     $reporterName = (string) ($incident['reporter_name'] ?? 'Anonymous');
+    $corroborateHint = $hasCorroborated
+        ? 'You corroborated this report.'
+        : ($isOwnReport
+            ? 'You reported this incident.'
+            : 'Community confirmations help LGU prioritize. Three or more may escalate review.');
     ?>
     <article class="incident-card card-bordered" data-incident-id="<?= $incidentId ?>">
         <div class="accent <?= htmlspecialchars($meta['accent']) ?>"></div>
         <div class="card-body" style="flex:1;">
             <div class="flex justify-between items-center mb-md" style="margin-bottom:10px;">
                 <span class="badge <?= htmlspecialchars($meta['badge']) ?>"><?= htmlspecialchars($meta['label']) ?></span>
-                    <span class="text-xs text-muted incident-card-time"><?= htmlspecialchars($timeAgo) ?></span>
+                    <span class="text-xs text-muted incident-card-time" title="<?= htmlspecialchars($fullTimestamp) ?>"><?= htmlspecialchars($timeAgo) ?></span>
             </div>
             <div class="flex gap-md" style="gap:11px;">
                 <div class="icon-box icon-box-md"><i data-lucide="<?= htmlspecialchars($meta['icon']) ?>"></i></div>
@@ -122,7 +139,7 @@ function render_single_incident_card(array $incident, string $userRole, int $use
                     <a href="incident.php?id=<?= $incidentId ?>" class="incident-card-title"><?= htmlspecialchars($title) ?></a>
                     <div class="text-xs text-muted mt-sm flex items-center gap-sm" style="margin-top:3px;">
                         <i data-lucide="map-pin" style="width:13px;height:13px;"></i>
-                        <?= htmlspecialchars((string) $incident['Location']) ?>
+                        <?= htmlspecialchars($displayLocation) ?>
                     </div>
                 </div>
             </div>
@@ -133,6 +150,9 @@ function render_single_incident_card(array $incident, string $userRole, int $use
             <div class="incident-details-panel" hidden>
                 <p class="text-xs text-muted" style="margin:0 0 4px;">Reported by <?= htmlspecialchars($reporterName) ?></p>
                 <p class="text-xs text-muted" style="margin:0 0 8px;"><?= htmlspecialchars($fullTimestamp) ?></p>
+                <?php if ($rawCoordinates !== null): ?>
+                    <p class="text-xs text-muted" style="margin:0 0 8px;">GPS: <?= htmlspecialchars($rawCoordinates) ?></p>
+                <?php endif; ?>
                 <?php if ($dogId > 0 && !empty($incident['DogName'])): ?>
                     <a href="dog-profile.php?id=<?= $dogId ?>" class="text-sm" style="font-weight:700;color:var(--air-force);">
                         View dog: <?= htmlspecialchars((string) $incident['DogName']) ?>
@@ -149,20 +169,21 @@ function render_single_incident_card(array $incident, string $userRole, int $use
             <div class="incident-card-footer flex justify-between items-center">
                 <div class="incident-card-actions flex items-center gap-sm" style="flex-wrap:wrap;">
                     <?php if ($hasCorroborated): ?>
-                        <div class="chip chip-outline corroborated is-corroborated" title="You corroborated this">
+                        <div class="chip chip-outline corroborated is-corroborated" title="<?= htmlspecialchars($corroborateHint) ?>">
                             <i data-lucide="thumbs-up" style="width:14px;height:14px;color:var(--tea-green);"></i>
                             Corroborate · <?= $corroborateCount ?>
                         </div>
                     <?php elseif ($canCorroborate): ?>
                         <button type="button"
                                 class="chip chip-outline corroborate-btn"
-                                data-corroborate="<?= $incidentId ?>">
+                                data-corroborate="<?= $incidentId ?>"
+                                title="<?= htmlspecialchars($corroborateHint) ?>">
                             <i data-lucide="thumbs-up" style="width:14px;height:14px;color:var(--air-force);"></i>
                             Corroborate · <?= $corroborateCount ?>
                         </button>
                     <?php else: ?>
                         <div class="chip chip-outline corroborated"
-                             <?= $isOwnReport ? 'title="You reported this incident"' : '' ?>>
+                             title="<?= htmlspecialchars($corroborateHint) ?>">
                             <i data-lucide="thumbs-up" style="width:14px;height:14px;color:var(--air-force);"></i>
                             Corroborate · <?= $corroborateCount ?>
                         </div>

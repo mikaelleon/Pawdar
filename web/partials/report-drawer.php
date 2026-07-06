@@ -65,6 +65,8 @@ $now = date('H:i');
                 <label class="form-label" for="report-dog-search">Tag a registered dog (optional)</label>
                 <input class="form-input" type="text" id="report-dog-search" placeholder="Search your dogs…" autocomplete="off">
                 <input type="hidden" name="dog_id" id="report-dog-id" value="">
+                <input type="hidden" name="latitude" id="report-latitude" value="">
+                <input type="hidden" name="longitude" id="report-longitude" value="">
                 <div class="dog-search-results" data-dog-search-results hidden></div>
             </div>
             <div class="form-group">

@@ -1,159 +1,188 @@
 document.addEventListener('DOMContentLoaded', function () {
-    var search = document.getElementById('breed-search');
-    var timer;
+    var directory = document.querySelector('[data-breeds-directory]');
+    if (!directory) return;
 
-    if (search) {
-        search.addEventListener('input', function () {
-            clearTimeout(timer);
-            timer = setTimeout(function () {
-                var q = search.value.trim();
-                var size = document.querySelector('[data-breeds-page]')?.getAttribute('data-size-filter') || 'all';
-                fetch('ajax/search_breeds.php?q=' + encodeURIComponent(q) + '&size=' + encodeURIComponent(size))
-                    .then(function (res) { return res.json(); })
-                    .then(function (data) {
-                        if (!data.success) return;
-                        var grid = document.querySelector('[data-breed-grid]');
-                        if (!grid) return;
-                        if (!data.breeds.length) {
-                            grid.innerHTML = '<div class="feed-empty-state"><p class="feed-empty-title">No breeds found</p><button type="button" class="btn-outline btn-sm" data-clear-breed-search>Clear search</button></div>';
-                            bindClearSearch();
-                            return;
-                        }
-                        grid.innerHTML = data.breeds.map(function (breed) {
-                            return '<button type="button" class="breed-card card-hoverable" data-breed-card data-breed-id="' + breed.breed_id + '" data-size="' + breed.size_category + '">' +
-                                '<div class="breed-card-image pastel-color-0"><i data-lucide="dog"></i></div>' +
-                                '<div class="card-body"><div style="font-weight:500;">' + escapeHtml(breed.breed_name) + '</div>' +
-                                '<span class="badge badge-owned">' + escapeHtml(breed.size_category) + '</span></div></button>';
-                        }).join('');
-                        bindBreedCards();
-                        if (window.lucide) lucide.createIcons();
-                    });
-            }, 300);
+    var form = directory.querySelector('[data-breed-filter-form]');
+    var sizeInput = directory.querySelector('[data-size-input]');
+    var moodInput = directory.querySelector('[data-mood-input]');
+    var localInput = directory.querySelector('[data-local-input]');
+    var compareBar = directory.querySelector('[data-compare-bar]');
+    var compareOpen = directory.querySelector('[data-compare-open]');
+    var compareClear = directory.querySelector('[data-compare-clear]');
+    var compareStatus = directory.querySelector('[data-compare-status]');
+    var compareHint = directory.querySelector('[data-compare-hint]');
+    var compareKey = 'pawdar-breed-compare';
+    var maxCompare = 3;
+    var focusedIndex = 0;
+    var listItems = [];
+
+    function refreshListItems() {
+        listItems = Array.prototype.slice.call(directory.querySelectorAll('[data-breed-list-item]'));
+        focusedIndex = Math.min(focusedIndex, Math.max(0, listItems.length - 1));
+    }
+
+    function getCompareIds() {
+        try {
+            return JSON.parse(localStorage.getItem(compareKey) || '[]');
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function setCompareIds(ids) {
+        localStorage.setItem(compareKey, JSON.stringify(ids.slice(0, maxCompare)));
+        updateCompareBar();
+        syncCompareCheckboxes();
+    }
+
+    function showCompareHint(message) {
+        if (!compareHint) return;
+        compareHint.hidden = false;
+        compareHint.textContent = message;
+        clearTimeout(showCompareHint._timer);
+        showCompareHint._timer = setTimeout(function () {
+            compareHint.hidden = true;
+        }, 3500);
+    }
+
+    function updateCompareBar() {
+        var ids = getCompareIds();
+        if (compareBar) {
+            compareBar.hidden = ids.length === 0;
+            compareBar.classList.toggle('is-visible', ids.length > 0);
+            directory.classList.toggle('has-compare-bar', ids.length > 0);
+        }
+        if (compareStatus) {
+            if (ids.length === 0) {
+                compareStatus.textContent = 'Select breeds to compare (up to 3)';
+            } else if (ids.length === 1) {
+                compareStatus.textContent = '1 breed selected — pick one more to compare';
+            } else {
+                compareStatus.textContent = ids.length + ' of ' + maxCompare + ' breeds selected';
+            }
+        }
+        if (compareOpen) {
+            compareOpen.hidden = ids.length < 2;
+            compareOpen.setAttribute('aria-disabled', ids.length < 2 ? 'true' : 'false');
+            compareOpen.href = 'breeds-compare.php?ids=' + ids.join(',');
+        }
+        if (compareClear) {
+            compareClear.hidden = ids.length === 0;
+        }
+    }
+
+    function syncCompareCheckboxes() {
+        var ids = getCompareIds();
+        directory.querySelectorAll('[data-compare-breed]').forEach(function (input) {
+            input.checked = ids.indexOf(parseInt(input.getAttribute('data-compare-breed'), 10)) !== -1;
         });
     }
 
-    document.querySelectorAll('.breed-size-chip').forEach(function (chip) {
+    function submitFilters() {
+        if (!form) return;
+        form.submit();
+    }
+
+    directory.querySelectorAll('[data-filter-local]').forEach(function (chip) {
         chip.addEventListener('click', function () {
-            var size = chip.getAttribute('data-size') || 'all';
-            document.querySelectorAll('[data-breed-card]').forEach(function (card) {
-                var cardSize = card.getAttribute('data-size');
-                card.hidden = size !== 'all' && cardSize !== size;
-            });
-            document.querySelectorAll('.breed-size-chip').forEach(function (c) {
-                c.classList.toggle('chip-active', c === chip);
-                c.classList.toggle('chip-outline', c !== chip);
-            });
-            var page = document.querySelector('[data-breeds-page]');
-            if (page) page.setAttribute('data-size-filter', size);
+            if (localInput) {
+                localInput.value = chip.getAttribute('data-filter-local') || '';
+            }
+            var pageInput = form.querySelector('input[name="page"]');
+            if (pageInput) pageInput.remove();
+            submitFilters();
         });
     });
 
-    bindBreedCards();
-    bindClearSearch();
-});
-
-function bindBreedCards() {
-    document.querySelectorAll('[data-breed-card]').forEach(function (card) {
-        card.addEventListener('click', function () {
-            var breedId = card.getAttribute('data-breed-id');
-            if (!breedId) return;
-
-            document.querySelectorAll('[data-breed-card]').forEach(function (c) {
-                c.classList.remove('is-selected');
-            });
-            card.classList.add('is-selected');
-
-            var page = document.querySelector('[data-breeds-page]');
-            if (page) page.setAttribute('data-selected-breed', breedId);
-
-            fetch('ajax/breed_detail.php?breed_id=' + encodeURIComponent(breedId))
-                .then(function (res) { return res.json(); })
-                .then(function (data) {
-                    if (data.success && data.breed) {
-                        renderBreedDetail(data.breed);
-                    }
-                });
-
-            fetch('ajax/breed_dogs.php?breed_id=' + encodeURIComponent(breedId))
-                .then(function (res) { return res.json(); })
-                .then(function (data) {
-                    if (!data.success) return;
-                    renderBreedDogs(data.dogs);
-                });
-
-            var url = new URL(window.location.href);
-            url.searchParams.set('breed', breedId);
-            window.history.replaceState({}, '', url.toString());
+    directory.querySelectorAll('[data-filter-size]').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+            var slug = chip.getAttribute('data-filter-size') || 'all';
+            if (localInput) localInput.value = '';
+            if (sizeInput) sizeInput.value = slug;
+            var pageInput = form.querySelector('input[name="page"]');
+            if (pageInput) pageInput.remove();
+            submitFilters();
         });
     });
-}
 
-function renderBreedDetail(breed) {
-    var nameEl = document.querySelector('[data-breed-name]');
-    var metaEl = document.querySelector('[data-breed-meta]');
-    var temperamentEl = document.querySelector('[data-breed-temperament]');
-    var healthEl = document.querySelector('[data-breed-health]');
-
-    if (nameEl) nameEl.textContent = breed.breed_name || '';
-    if (metaEl) {
-        metaEl.textContent = [breed.size_category, breed.weight_range, breed.lifespan]
-            .filter(Boolean)
-            .join(' · ');
-    }
-    if (temperamentEl) temperamentEl.textContent = breed.temperament_notes || '';
-    if (healthEl) healthEl.textContent = breed.common_health_risks || '';
-
-    document.querySelectorAll('[data-breed-detail] .rating-dots').forEach(function (dotsEl, index) {
-        var scores = [
-            parseInt(breed.loyalty_score, 10) || 3,
-            parseInt(breed.energy_score, 10) || 3,
-            parseInt(breed.friendliness_score, 10) || 3
-        ];
-        var filled = scores[index] || 3;
-        dotsEl.querySelectorAll('.rating-dot').forEach(function (dot, i) {
-            dot.classList.toggle('empty', i >= filled);
+    directory.querySelectorAll('[data-filter-mood]').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+            if (moodInput) moodInput.value = chip.getAttribute('data-filter-mood') || '';
+            submitFilters();
         });
     });
-}
 
-function renderBreedDogs(dogs) {
-    var container = document.querySelector('[data-breed-dogs]');
-    if (!container) return;
-
-    if (!dogs.length) {
-        container.innerHTML = '<div class="text-sm text-muted text-center" style="padding:12px;"><i data-lucide="paw-print"></i><div>No dogs of this breed registered yet</div></div>';
-        if (window.lucide) lucide.createIcons();
-        return;
+    var sortSelect = directory.querySelector('#breed-sort');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', submitFilters);
     }
 
-    container.innerHTML = dogs.map(function (dog) {
-        var status = dog.Status || 'Registered';
-        var badge = status === 'Registered' ? 'badge-verified' : 'badge-investigating';
-        return '<a href="dog-profile.php?id=' + dog.dog_id + '" class="dog-breed-row">' +
-            '<div class="icon-box icon-box-sm" style="background:var(--muted-teal);color:#fff;width:32px;height:32px;"><i data-lucide="dog"></i></div>' +
-            '<div class="flex-1"><div class="text-sm" style="font-weight:500;">' + escapeHtml(dog.DogName) + '</div>' +
-            '<div class="text-xs text-muted">' + escapeHtml(dog.owner_name) + '</div></div>' +
-            '<span class="badge ' + badge + '">' + escapeHtml(status) + '</span>' +
-            '<i data-lucide="chevron-right"></i></a>';
-    }).join('');
-
-    if (window.lucide) lucide.createIcons();
-}
-
-function bindClearSearch() {
-    document.querySelectorAll('[data-clear-breed-search]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var search = document.getElementById('breed-search');
-            if (search) {
-                search.value = '';
-                search.dispatchEvent(new Event('input'));
+    var pageJump = directory.querySelector('[data-page-jump]');
+    if (pageJump) {
+        pageJump.addEventListener('change', function () {
+            if (pageJump.value) {
+                window.location.href = pageJump.value;
             }
         });
-    });
-}
+    }
 
-function escapeHtml(text) {
-    var div = document.createElement('div');
-    div.textContent = text || '';
-    return div.innerHTML;
-}
+    var search = directory.querySelector('#breed-search');
+    var searchTimer;
+    if (search) {
+        search.addEventListener('input', function () {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(submitFilters, 400);
+        });
+    }
+
+    directory.addEventListener('change', function (event) {
+        var compareInput = event.target.closest('[data-compare-breed]');
+        if (!compareInput) return;
+
+        var id = parseInt(compareInput.getAttribute('data-compare-breed'), 10);
+        var ids = getCompareIds();
+
+        if (compareInput.checked) {
+            if (ids.indexOf(id) === -1) {
+                if (ids.length >= maxCompare) {
+                    compareInput.checked = false;
+                    showCompareHint('Maximum ' + maxCompare + ' breeds. Uncheck one to add another.');
+                    return;
+                }
+                ids.push(id);
+            }
+        } else {
+            ids = ids.filter(function (x) { return x !== id; });
+        }
+
+        setCompareIds(ids);
+    });
+
+    if (compareClear) {
+        compareClear.addEventListener('click', function () {
+            setCompareIds([]);
+        });
+    }
+
+    directory.addEventListener('keydown', function (event) {
+        if (!listItems.length) return;
+        if (event.target.closest('[data-compare-breed]')) return;
+
+        if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            focusedIndex = Math.min(listItems.length - 1, focusedIndex + 1);
+            listItems[focusedIndex].focus();
+        } else if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            focusedIndex = Math.max(0, focusedIndex - 1);
+            listItems[focusedIndex].focus();
+        } else if (event.key === 'Enter' && document.activeElement && document.activeElement.hasAttribute('data-breed-list-item')) {
+            var link = document.activeElement.querySelector('.breed-list-link');
+            if (link) link.click();
+        }
+    });
+
+    refreshListItems();
+    updateCompareBar();
+    syncCompareCheckboxes();
+});

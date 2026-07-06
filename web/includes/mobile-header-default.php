@@ -51,8 +51,10 @@ try {
             ?>
         </div>
     </div>
+    <?php if ($showMobileSearch ?? true): ?>
     <div class="search-bar">
         <i data-lucide="search"></i>
         <span style="font-size:14px;color:var(--air-force);font-weight:600;">Search incidents or dogs…</span>
     </div>
+    <?php endif; ?>
 </header>

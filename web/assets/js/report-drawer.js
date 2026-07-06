@@ -169,6 +169,10 @@
                 geoBtn.disabled = true;
                 if (geoStatus) geoStatus.textContent = 'Getting your location…';
                 navigator.geolocation.getCurrentPosition(function (pos) {
+                    var latInput = f.querySelector('#report-latitude');
+                    var lngInput = f.querySelector('#report-longitude');
+                    if (latInput) latInput.value = pos.coords.latitude.toFixed(7);
+                    if (lngInput) lngInput.value = pos.coords.longitude.toFixed(7);
                     f.querySelector('#report-location').value =
                         pos.coords.latitude.toFixed(5) + ', ' + pos.coords.longitude.toFixed(5);
                     geoBtn.disabled = false;

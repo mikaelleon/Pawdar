@@ -57,7 +57,7 @@ app_layout_start('registry', 'Dog Registry', [
 
 <div class="registry-search-bar search-bar search-bar-light" data-registry-search-wrap>
     <i data-lucide="search"></i>
-    <input type="search" id="registry-search" value="<?= htmlspecialchars($filters['q']) ?>" placeholder="Search dogs by name, breed, or owner…" style="border:none;background:transparent;flex:1;font-family:inherit;font-size:14px;">
+    <input type="search" id="registry-search" value="<?= htmlspecialchars($filters['q']) ?>" placeholder="Search dogs by name, breed, or owner…">
 </div>
 
 <div class="filter-chips chips-row" data-registry-type-chips>

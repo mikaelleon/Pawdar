@@ -102,8 +102,11 @@ function filter_to_incident_type(string $filter): ?string
 /**
  * Generates a readable incident title from type and location.
  */
-function generate_incident_title(string $type, string $location): string
+function generate_incident_title(string $type, string $location, ?float $latitude = null, ?float $longitude = null): string
 {
+    $locationParts = incident_location_display($location, $latitude, $longitude);
+    $place = incident_location_short_label($locationParts['display']);
+
     $phrases = [
         'Animal Bite' => 'Animal bite reported near',
         'Injured Stray' => 'Injured stray spotted near',
@@ -113,7 +116,7 @@ function generate_incident_title(string $type, string $location): string
         'Trash Disturbance' => 'Disturbance reported near',
     ];
 
-    return ($phrases[$type] ?? 'Incident reported near') . ' ' . $location;
+    return ($phrases[$type] ?? 'Incident reported near') . ' ' . $place;
 }
 
 /**

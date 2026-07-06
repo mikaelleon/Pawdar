@@ -33,7 +33,9 @@ This folder contains the production-ready HTML/PHP site converted from the Pawda
 | `report-details.php` | Report incident (step 3) |
 | `cases.php` | LGU case management |
 | `case-detail.php` | Case detail + rabies watch |
-| `breeds.php` | Breed directory |
+| `breeds.php` | Breed directory (paginated list) |
+| `breed-detail.php` | Breed detail page (`?slug=`) |
+| `breeds-compare.php` | Side-by-side breed comparison |
 | `first-aid.php` | First aid guides |
 
 ## Local setup (XAMPP)
@@ -48,7 +50,9 @@ This folder contains the production-ready HTML/PHP site converted from the Pawda
    Regenerate from `archive/dogs_cleaned.csv`: `php sql/generate-breeds-seed.php`
 6. **UI feedback migration:** import `sql/schema-v8-ui-fixes.sql` in phpMyAdmin after v7 (or run `php sql/setup.php` locally)  
    See `docs/UI_FEEDBACK_SPEC.md` for professor-feedback fixes.
-7. Open `http://localhost/WS101_Aliwate/WS101-Pawdar/web/`
+7. **Breed Directory migration:** import `sql/schema-v9-breeds-directory.sql` after v8 (included in `php sql/setup.php`).
+8. **Feed geocoding:** first load of GPS-based incidents needs HTTPS to OpenStreetMap Nominatim; results cache in `web/cache/geocode/`.
+9. Open `http://localhost/WS101_Aliwate/WS101-Pawdar/web/`
 
 Demo login: any seeded account, password `password`.
 

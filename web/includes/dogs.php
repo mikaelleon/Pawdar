@@ -63,7 +63,7 @@ function fetch_breed_by_name(PDO $pdo, string $breedName): ?array
 function fetch_dogs_by_breed_id(PDO $pdo, int $breedId): array
 {
     $stmt = $pdo->prepare('
-        SELECT d.dog_id, d.DogName, d.DogType, d.Status, d.RegistryID, u.Name AS owner_name
+        SELECT d.dog_id, d.DogName, d.DogType, d.Status, d.RegistryID, d.photo_path, u.Name AS owner_name
         FROM dog d
         INNER JOIN `user` u ON u.UserID = d.UserID
         WHERE d.breed_id = :breed_id

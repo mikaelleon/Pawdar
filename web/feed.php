@@ -94,9 +94,9 @@ if (role_can_report($userRole)) {
     </div>
 
     <aside class="bento-column hidden-mobile">
-        <?php require __DIR__ . '/partials/widget_funfact.php'; ?>
         <?php require __DIR__ . '/partials/widget_firstaid.php'; ?>
         <?php require __DIR__ . '/partials/widget_map.php'; ?>
+        <?php require __DIR__ . '/partials/widget_funfact.php'; ?>
     </aside>
 </div>
 

@@ -56,7 +56,7 @@ app_layout_start('map', 'Incident Map', [
         <div class="card card-body map-toolbar">
             <div class="search-bar search-bar-light flex-1">
                 <i data-lucide="search"></i>
-                <input type="search" id="map-search" placeholder="Search by barangay, location…" style="border:none;background:transparent;flex:1;">
+                <input type="search" id="map-search" placeholder="Search by barangay, location…">
             </div>
             <div class="chips-row" data-map-type-chips>
                 <button type="button" class="chip chip-active map-type-chip" data-filter="all">All</button>
