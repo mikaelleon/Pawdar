@@ -6,8 +6,9 @@ declare(strict_types=1);
  * One-time setup: creates database tables and demo data.
  * Run: php sql/setup.php
  *
- * Migration order: schema.sql → columns (runner.php) → v2 → v3 → v4 → breed FK
- * Breed CSV import (separate step): php sql/import-breeds.php
+ * Migration order: schema.sql → columns (runner.php) → v2 → v3 → v3 breeds seed → v4 → v5 → v6
+ * Breed seed (separate step): php sql/import-breeds.php
+ *   Or phpMyAdmin: schema-v3-breeds-seed.sql after schema-v3-breeds.sql
  */
 
 require_once dirname(__DIR__) . '/includes/env.php';
@@ -66,6 +67,7 @@ try {
 
     if ($breedCount === 0) {
         echo "Breeds table is empty — run: php sql/import-breeds.php\n";
+        echo "  Or import sql/schema-v3-breeds-seed.sql in phpMyAdmin (after schema-v3-breeds.sql)\n";
     } else {
         echo "Breeds loaded: {$breedCount}\n";
     }

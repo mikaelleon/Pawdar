@@ -43,7 +43,9 @@ This folder contains the production-ready HTML/PHP site converted from the Pawda
 3. Run schema: `php sql/setup.php`
 4. Import barangays (local CLI): `php sql/import-barangays.php`  
    **InfinityFree:** import `sql/schema-v5-barangays-seed.sql` in phpMyAdmin instead (no shell access).
-5. Import Kaggle breeds: `php sql/import-breeds.php` (reads `../archive/dogs_cleaned.csv`)
+5. Import breeds (local CLI): `php sql/import-breeds.php`  
+   **InfinityFree:** import `sql/schema-v3-breeds-seed.sql` in phpMyAdmin after `schema-v3-breeds.sql`  
+   Regenerate from `archive/dogs_cleaned.csv`: `php sql/generate-breeds-seed.php`
 6. Open `http://localhost/WS101_Aliwate/WS101-Pawdar/web/`
 
 Demo login: any seeded account, password `password`.

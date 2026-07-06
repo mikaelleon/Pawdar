@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS breeds (
     CONSTRAINT chk_friendliness CHECK (friendliness_score BETWEEN 1 AND 5)
 );
 
--- Staging table used only by import-breeds.php (created/dropped during import).
+-- Staging table used only when regenerating from CSV via generate-breeds-seed.php (optional).
+-- phpMyAdmin seed: use schema-v3-breeds-seed.sql instead of CLI import.
 CREATE TABLE IF NOT EXISTS breeds_staging (
     breed_name VARCHAR(120) NOT NULL,
     dog_size VARCHAR(50) NULL,

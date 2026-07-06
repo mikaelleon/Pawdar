@@ -149,7 +149,8 @@ See `docs/Batangas_Cities_and_Barangays.md` for the canonical barangay reference
 
 - `php sql/setup.php` — schema and seed data.
 - `php sql/import-barangays.php` — city/barangay reference import.
-- `php sql/import-breeds.php` — Kaggle breed CSV import.
+- `php sql/import-breeds.php` — load breeds from `schema-v3-breeds-seed.sql`
+- `php sql/generate-breeds-seed.php` — rebuild seed SQL from `archive/dogs_cleaned.csv`
 
 ## Language and Accessibility
 
@@ -191,9 +192,10 @@ See `docs/Batangas_Cities_and_Barangays.md` for the canonical barangay reference
    ```powershell
    c:\xampp\php\php.exe web\sql\setup.php
    c:\xampp\php\php.exe web\sql\import-barangays.php
+   c:\xampp\php\php.exe web\sql\import-breeds.php
    ```
-4. Optional breeds import: `c:\xampp\php\php.exe web\sql\import-breeds.php`
-5. Open `http://localhost/WS101_Aliwate/WS101-Pawdar/web/`
+   **phpMyAdmin only:** import `schema-v3-breeds-seed.sql` and `schema-v5-barangays-seed.sql` after their schema files (see `web/sql/BREEDS_CSV_HEADERS.md`).
+4. Open `http://localhost/WS101_Aliwate/WS101-Pawdar/web/`
 6. Demo login: `maria.santos@email.com` / `password`
 
 ## Project Structure (High Level)
@@ -228,7 +230,7 @@ See `docs/Batangas_Cities_and_Barangays.md` for the canonical barangay reference
 
 - **Upload target:** entire `web/` folder contents to hosting `htdocs`.
 - **PHP:** 7.4+ with PDO MySQL and cURL.
-- **Database:** create MySQL database; run `sql/setup.php` and `sql/import-barangays.php` via host shell or phpMyAdmin imports.
+- **Database:** create MySQL database; run migrations via host shell or phpMyAdmin (`schema.sql` through `schema-v6-auth-user.sql`, plus `schema-v3-breeds-seed.sql` and `schema-v5-barangays-seed.sql` — see `web/sql/BREEDS_CSV_HEADERS.md`).
 - **Environment:** set `PAWDAR_DB_*` and `RESEND_*` via host env panel, or place `.env` in `web/` if supported. Otherwise use `includes/db.local.php` for DB and host env for Resend.
 - **Required env vars:** `PAWDAR_DB_HOST`, `PAWDAR_DB_NAME`, `PAWDAR_DB_USER`, `PAWDAR_DB_PASS`, `RESEND_API_KEY`, `RESEND_FROM`.
 

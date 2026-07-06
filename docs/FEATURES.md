@@ -117,7 +117,7 @@ Pawdar is a **PHP + MySQL** civic platform for dog registration, incident report
 | Breed grid | DB-backed directory | `web/breeds.php`, `web/includes/breeds.php` | **Full** |
 | Search & filters | AJAX search, size filter | `web/ajax/search_breeds.php`, `web/ajax/breed_detail.php`, `web/assets/js/breeds.js` | **Full** |
 | Breed detail panel | Scores, health notes, related dogs | `web/ajax/breed_dogs.php` | **Full** |
-| Kaggle CSV import | CLI breed seed | `web/sql/import-breeds.php`, `schema-v3-breeds.sql` | **Full** *(needs `archive/dogs_cleaned.csv`)* |
+| Kaggle / archive breed seed | CLI or phpMyAdmin SQL | `web/sql/schema-v3-breeds-seed.sql`, `generate-breeds-seed.php`, `import-breeds.php` | **Full** |
 
 ---
 
@@ -213,7 +213,7 @@ Pawdar is a **PHP + MySQL** civic platform for dog registration, incident report
 | `breeds` | Breed directory | `schema-v3-breeds.sql` |
 | `city` / `barangay` | Batangas locations (5 cities, 287 barangays) | `schema-v5-locations.sql`, `schema-v5-barangays-seed.sql` |
 
-**Setup order:** `schema.sql` → `schema-v2.sql` → `schema-v3-breeds.sql` → `schema-v4-screens.sql` → `schema-v5-locations.sql` → `schema-v5-barangays-seed.sql` → `schema-v6-auth-user.sql` (or `php web/sql/setup.php` locally).
+**Setup order:** `schema.sql` → `schema-v2.sql` → `schema-v3-breeds.sql` → **`schema-v3-breeds-seed.sql`** → `schema-v4-screens.sql` → `schema-v5-locations.sql` → `schema-v5-barangays-seed.sql` → `schema-v6-auth-user.sql` (or `php web/sql/setup.php` + import scripts locally).
 
 ---
 
