@@ -42,9 +42,16 @@ app_layout_start('breeds', 'Compare Breeds', [
             $care = breed_care_profile($breed);
             $adoption = breed_adoption_guidance($breed);
             $thumb = breed_thumbnail_url($breed);
+            $thumbColor = string_color_class((string) $breed['breed_name']);
         ?>
             <article class="card card-bordered card-body breed-compare-col">
-                <img src="<?= htmlspecialchars($thumb) ?>" alt="" class="breed-compare-photo" loading="lazy">
+                <?php if ($thumb): ?>
+                    <img src="<?= htmlspecialchars($thumb) ?>" alt="" class="breed-compare-photo" loading="lazy">
+                <?php else: ?>
+                    <div class="breed-compare-photo breed-compare-photo--placeholder dog-photo-placeholder <?= htmlspecialchars($thumbColor) ?>" aria-hidden="true">
+                        <i data-lucide="dog"></i>
+                    </div>
+                <?php endif; ?>
                 <h2 class="text-lg" style="font-weight:700;margin:12px 0 4px;">
                     <a href="breed-detail.php?slug=<?= urlencode((string) $breed['slug']) ?>"><?= htmlspecialchars((string) $breed['breed_name']) ?></a>
                 </h2>

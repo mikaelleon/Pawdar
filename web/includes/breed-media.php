@@ -210,10 +210,10 @@ function resolve_breed_image_url(PDO $pdo, int $breedId, string $breedName): ?st
 }
 
 /**
- * Returns URL for a dog profile photo or breed fallback image.
+ * Returns the dog's own uploaded photo URL, or null when none is set.
  *
  * @param array<string, mixed> $dog
- * @param array<string, mixed>|null $breed
+ * @param array<string, mixed>|null $breed Unused; kept for call-site compatibility.
  */
 function dog_profile_image_url(array $dog, ?array $breed = null): ?string
 {
@@ -221,19 +221,25 @@ function dog_profile_image_url(array $dog, ?array $breed = null): ?string
         return (string) $dog['photo_path'];
     }
 
-    if ($breed === null) {
-        return null;
-    }
-
-    if (!empty($breed['image_url'])) {
-        return (string) $breed['image_url'];
-    }
-
-    if (!empty($breed['breed_id'])) {
-        return 'ajax/breed-image.php?id=' . (int) $breed['breed_id'];
-    }
-
     return null;
+}
+
+/**
+ * Returns a local breed photo for directory UI, or null when none is stored.
+ *
+ * @param array<string, mixed> $breed
+ */
+function breed_directory_photo_url(array $breed): ?string
+{
+    if (!empty($breed['image_url'])) {
+        $url = (string) $breed['image_url'];
+        if (breed_image_url_is_valid($url) && str_starts_with($url, 'uploads/')) {
+            return $url;
+        }
+    }
+
+    $slug = (string) ($breed['slug'] ?? breed_slug_from_name((string) ($breed['breed_name'] ?? '')));
+    return breed_local_image_public_path($slug);
 }
 
 /**
@@ -243,14 +249,9 @@ function dog_profile_image_url(array $dog, ?array $breed = null): ?string
  */
 function breed_card_image_url(array $breed): ?string
 {
-    if (!empty($breed['image_url']) && breed_image_url_is_valid((string) $breed['image_url'])) {
-        return (string) $breed['image_url'];
-    }
-
-    $slug = (string) ($breed['slug'] ?? breed_slug_from_name((string) ($breed['breed_name'] ?? '')));
-    $localPath = breed_local_image_public_path($slug);
-    if ($localPath !== null) {
-        return $localPath;
+    $local = breed_directory_photo_url($breed);
+    if ($local !== null) {
+        return $local;
     }
 
     if (!empty($breed['breed_id'])) {
@@ -263,6 +264,7 @@ function breed_card_image_url(array $breed): ?string
 /**
  * Silhouette fallback tinted by dominant trait.
  *
+ * @deprecated Directory UI uses Lucide dog icon instead.
  * @param array<string, mixed> $breed
  */
 function breed_silhouette_url(array $breed): string
@@ -271,36 +273,23 @@ function breed_silhouette_url(array $breed): string
 }
 
 /**
- * List row thumbnail — silhouette when no cached photo (avoids blank color blocks).
+ * List row thumbnail — local photo only; null when the breed has no stored image.
  *
  * @param array<string, mixed> $breed
  */
-function breed_list_thumbnail_url(array $breed): string
+function breed_list_thumbnail_url(array $breed): ?string
 {
-    $cardImage = breed_card_image_url($breed);
-    if ($cardImage !== null && !str_starts_with($cardImage, 'ajax/')) {
-        return $cardImage;
-    }
-
-    if (!empty($breed['breed_id'])) {
-        return 'ajax/breed-image.php?id=' . (int) $breed['breed_id'];
-    }
-
-    return breed_silhouette_url($breed);
+    return breed_directory_photo_url($breed);
 }
 
 /**
- * List/detail thumbnail — always via proxy so broken caches fall back to silhouette.
+ * Detail/compare thumbnail — local photo only.
  *
  * @param array<string, mixed> $breed
  */
-function breed_thumbnail_url(array $breed): string
+function breed_thumbnail_url(array $breed): ?string
 {
-    if (!empty($breed['breed_id'])) {
-        return 'ajax/breed-image.php?id=' . (int) $breed['breed_id'];
-    }
-
-    return breed_silhouette_url(['breed_id' => 0, 'energy_score' => 3, 'loyalty_score' => 3, 'friendliness_score' => 3]);
+    return breed_directory_photo_url($breed);
 }
 
 /**

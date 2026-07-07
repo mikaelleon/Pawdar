@@ -1,8 +1,8 @@
 <?php
 /** @var array<string, mixed> $breed */
 /** @var array<string, string|int> $listParams */
-$thumb = breed_list_thumbnail_url($breed);
-$fallback = breed_silhouette_url($breed);
+$photoUrl = breed_list_thumbnail_url($breed);
+$mediaColor = string_color_class((string) ($breed['breed_name'] ?? 'dog'));
 $registered = (int) ($breed['registered_count'] ?? 0);
 $slug = (string) ($breed['slug'] ?? breed_slug_from_name((string) $breed['breed_name']));
 $href = 'breed-detail.php?slug=' . urlencode($slug) . '&from=' . urlencode(breeds_directory_url($listParams));
@@ -18,13 +18,21 @@ $breedName = (string) $breed['breed_name'];
          tabindex="0">
     <div class="breed-grid-card-media-wrap">
         <a href="<?= htmlspecialchars($href) ?>" class="breed-grid-card-link" title="<?= htmlspecialchars($blurb) ?>" aria-label="View <?= htmlspecialchars($breedName) ?>">
-            <div class="breed-grid-card-media">
-                <img src="<?= htmlspecialchars($thumb) ?>"
-                     alt=""
-                     class="breed-grid-card-photo"
-                     loading="lazy"
-                     data-fallback="<?= htmlspecialchars($fallback) ?>"
-                     onerror="if(this.dataset.fallback){this.onerror=null;this.src=this.dataset.fallback;}">
+            <div class="breed-grid-card-media<?= $photoUrl ? '' : ' breed-grid-card-media--placeholder ' . $mediaColor ?>">
+                <?php if ($photoUrl): ?>
+                    <img src="<?= htmlspecialchars($photoUrl) ?>"
+                         alt=""
+                         class="breed-grid-card-photo"
+                         loading="lazy"
+                         onerror="this.hidden=true; this.nextElementSibling.hidden=false; if(window.lucide){window.lucide.createIcons();}">
+                    <div class="breed-grid-card-photo-placeholder dog-photo-placeholder" hidden aria-hidden="true">
+                        <i data-lucide="dog"></i>
+                    </div>
+                <?php else: ?>
+                    <div class="breed-grid-card-photo-placeholder dog-photo-placeholder" aria-hidden="true">
+                        <i data-lucide="dog"></i>
+                    </div>
+                <?php endif; ?>
                 <span class="breed-grid-card-view" aria-hidden="true">
                     <i data-lucide="chevron-right"></i>
                 </span>

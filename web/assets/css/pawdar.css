@@ -2697,6 +2697,15 @@ textarea.form-input {
     object-fit: cover;
     display: block;
 }
+
+.breed-grid-card-photo-placeholder {
+    width: 100%;
+    height: 100%;
+}
+
+.breed-grid-card-media--placeholder {
+    color: #fff;
+}
 .breed-grid-card-compare {
     position: absolute;
     top: 8px;
@@ -2856,6 +2865,21 @@ textarea.form-input {
     object-fit: cover;
     display: block;
 }
+
+.breed-detail-hero-img--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    object-fit: unset;
+}
+
+.breed-detail-hero-img--placeholder i,
+.breed-detail-hero-img--placeholder svg {
+    width: 96px;
+    height: 96px;
+    max-width: none;
+    max-height: none;
+}
 .breed-detail-hero-overlay {
     position: absolute;
     inset: auto 0 0 0;
@@ -2926,6 +2950,37 @@ textarea.form-input {
     border-radius: var(--radius-sm);
     background: var(--tea-green);
 }
+
+.breed-dog-preview-photo--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    object-fit: unset;
+}
+
+.dog-photo-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.dog-photo-placeholder i,
+.dog-photo-placeholder svg {
+    width: 42%;
+    height: 42%;
+    max-width: 52px;
+    max-height: 52px;
+    stroke: currentColor;
+}
+
+.breed-dog-preview-photo--placeholder i,
+.breed-dog-preview-photo--placeholder svg {
+    width: 40px;
+    height: 40px;
+    max-width: none;
+    max-height: none;
+}
 .breed-compare-page { max-width: 1000px; margin: 0 auto; padding-bottom: 32px; }
 .breed-compare-grid {
     display: grid;
@@ -2938,6 +2993,22 @@ textarea.form-input {
     object-fit: cover;
     border-radius: var(--radius-sm);
     background: var(--tea-green);
+}
+
+.breed-compare-photo--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    object-fit: unset;
+}
+
+.breed-compare-photo--placeholder i,
+.breed-compare-photo--placeholder svg {
+    width: 56px;
+    height: 56px;
+    max-width: none;
+    max-height: none;
+}
 }
 
 .first-aid-list { display: flex; flex-direction: column; gap: 12px; }

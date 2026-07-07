@@ -54,6 +54,14 @@ function breed_image_match_key(string $value): string
 function breed_archive_aliases(): array
 {
     return [
+        'aspin' => 'Aspin (Asong Pinoy)',
+        'afador' => 'Afador',
+        'affenhuahua' => 'Affenhuahua',
+        'akbash' => 'Akbash',
+        'akita chow' => 'Akita Chow',
+        'akita pit' => 'Akita Pit',
+        'akita shepherd' => 'Akita Shepherd',
+        'alaskan klee kai' => 'Alaskan Klee Kai',
         'borzoi russian hunting sighthound' => 'Borzoi',
         'bull terrier' => 'Bull Terrier',
         'catalan sheepdog' => 'Catalan Sheepdog',

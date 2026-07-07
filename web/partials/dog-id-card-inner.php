@@ -8,8 +8,7 @@
 $breedInfo = $breedInfo ?? null;
 $registryId = (string) ($dog['RegistryID'] ?? ('PWD-2024-' . str_pad((string) ($dog['dog_id'] ?? 0), 5, '0', STR_PAD_LEFT)));
 $photoUrl = dog_profile_image_url($dog, $breedInfo);
-$silhouetteUrl = breed_silhouette_url($breedInfo ?? ['breed_id' => 0, 'energy_score' => 3, 'loyalty_score' => 3, 'friendliness_score' => 3]);
-$displayPhoto = $photoUrl ?: $silhouetteUrl;
+$avatarColor = string_color_class((string) ($dog['Breed'] ?? 'dog'));
 $dogType = (string) ($dog['DogType'] ?? 'Owned');
 $genderLabel = dog_gender_label($dog);
 $breedLabel = trim((string) ($dog['Breed'] ?? 'Unknown breed'));
@@ -45,15 +44,24 @@ if ($vaxDate !== null) {
     </header>
 
     <div class="id-card-main">
-        <div class="id-card-photo-wrap">
-            <img
-                src="<?= htmlspecialchars($displayPhoto) ?>"
-                alt=""
-                class="id-card-photo"
-                width="88"
-                height="88"
-                onerror="this.onerror=null;this.src='<?= htmlspecialchars($silhouetteUrl, ENT_QUOTES) ?>';"
-            >
+        <div class="id-card-photo-wrap <?= htmlspecialchars($avatarColor) ?><?= $photoUrl ? ' id-card-photo-wrap--has-photo' : '' ?>">
+            <?php if ($photoUrl): ?>
+                <img
+                    src="<?= htmlspecialchars($photoUrl) ?>"
+                    alt=""
+                    class="id-card-photo"
+                    width="88"
+                    height="88"
+                    onerror="this.hidden=true; this.nextElementSibling.hidden=false; if(window.lucide){window.lucide.createIcons();}"
+                >
+                <div class="id-card-photo-placeholder dog-photo-placeholder" hidden aria-hidden="true">
+                    <i data-lucide="dog"></i>
+                </div>
+            <?php else: ?>
+                <div class="id-card-photo-placeholder dog-photo-placeholder" aria-hidden="true">
+                    <i data-lucide="dog"></i>
+                </div>
+            <?php endif; ?>
         </div>
 
         <div class="id-card-details">

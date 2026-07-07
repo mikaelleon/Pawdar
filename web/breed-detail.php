@@ -37,8 +37,8 @@ $dogsOfBreed = fetch_dogs_by_breed_id($pdo, (int) $breed['breed_id']);
 $care = breed_care_profile($breed);
 $adoption = breed_adoption_guidance($breed);
 $gallery = breed_gallery_urls($breed);
-$heroImage = $gallery[0] ?? breed_thumbnail_url($breed);
-$heroFallback = breed_silhouette_url($breed);
+$heroImage = breed_directory_photo_url($breed);
+$heroColor = string_color_class((string) $breed['breed_name']);
 $weightLabel = breed_weight_display($breed);
 $traits = [
     ['shield', 'Loyalty', (int) ($breed['loyalty_score'] ?? 3)],
@@ -63,11 +63,19 @@ app_layout_start('breeds', (string) $breed['breed_name'], [
     <a href="<?= htmlspecialchars($backHref) ?>" class="registry-back"><i data-lucide="arrow-left"></i> Back to Breed Directory</a>
 
     <section class="breed-detail-hero-wrap card card-bordered">
-        <img src="<?= htmlspecialchars($heroImage) ?>"
-             alt="<?= htmlspecialchars((string) $breed['breed_name']) ?>"
-             class="breed-detail-hero-img"
-             data-fallback="<?= htmlspecialchars($heroFallback) ?>"
-             onerror="if(this.dataset.fallback){this.onerror=null;this.src=this.dataset.fallback;}">
+        <?php if ($heroImage): ?>
+            <img src="<?= htmlspecialchars($heroImage) ?>"
+                 alt="<?= htmlspecialchars((string) $breed['breed_name']) ?>"
+                 class="breed-detail-hero-img"
+                 onerror="this.hidden=true; this.nextElementSibling.hidden=false; if(window.lucide){window.lucide.createIcons();}">
+            <div class="breed-detail-hero-img breed-detail-hero-img--placeholder dog-photo-placeholder <?= htmlspecialchars($heroColor) ?>" hidden aria-hidden="true">
+                <i data-lucide="dog"></i>
+            </div>
+        <?php else: ?>
+            <div class="breed-detail-hero-img breed-detail-hero-img--placeholder dog-photo-placeholder <?= htmlspecialchars($heroColor) ?>" aria-hidden="true">
+                <i data-lucide="dog"></i>
+            </div>
+        <?php endif; ?>
         <div class="breed-detail-hero-overlay">
             <div class="breed-detail-hero-badges">
                 <?php if (breed_is_local($breed)): ?><span class="badge badge-owned">Batangas match</span><?php endif; ?>
@@ -168,10 +176,17 @@ app_layout_start('breeds', (string) $breed['breed_name'], [
             <?php else: ?>
                 <div class="breed-dog-preview-grid">
                     <?php foreach ($dogsOfBreed as $dog):
-                        $dogThumb = !empty($dog['photo_path']) ? (string) $dog['photo_path'] : breed_silhouette_url($breed);
+                        $dogPhoto = !empty($dog['photo_path']) ? (string) $dog['photo_path'] : null;
+                        $dogAvatarColor = string_color_class((string) ($dog['Breed'] ?? 'dog'));
                     ?>
                         <a href="dog-profile.php?id=<?= (int) $dog['dog_id'] ?>" class="breed-dog-preview-card card-hoverable">
-                            <img src="<?= htmlspecialchars($dogThumb) ?>" alt="" class="breed-dog-preview-photo" loading="lazy">
+                            <?php if ($dogPhoto): ?>
+                                <img src="<?= htmlspecialchars($dogPhoto) ?>" alt="" class="breed-dog-preview-photo" loading="lazy">
+                            <?php else: ?>
+                                <div class="breed-dog-preview-photo breed-dog-preview-photo--placeholder dog-photo-placeholder <?= htmlspecialchars($dogAvatarColor) ?>" aria-hidden="true">
+                                    <i data-lucide="dog"></i>
+                                </div>
+                            <?php endif; ?>
                             <div>
                                 <div class="text-sm" style="font-weight:600;"><?= htmlspecialchars((string) $dog['DogName']) ?></div>
                                 <div class="text-xs text-muted"><?= htmlspecialchars((string) $dog['owner_name']) ?></div>
