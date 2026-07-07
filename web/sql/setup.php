@@ -53,6 +53,7 @@ try {
     pawdar_run_sql_file($pdo, __DIR__ . '/schema-v7-cases-demo.sql', true);
     pawdar_run_sql_file($pdo, __DIR__ . '/schema-v8-ui-fixes.sql', true);
     pawdar_run_sql_file($pdo, __DIR__ . '/schema-v9-breeds-directory.sql', true);
+    pawdar_run_sql_file($pdo, __DIR__ . '/schema-v10-dog-profile-demo.sql', true);
     pawdar_ensure_breed_foreign_key($pdo);
 
     $breedCount = 0;

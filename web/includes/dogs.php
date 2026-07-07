@@ -24,12 +24,13 @@ function fetch_dog_profile(PDO $pdo, int $dogId): ?array
         return null;
     }
 
-    $vax = $pdo->prepare('SELECT * FROM vaccinerecord WHERE dog_id = :dog_id ORDER BY DateGiven DESC LIMIT 1');
-    $vax->execute([':dog_id' => $dogId]);
-    $dog['vaccine'] = $vax->fetch() ?: null;
+    $vaxList = $pdo->prepare('SELECT * FROM vaccinerecord WHERE dog_id = :dog_id ORDER BY DateGiven DESC LIMIT 5');
+    $vaxList->execute([':dog_id' => $dogId]);
+    $dog['vaccines'] = $vaxList->fetchAll();
+    $dog['vaccine'] = $dog['vaccines'][0] ?? null;
 
     $incidents = $pdo->prepare('
-        SELECT i.IncidentType, i.Date, i.Description, c.CaseStatus
+        SELECT i.IncidentID, i.IncidentType, i.Date, i.Description, c.CaseStatus, c.CaseID
         FROM incident i
         LEFT JOIN `case` c ON c.IncidentID = i.IncidentID
         WHERE i.dog_id = :dog_id
@@ -40,6 +41,93 @@ function fetch_dog_profile(PDO $pdo, int $dogId): ?array
     $dog['incidents'] = $incidents->fetchAll();
 
     return $dog;
+}
+
+/**
+ * Vaccination badge for dog profile — "Pending" only when a record awaits verification.
+ *
+ * @param array<string, mixed> $dog
+ * @return array{class: string, label: string}
+ */
+function dog_vaccination_badge(array $dog): array
+{
+    $vaccine = $dog['vaccine'] ?? null;
+    if (!$vaccine) {
+        return ['class' => 'badge-unverified', 'label' => 'Not on file'];
+    }
+
+    $status = (string) ($vaccine['vax_status'] ?? 'Unverified');
+    if ($status === 'Verified') {
+        return ['class' => 'badge-verified', 'label' => 'Verified'];
+    }
+
+    if ($status === 'Expired') {
+        return ['class' => 'badge-unverified', 'label' => 'Expired'];
+    }
+
+    return ['class' => 'badge-investigating', 'label' => 'Pending'];
+}
+
+/**
+ * Detail page URL for an incident row on dog profile.
+ *
+ * @param array<string, mixed> $incident
+ */
+function dog_incident_detail_url(array $incident): string
+{
+    $incidentId = (int) ($incident['IncidentID'] ?? 0);
+    if ($incidentId > 0) {
+        return 'incident.php?id=' . $incidentId;
+    }
+
+    $caseId = (int) ($incident['CaseID'] ?? 0);
+    if ($caseId > 0) {
+        return 'cases.php';
+    }
+
+    return 'feed.php';
+}
+
+/**
+ * Human-readable gender label for profile hero.
+ *
+ * @param array<string, mixed> $dog
+ */
+function dog_gender_label(array $dog): string
+{
+    $gender = trim((string) ($dog['Gender'] ?? ''));
+
+    return $gender !== '' ? $gender : 'Unknown';
+}
+
+/**
+ * Best-effort profile freshness label from vaccination and incident dates.
+ *
+ * @param array<string, mixed> $dog
+ */
+function dog_profile_last_updated_label(array $dog): ?string
+{
+    $timestamps = [];
+
+    foreach ($dog['vaccines'] ?? [] as $vax) {
+        if (!empty($vax['DateGiven'])) {
+            $timestamps[] = strtotime((string) $vax['DateGiven']);
+        }
+    }
+
+    foreach ($dog['incidents'] ?? [] as $incident) {
+        if (!empty($incident['Date'])) {
+            $timestamps[] = strtotime((string) $incident['Date']);
+        }
+    }
+
+    $timestamps = array_filter($timestamps, static fn (int|false $ts): bool => $ts !== false);
+
+    if ($timestamps === []) {
+        return null;
+    }
+
+    return date('d M Y', max($timestamps));
 }
 
 /**

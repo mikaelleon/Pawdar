@@ -10,6 +10,12 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    document.querySelectorAll('[data-print-id-card]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            window.print();
+        });
+    });
+
     document.querySelectorAll('[data-flag-dog]').forEach(function (btn) {
         btn.addEventListener('click', function () {
             if (!window.PawdarUI || !PawdarUI.showConfirmModal) {
@@ -46,23 +52,49 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     var editModal = document.querySelector('[data-dog-edit-modal]');
-    var editForm = document.querySelector('[data-dog-edit-form]');
-    var coatSelect = document.querySelector('[data-coat-select]');
-    var coatOtherWrap = document.querySelector('[data-coat-other-wrap]');
+    var editForm = editModal ? editModal.querySelector('[data-dog-edit-form]') : null;
+    var coatSelect = editModal ? editModal.querySelector('[data-coat-select]') : null;
+    var coatOtherWrap = editModal ? editModal.querySelector('[data-coat-other-wrap]') : null;
+    var appMain = document.querySelector('.app-main');
+
+    if (editModal && editModal.parentElement !== document.body) {
+        document.body.appendChild(editModal);
+    }
+
+    function openEditModal() {
+        if (!editModal) {
+            return;
+        }
+        editModal.hidden = false;
+        document.body.classList.add('modal-open', 'dog-edit-modal-open');
+        if (appMain) {
+            appMain.setAttribute('aria-hidden', 'true');
+        }
+        var firstField = editForm ? editForm.querySelector('input, select, textarea') : null;
+        if (firstField) {
+            window.setTimeout(function () { firstField.focus(); }, 0);
+        }
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+        }
+    }
 
     document.querySelectorAll('[data-open-edit-dog]').forEach(function (btn) {
         btn.addEventListener('click', function (event) {
             event.preventDefault();
-            if (!editModal) return;
-            editModal.hidden = false;
-            document.body.classList.add('modal-open');
+            openEditModal();
         });
     });
 
     function closeEditModal() {
-        if (!editModal) return;
+        if (!editModal) {
+            return;
+        }
         editModal.hidden = true;
-        document.body.classList.remove('modal-open');
+        document.body.classList.remove('modal-open', 'dog-edit-modal-open');
+        if (appMain) {
+            appMain.removeAttribute('aria-hidden');
+        }
     }
 
     document.querySelectorAll('[data-close-dog-edit]').forEach(function (btn) {
@@ -76,6 +108,12 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && editModal && !editModal.hidden) {
+            closeEditModal();
+        }
+    });
 
     if (coatSelect && coatOtherWrap) {
         coatSelect.addEventListener('change', function () {

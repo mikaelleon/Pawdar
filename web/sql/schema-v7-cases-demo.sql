@@ -12,8 +12,8 @@ FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM `user` u WHERE u.Email = 'ana.reyes@barangay.gov.ph');
 
 -- Second registered dog for incident linkage demo
-INSERT INTO dog (UserID, DogName, Breed)
-SELECT u.UserID, 'Bruno', 'Aspin'
+INSERT INTO dog (UserID, DogName, Breed, Gender, Size, DogType)
+SELECT u.UserID, 'Bruno', 'Aspin', 'Male', 'Medium', 'Owned'
 FROM `user` u
 WHERE u.Email = 'rosa.castillo@email.com'
 AND NOT EXISTS (SELECT 1 FROM dog d WHERE d.UserID = u.UserID AND d.DogName = 'Bruno');

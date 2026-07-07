@@ -48,6 +48,12 @@ function app_layout_end(array $fabOptions = []): void
     global $includeReportDrawer;
 
     echo '</div></main>';
+
+    if (!empty($fabOptions['dog_edit_modal']) && is_array($fabOptions['dog_edit_modal'])) {
+        $dog = $fabOptions['dog_edit_modal'];
+        require __DIR__ . '/../partials/dog-edit-modal.php';
+    }
+
     require __DIR__ . '/bottom-nav.php';
 
     if (!empty($includeReportDrawer)) {

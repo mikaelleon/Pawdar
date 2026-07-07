@@ -236,6 +236,7 @@ button, .btn {
 .badge-resolved { background: var(--tea-green); color: var(--taupe); }
 .badge-owned { background: var(--muted-teal); color: var(--white); }
 .badge-verified { background: var(--tea-green); color: var(--taupe); }
+.badge-unverified { background: #9CA3AF; color: var(--white); }
 
 /* Severity tiers — shared: First Aid, Feed widgets, Map */
 .severity-badge,
@@ -1864,11 +1865,149 @@ textarea.form-input {
 }
 
 .profile-layout {
-    display: flex;
-    gap: 24px;
+    max-width: 1080px;
+    margin: 0 auto;
 }
 
-.profile-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.profile-main { display: flex; flex-direction: column; gap: 14px; }
+
+.profile-page-pattern {
+    padding: 4px 6px 20px;
+    border-radius: var(--radius-md);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Ccircle cx='24' cy='24' r='16' fill='%2387AFAE' fill-opacity='0.06'/%3E%3Ccircle cx='96' cy='32' r='12' fill='%23C0DAB5' fill-opacity='0.08'/%3E%3Ccircle cx='60' cy='88' r='18' fill='%236C8B9F' fill-opacity='0.06'/%3E%3C/svg%3E");
+    background-size: 120px 120px;
+}
+
+.profile-content-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.65fr) minmax(260px, 1fr);
+    gap: 14px;
+    align-items: stretch;
+}
+
+.profile-glance-card,
+.profile-physical-card,
+.profile-about-card,
+.profile-incidents-card { grid-column: 1; }
+
+.profile-breed-card {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.profile-breed-card--empty { display: none; }
+
+.profile-qr-card {
+    grid-column: 2;
+    grid-row: 2;
+    text-align: center;
+    padding: 12px 14px 12px;
+    align-self: start;
+}
+
+.profile-content-grid--no-breed .profile-qr-card { grid-row: 1; }
+
+.card-compact { padding: 12px 14px; }
+
+.card-compact .label-upper { margin-bottom: 8px; }
+
+.profile-glance-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--air-force);
+    margin-bottom: 8px;
+}
+
+.profile-glance-value {
+    font-weight: 500;
+    font-size: 15px;
+}
+
+.profile-glance-divider {
+    height: 1px;
+    background: var(--border-light);
+    margin: 12px 0;
+}
+
+.profile-glance-vax-head { margin-bottom: 8px; }
+
+.profile-glance-vax-body { margin-top: 4px; }
+
+.profile-glance-empty { margin: 0; }
+
+.profile-updated-meta { color: var(--air-force); }
+
+.profile-owner-phone {
+    margin-top: 4px;
+    color: var(--taupe);
+    font-weight: 600;
+}
+
+.profile-about-text { margin: 0; line-height: 1.5; }
+
+.profile-vax-history {
+    margin: 10px 0 0;
+    padding-left: 18px;
+}
+
+.profile-vax-history li { margin-bottom: 4px; }
+
+.profile-trait-row { margin-bottom: 10px; }
+
+.profile-trait-row:last-child { margin-bottom: 0; }
+
+.profile-incident-list { display: flex; flex-direction: column; gap: 10px; }
+
+.profile-incident-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    background: var(--bg-soft);
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.profile-incident-row:hover {
+    border-color: var(--muted-teal);
+    box-shadow: var(--shadow-sm);
+}
+
+.profile-incident-title { font-weight: 500; }
+
+.profile-incident-chevron {
+    width: 18px;
+    height: 18px;
+    color: var(--muted-teal);
+    flex: none;
+}
+
+.profile-qr-img {
+    display: block;
+    margin: 0 auto;
+    border-radius: 8px;
+}
+
+.profile-qr-title {
+    font-weight: 500;
+    font-size: 15px;
+    margin-top: 10px;
+}
+
+.profile-qr-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 12px;
+}
+
+.profile-qr-meta { margin: 10px 0 0; }
 
 .profile-side {
     width: 300px;
@@ -3398,8 +3537,8 @@ body.modal-open { overflow: hidden; }
 }
 
 .profile-actions {
-    margin-top: 18px;
-    padding-top: 16px;
+    margin-top: 8px;
+    padding-top: 14px;
     border-top: 1px solid var(--border);
 }
 
@@ -5583,6 +5722,41 @@ body.modal-open { overflow: hidden; }
     padding: 12px 8px 4px;
 }
 
+@media (max-width: 900px) {
+    .profile-content-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-glance-card,
+    .profile-physical-card,
+    .profile-about-card,
+    .profile-incidents-card,
+    .profile-breed-card,
+    .profile-qr-card {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .profile-breed-card--empty { display: none; }
+}
+
+@media print {
+    .app-sidebar,
+    .app-topbar,
+    .bottom-nav,
+    .registry-back,
+    .profile-actions,
+    .sticky-cta,
+    .btn-call-owner,
+    [data-open-edit-dog],
+    [data-report-dog-incident] {
+        display: none !important;
+    }
+
+    .profile-layout { max-width: none; }
+    .profile-content-grid { grid-template-columns: 1fr 220px; }
+}
+
 .breed-card-photo,
 .breed-detail-photo {
     width: 100%;
@@ -5609,6 +5783,93 @@ body.modal-open { overflow: hidden; }
 .dog-edit-modal {
     max-width: 520px;
     width: calc(100% - 32px);
+    max-height: min(90vh, 720px);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+}
+
+.dog-edit-modal-overlay {
+    z-index: 600;
+    background: rgba(74, 67, 67, 0.5);
+    backdrop-filter: blur(2px);
+}
+
+.dog-edit-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border-light);
+    flex-shrink: 0;
+}
+
+.dog-edit-modal-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--taupe);
+}
+
+.dog-edit-modal-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg-soft);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--taupe);
+}
+
+.dog-edit-modal-close:hover {
+    background: var(--white);
+}
+
+.dog-edit-modal-form {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1;
+}
+
+.dog-edit-modal-body {
+    padding: 16px 20px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+
+.dog-edit-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--border-light);
+    background: var(--white);
+    flex-shrink: 0;
+}
+
+.dog-edit-textarea {
+    height: auto;
+    min-height: 72px;
+    padding: 12px 14px;
+    resize: vertical;
+}
+
+.dog-edit-textarea--short { min-height: 72px; }
+.dog-edit-textarea--medium { min-height: 96px; }
+.dog-edit-textarea--tall { min-height: 120px; }
+
+body.dog-edit-modal-open .app-main {
+    pointer-events: none;
 }
 
 .remarks-modal-input {
