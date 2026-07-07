@@ -5,6 +5,7 @@ $pageTitle = $pageTitle ?? SITE_NAME;
 $pageDescription = $pageDescription ?? SITE_DESCRIPTION;
 $bodyClass = $bodyClass ?? '';
 $pageScripts = $pageScripts ?? [];
+$pageStyles = $pageStyles ?? [];
 
 $assetVersion = static function (string $relativePath): string {
     $absolute = dirname(__DIR__) . '/' . ltrim($relativePath, '/');
@@ -34,6 +35,9 @@ $assetVersion = static function (string $relativePath): string {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= htmlspecialchars($assetVersion('assets/css/pawdar.css')) ?>">
+    <?php foreach ($pageStyles as $style): ?>
+        <link rel="stylesheet" href="<?= htmlspecialchars($assetVersion($style)) ?>">
+    <?php endforeach; ?>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
     <script src="<?= htmlspecialchars($assetVersion('assets/js/app.js')) ?>" defer></script>
     <script src="<?= htmlspecialchars($assetVersion('assets/js/ui.js')) ?>" defer></script>

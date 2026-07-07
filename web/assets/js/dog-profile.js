@@ -10,10 +10,78 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    var idCardModal = document.querySelector('[data-id-card-modal]');
+
+    if (idCardModal && idCardModal.parentElement !== document.body) {
+        document.body.appendChild(idCardModal);
+    }
+
+    function openIdCardModal() {
+        if (!idCardModal) {
+            return;
+        }
+        idCardModal.hidden = false;
+        document.body.classList.add('modal-open', 'id-card-modal-open');
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+        }
+    }
+
+    function closeIdCardModal() {
+        if (!idCardModal) {
+            return;
+        }
+        idCardModal.hidden = true;
+        document.body.classList.remove('modal-open', 'id-card-modal-open', 'id-card-printing');
+    }
+
     document.querySelectorAll('[data-print-id-card]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            window.print();
+        btn.addEventListener('click', function (event) {
+            event.preventDefault();
+            openIdCardModal();
         });
+    });
+
+    if (idCardModal) {
+        idCardModal.querySelectorAll('[data-id-card-close], [data-id-card-close-inline]').forEach(function (btn) {
+            btn.addEventListener('click', closeIdCardModal);
+        });
+
+        idCardModal.addEventListener('click', function (event) {
+            if (event.target === idCardModal) {
+                closeIdCardModal();
+            }
+        });
+
+        var idCardPrintBtn = idCardModal.querySelector('[data-id-card-print]');
+        if (idCardPrintBtn) {
+            idCardPrintBtn.addEventListener('click', function () {
+                if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                    window.lucide.createIcons();
+                }
+                document.body.classList.add('id-card-printing');
+                window.print();
+            });
+        }
+    }
+
+    window.addEventListener('beforeprint', function () {
+        if (idCardModal && !idCardModal.hidden) {
+            document.body.classList.add('id-card-printing');
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+        }
+    });
+
+    window.addEventListener('afterprint', function () {
+        document.body.classList.remove('id-card-printing');
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && idCardModal && !idCardModal.hidden) {
+            closeIdCardModal();
+        }
     });
 
     document.querySelectorAll('[data-flag-dog]').forEach(function (btn) {

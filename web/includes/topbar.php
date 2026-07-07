@@ -16,12 +16,20 @@ try {
 } catch (Throwable $exception) {
     $bellBadgeCount = 0;
 }
+
+global $breadcrumbs, $adminContext;
+$hasBreadcrumbs = is_array($breadcrumbs) && count($breadcrumbs) > 0;
 ?>
 <header class="app-topbar hidden-mobile">
     <div class="app-topbar-inner">
-        <?php if ($topbarTitle): ?>
-            <div class="page-title"><?= htmlspecialchars($topbarTitle) ?></div>
-        <?php endif; ?>
+        <div class="app-topbar-start">
+            <?php if ($hasBreadcrumbs): ?>
+                <?php require __DIR__ . '/../partials/breadcrumb.php'; ?>
+            <?php endif; ?>
+            <?php if ($topbarTitle): ?>
+                <div class="page-title"><?= htmlspecialchars($topbarTitle) ?></div>
+            <?php endif; ?>
+        </div>
         <?php if ($showSearch): ?>
             <div class="app-topbar-search search-bar search-bar-light">
                 <i data-lucide="search"></i>

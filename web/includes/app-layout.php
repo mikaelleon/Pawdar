@@ -4,7 +4,7 @@ require_login_active();
 
 function app_layout_start(string $activeNav, string $pageTitle, array $options = []): void
 {
-    global $bodyClass, $pageScripts, $breadcrumbs, $adminContext, $includeReportDrawer, $showMobileSearch;
+    global $bodyClass, $pageScripts, $pageStyles, $breadcrumbs, $adminContext, $includeReportDrawer, $showMobileSearch;
     $bodyClass = 'app-page';
     $pageTitle = $pageTitle . ' · ' . SITE_NAME;
     $activeNav = $activeNav;
@@ -16,6 +16,7 @@ function app_layout_start(string $activeNav, string $pageTitle, array $options =
     $backTitle = $options['backTitle'] ?? 'Back';
     $backHref = $options['backHref'] ?? 'javascript:history.back()';
     $pageScripts = $options['scripts'] ?? [];
+    $pageStyles = $options['styles'] ?? [];
     $breadcrumbs = $options['breadcrumbs'] ?? null;
     $adminContext = (bool) ($options['admin_context'] ?? false);
     $includeReportDrawer = (bool) ($options['report_drawer'] ?? false);
@@ -34,10 +35,12 @@ function app_layout_start(string $activeNav, string $pageTitle, array $options =
 
     echo '<main class="app-main">';
     require __DIR__ . '/topbar.php';
-    echo '<div class="app-content app-content-padded">';
     if (is_array($breadcrumbs) && count($breadcrumbs) > 0) {
+        echo '<div class="app-mobile-breadcrumb hidden-desktop">';
         require __DIR__ . '/../partials/breadcrumb.php';
+        echo '</div>';
     }
+    echo '<div class="app-content app-content-padded">';
 }
 
 /**
@@ -52,6 +55,12 @@ function app_layout_end(array $fabOptions = []): void
     if (!empty($fabOptions['dog_edit_modal']) && is_array($fabOptions['dog_edit_modal'])) {
         $dog = $fabOptions['dog_edit_modal'];
         require __DIR__ . '/../partials/dog-edit-modal.php';
+    }
+
+    if (!empty($fabOptions['dog_id_card_modal']) && is_array($fabOptions['dog_id_card_modal'])) {
+        $dog = $fabOptions['dog_id_card_modal']['dog'];
+        $breedInfo = $fabOptions['dog_id_card_modal']['breedInfo'] ?? null;
+        require __DIR__ . '/../partials/dog-id-card-modal.php';
     }
 
     require __DIR__ . '/bottom-nav.php';

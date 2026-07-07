@@ -11,7 +11,9 @@ document.addEventListener('DOMContentLoaded', function () {
     var compareClear = directory.querySelector('[data-compare-clear]');
     var compareStatus = directory.querySelector('[data-compare-status]');
     var compareHint = directory.querySelector('[data-compare-hint]');
+    var compareModeToggle = directory.querySelector('[data-compare-mode-toggle]');
     var compareKey = 'pawdar-breed-compare';
+    var compareModeKey = 'pawdar-breed-compare-mode';
     var maxCompare = 3;
     var focusedIndex = 0;
     var listItems = [];
@@ -19,6 +21,10 @@ document.addEventListener('DOMContentLoaded', function () {
     function refreshListItems() {
         listItems = Array.prototype.slice.call(directory.querySelectorAll('[data-breed-list-item]'));
         focusedIndex = Math.min(focusedIndex, Math.max(0, listItems.length - 1));
+    }
+
+    function isCompareMode() {
+        return directory.classList.contains('is-compare-mode');
     }
 
     function getCompareIds() {
@@ -45,13 +51,42 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 3500);
     }
 
+    function setCompareMode(enabled) {
+        directory.classList.toggle('is-compare-mode', enabled);
+        sessionStorage.setItem(compareModeKey, enabled ? '1' : '0');
+
+        if (compareModeToggle) {
+            compareModeToggle.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+            compareModeToggle.classList.toggle('chip-active', enabled);
+            compareModeToggle.classList.toggle('chip-outline', !enabled);
+        }
+
+        if (!enabled) {
+            setCompareIds([]);
+        }
+
+        updateCompareBar();
+    }
+
     function updateCompareBar() {
         var ids = getCompareIds();
+        var showBar = isCompareMode() && ids.length > 0;
+
         if (compareBar) {
-            compareBar.hidden = ids.length === 0;
-            compareBar.classList.toggle('is-visible', ids.length > 0);
-            directory.classList.toggle('has-compare-bar', ids.length > 0);
+            compareBar.hidden = !showBar;
+            compareBar.classList.toggle('is-visible', showBar);
+            directory.classList.toggle('has-compare-bar', showBar);
         }
+
+        if (!isCompareMode()) {
+            if (compareBar) {
+                compareBar.hidden = true;
+                compareBar.classList.remove('is-visible');
+            }
+            directory.classList.remove('has-compare-bar');
+            return;
+        }
+
         if (compareStatus) {
             if (ids.length === 0) {
                 compareStatus.textContent = 'Select breeds to compare (up to 3)';
@@ -81,6 +116,12 @@ document.addEventListener('DOMContentLoaded', function () {
     function submitFilters() {
         if (!form) return;
         form.submit();
+    }
+
+    if (compareModeToggle) {
+        compareModeToggle.addEventListener('click', function () {
+            setCompareMode(!isCompareMode());
+        });
     }
 
     directory.querySelectorAll('[data-filter-local]').forEach(function (chip) {
@@ -137,7 +178,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     directory.addEventListener('change', function (event) {
         var compareInput = event.target.closest('[data-compare-breed]');
-        if (!compareInput) return;
+        if (!compareInput || !isCompareMode()) {
+            if (compareInput) {
+                compareInput.checked = false;
+            }
+            return;
+        }
 
         var id = parseInt(compareInput.getAttribute('data-compare-breed'), 10);
         var ids = getCompareIds();
@@ -156,6 +202,16 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         setCompareIds(ids);
+    });
+
+    directory.addEventListener('click', function (event) {
+        if (!isCompareMode()) {
+            return;
+        }
+
+        if (event.target.closest('[data-compare-toggle-wrap]')) {
+            event.stopPropagation();
+        }
     });
 
     if (compareClear) {
@@ -177,12 +233,12 @@ document.addEventListener('DOMContentLoaded', function () {
             focusedIndex = Math.max(0, focusedIndex - 1);
             listItems[focusedIndex].focus();
         } else if (event.key === 'Enter' && document.activeElement && document.activeElement.hasAttribute('data-breed-list-item')) {
-            var link = document.activeElement.querySelector('.breed-list-link');
+            var link = document.activeElement.querySelector('.breed-grid-card-link');
             if (link) link.click();
         }
     });
 
     refreshListItems();
-    updateCompareBar();
+    setCompareMode(sessionStorage.getItem(compareModeKey) === '1');
     syncCompareCheckboxes();
 });

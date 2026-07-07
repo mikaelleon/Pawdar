@@ -1,0 +1,444 @@
+:root {
+    --taupe: #4a4343;
+    --air-force: #6c8b9f;
+    --border: #d8d2cc;
+    --bg-soft: #f6f3ef;
+    --white: #ffffff;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Nunito', system-ui, sans-serif;
+    color: var(--taupe);
+    background: var(--bg-soft);
+}
+
+.id-card-page {
+    min-height: 100vh;
+}
+
+.id-card-toolbar,
+.id-card-modal-chrome {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 20px;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+}
+
+.id-card-modal-chrome-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.id-card-modal-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.id-card-modal-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg-soft);
+    color: var(--taupe);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.id-card-toolbar-hint {
+    margin: 0;
+    font-size: 13px;
+    color: #6b6565;
+}
+
+.id-card-toolbar-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.id-card-btn {
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    color: var(--taupe);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.id-card-btn--primary {
+    background: var(--air-force);
+    border-color: var(--air-force);
+    color: var(--white);
+}
+
+.id-card-stage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px 48px;
+}
+
+.id-card {
+    width: 118mm;
+    height: 74mm;
+    max-width: calc(100vw - 32px);
+    background: var(--white);
+    border: 1.5px solid var(--taupe);
+    border-radius: 10px;
+    box-shadow: 0 10px 28px rgba(74, 67, 67, 0.12);
+    padding: 4.5mm 5mm;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.id-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    padding-bottom: 2.5mm;
+    margin-bottom: 2.5mm;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.id-card-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.id-card-logo-mark {
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    flex-shrink: 0;
+}
+
+.id-card-logo-mark svg {
+    width: 14px;
+    height: 14px;
+}
+
+.id-card-brand-name {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: -0.2px;
+}
+
+.id-card-header-id {
+    text-align: right;
+    min-width: 0;
+}
+
+.id-card-header-id-label {
+    display: block;
+    font-size: 7px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6b6565;
+    line-height: 1.2;
+    margin-bottom: 1px;
+}
+
+.id-card-header-id-value {
+    display: block;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.id-card-main {
+    display: grid;
+    grid-template-columns: 22mm minmax(0, 1fr) 30mm;
+    gap: 3.5mm;
+    align-items: start;
+    flex: 1;
+    min-height: 0;
+}
+
+.id-card-photo-wrap {
+    width: 22mm;
+    height: 22mm;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    background: #ece8e3;
+}
+
+.id-card-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.id-card-details {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5mm;
+}
+
+.id-card-name {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.id-card-meta,
+.id-card-physical {
+    margin: 0;
+    font-size: 9.5px;
+    line-height: 1.35;
+    font-weight: 700;
+}
+
+.id-card-physical {
+    color: #6b6565;
+}
+
+.id-card-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 1.8mm;
+    margin-top: 0.5mm;
+}
+
+.id-card-field {
+    display: block;
+    min-width: 0;
+}
+
+.id-card-field-label {
+    display: block;
+    font-size: 7px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b6565;
+    line-height: 1.2;
+    margin-bottom: 0.6mm;
+}
+
+.id-card-field-value {
+    display: block;
+    font-size: 9.5px;
+    font-weight: 700;
+    line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.id-card-qr-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1mm;
+    min-width: 0;
+}
+
+.id-card-qr {
+    width: 28mm;
+    height: 28mm;
+    display: block;
+    image-rendering: pixelated;
+}
+
+.id-card-scan-caption {
+    margin: 0;
+    font-size: 7px;
+    font-weight: 700;
+    color: #6b6565;
+    text-align: center;
+    line-height: 1.25;
+}
+
+.id-card-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 650;
+    background: rgba(74, 67, 67, 0.5);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    overflow-y: auto;
+}
+
+.id-card-modal-overlay[hidden] {
+    display: none !important;
+}
+
+.id-card-modal {
+    width: 100%;
+    max-width: 560px;
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 16px 40px rgba(74, 67, 67, 0.2);
+    overflow: hidden;
+}
+
+.id-card-modal .id-card-stage {
+    padding: 20px 16px 24px;
+    background: var(--bg-soft);
+}
+
+.id-card-missing {
+    max-width: 420px;
+    margin: 80px auto;
+    text-align: center;
+    padding: 24px;
+}
+
+@page {
+    size: A4 portrait;
+    margin: 18mm;
+}
+
+@media print {
+    /* Standalone dog-id-card.php */
+    body.id-card-page {
+        background: #fff;
+    }
+
+    body.id-card-page .id-card-toolbar {
+        display: none !important;
+    }
+
+    body.id-card-page .id-card-stage {
+        padding: 0;
+        min-height: auto;
+    }
+
+    /* In-page modal on dog-profile.php */
+    body.id-card-printing .app-shell {
+        display: none !important;
+    }
+
+    body.id-card-printing .id-card-modal-overlay {
+        display: flex !important;
+        position: fixed !important;
+        inset: 0 !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: #fff !important;
+        backdrop-filter: none !important;
+        z-index: 2147483647 !important;
+        overflow: visible !important;
+    }
+
+    body.id-card-printing .id-card-modal-chrome {
+        display: none !important;
+    }
+
+    body.id-card-printing .id-card-modal {
+        width: auto !important;
+        max-width: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        overflow: visible !important;
+    }
+
+    body.id-card-printing .id-card-print-root,
+    body.id-card-printing .id-card-stage {
+        padding: 0 !important;
+        margin: 0 !important;
+        min-height: 0 !important;
+        background: transparent !important;
+    }
+
+    body.id-card-printing [data-id-card-print-target],
+    body.id-card-page [data-id-card-print-target] {
+        box-shadow: none !important;
+        max-width: none !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    body.id-card-printing .id-card-logo-mark,
+    body.id-card-page .id-card-logo-mark {
+        background: #333 !important;
+        color: #fff !important;
+    }
+}
+
+@media (max-width: 520px) {
+    .id-card-toolbar-actions,
+    .id-card-modal-chrome .id-card-toolbar-actions {
+        display: flex;
+    }
+
+    .id-card-btn {
+        flex: 1;
+    }
+
+    .id-card {
+        width: 100%;
+        height: auto;
+        min-height: 74mm;
+    }
+
+    .id-card-main {
+        grid-template-columns: 72px 1fr;
+        grid-template-rows: auto auto;
+    }
+
+    .id-card-qr-col {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .id-card-qr {
+        width: 88px;
+        height: 88px;
+    }
+}

@@ -18,9 +18,9 @@ $listParams = [
 
 $result = fetch_breeds_directory($pdo, $listParams);
 $counts = fetch_breed_size_counts($pdo);
+$moreFiltersOpen = $listParams['local'] === '1' || $listParams['mood'] !== '';
 
 app_layout_start('breeds', 'Breed Directory', [
-    'topbarTitle' => 'Breed Directory',
     'showSearch' => false,
     'showMobileSearch' => false,
     'scripts' => ['assets/js/breeds.js'],
@@ -47,64 +47,78 @@ app_layout_start('breeds', 'Breed Directory', [
         <input type="hidden" name="local" value="<?= htmlspecialchars($listParams['local']) ?>" data-local-input>
 
         <div class="breed-directory-filters">
-            <div class="chips-row breed-filter-row">
-                <span class="breed-filter-row-label" id="breed-sort-label">Sort</span>
-                <select name="sort" id="breed-sort" class="registry-filter breed-sort-select" aria-labelledby="breed-sort-label">
-                    <?php foreach (breed_sort_options() as $option): ?>
-                        <option value="<?= htmlspecialchars($option['slug']) ?>" <?= $listParams['sort'] === $option['slug'] ? 'selected' : '' ?>><?= htmlspecialchars($option['label']) ?></option>
+            <div class="breed-filter-primary">
+                <div class="chips-row breed-filter-row breed-filter-sort-row">
+                    <span class="breed-filter-row-label" id="breed-sort-label">Sort</span>
+                    <select name="sort" id="breed-sort" class="registry-filter breed-sort-select" aria-labelledby="breed-sort-label">
+                        <?php foreach (breed_sort_options() as $option): ?>
+                            <option value="<?= htmlspecialchars($option['slug']) ?>" <?= $listParams['sort'] === $option['slug'] ? 'selected' : '' ?>><?= htmlspecialchars($option['label']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="chips-row breed-filter-row" data-size-chips>
+                    <span class="breed-filter-row-label">Size</span>
+                    <?php
+                    $sizeChips = [
+                        'all' => 'All sizes',
+                        'Small' => 'Small',
+                        'Medium' => 'Medium',
+                        'Large' => 'Large',
+                    ];
+                    foreach ($sizeChips as $slug => $label):
+                        $active = $listParams['local'] !== '1' && $listParams['size'] === $slug;
+                    ?>
+                        <button type="button"
+                                class="chip breed-filter-chip<?= $active ? ' chip-active' : ' chip-outline' ?>"
+                                data-filter-size="<?= htmlspecialchars($slug) ?>">
+                            <?= htmlspecialchars($label) ?>
+                        </button>
                     <?php endforeach; ?>
-                </select>
-            </div>
+                </div>
 
-            <div class="chips-row breed-filter-row" data-origin-chips>
-                <span class="breed-filter-row-label">Origin</span>
                 <button type="button"
-                        class="chip breed-filter-chip<?= $listParams['local'] !== '1' ? ' chip-active' : ' chip-outline' ?>"
-                        data-filter-local="">
-                    All breeds
-                </button>
-                <button type="button"
-                        class="chip breed-filter-chip<?= $listParams['local'] === '1' ? ' chip-active' : ' chip-outline' ?>"
-                        data-filter-local="1">
-                    Local — Aspin (<?= (int) $counts['local'] ?>)
+                        class="chip breed-compare-mode-toggle chip-outline"
+                        data-compare-mode-toggle
+                        aria-pressed="false">
+                    Compare
                 </button>
             </div>
 
-            <div class="chips-row breed-filter-row" data-size-chips>
-                <span class="breed-filter-row-label">Size</span>
-                <?php
-                $sizeChips = [
-                    'all' => 'All sizes',
-                    'Small' => 'Small',
-                    'Medium' => 'Medium',
-                    'Large' => 'Large',
-                ];
-                foreach ($sizeChips as $slug => $label):
-                    $active = $listParams['local'] !== '1' && $listParams['size'] === $slug;
-                ?>
-                    <button type="button"
-                            class="chip breed-filter-chip<?= $active ? ' chip-active' : ' chip-outline' ?>"
-                            data-filter-size="<?= htmlspecialchars($slug) ?>">
-                        <?= htmlspecialchars($label) ?>
-                    </button>
-                <?php endforeach; ?>
-            </div>
+            <details class="breed-more-filters" data-breed-more-filters <?= $moreFiltersOpen ? 'open' : '' ?>>
+                <summary class="breed-more-filters-toggle">More filters</summary>
+                <div class="breed-more-filters-body">
+                    <div class="chips-row breed-filter-row" data-origin-chips>
+                        <span class="breed-filter-row-label">Origin</span>
+                        <button type="button"
+                                class="chip breed-filter-chip<?= $listParams['local'] !== '1' ? ' chip-active' : ' chip-outline' ?>"
+                                data-filter-local="">
+                            All breeds
+                        </button>
+                        <button type="button"
+                                class="chip breed-filter-chip<?= $listParams['local'] === '1' ? ' chip-active' : ' chip-outline' ?>"
+                                data-filter-local="1">
+                            Local — Aspin (<?= (int) $counts['local'] ?>)
+                        </button>
+                    </div>
 
-            <div class="chips-row breed-filter-row" data-mood-chips>
-                <span class="breed-filter-row-label">Mood</span>
-                <button type="button" class="chip breed-mood-chip<?= $listParams['mood'] === '' ? ' chip-active' : ' chip-outline' ?>" data-filter-mood="">All moods</button>
-                <?php foreach (breed_mood_filters() as $mood): ?>
-                    <button type="button"
-                            class="chip breed-mood-chip<?= $listParams['mood'] === $mood['slug'] ? ' chip-active' : ' chip-outline' ?>"
-                            data-filter-mood="<?= htmlspecialchars($mood['slug']) ?>">
-                        <?= htmlspecialchars($mood['label']) ?>
-                    </button>
-                <?php endforeach; ?>
-            </div>
+                    <div class="chips-row breed-filter-row" data-mood-chips>
+                        <span class="breed-filter-row-label">Mood</span>
+                        <button type="button" class="chip breed-mood-chip<?= $listParams['mood'] === '' ? ' chip-active' : ' chip-outline' ?>" data-filter-mood="">All moods</button>
+                        <?php foreach (breed_mood_filters() as $mood): ?>
+                            <button type="button"
+                                    class="chip breed-mood-chip<?= $listParams['mood'] === $mood['slug'] ? ' chip-active' : ' chip-outline' ?>"
+                                    data-filter-mood="<?= htmlspecialchars($mood['slug']) ?>">
+                                <?= htmlspecialchars($mood['label']) ?>
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </details>
         </div>
     </form>
 
-    <div class="breed-list" data-breed-list role="list">
+    <div class="breed-grid" data-breed-list role="list">
         <?php if (count($result['rows']) === 0): ?>
             <div class="feed-empty-state breed-empty-state">
                 <svg class="feed-empty-illustration" viewBox="0 0 200 160" aria-hidden="true" style="width:140px;">

@@ -59,6 +59,7 @@ app_layout_start('registry', 'Dog Profile', [
         ['label' => (string) ($dog['DogName'] ?? 'Dog Profile')],
     ],
     'scripts' => ['assets/js/dog-profile.js'],
+    'styles' => ['assets/css/dog-id-card.css'],
 ]);
 ?>
 
@@ -300,4 +301,15 @@ app_layout_start('registry', 'Dog Profile', [
     </div>
 </div>
 
-<?php app_layout_end($isOwner ? ['dog_edit_modal' => $dog] : []); ?>
+<?php
+$layoutEndOptions = [
+    'dog_id_card_modal' => [
+        'dog' => $dog,
+        'breedInfo' => $breedInfo,
+    ],
+];
+if ($isOwner) {
+    $layoutEndOptions['dog_edit_modal'] = $dog;
+}
+app_layout_end($layoutEndOptions);
+?>

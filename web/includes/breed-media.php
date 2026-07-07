@@ -210,6 +210,20 @@ function breed_silhouette_url(array $breed): string
 }
 
 /**
+ * List row thumbnail — silhouette when no cached photo (avoids blank color blocks).
+ *
+ * @param array<string, mixed> $breed
+ */
+function breed_list_thumbnail_url(array $breed): string
+{
+    if (!empty($breed['image_url']) && !empty($breed['breed_id'])) {
+        return 'ajax/breed-image.php?id=' . (int) $breed['breed_id'];
+    }
+
+    return breed_silhouette_url($breed);
+}
+
+/**
  * List/detail thumbnail — always via proxy so broken caches fall back to silhouette.
  *
  * @param array<string, mixed> $breed

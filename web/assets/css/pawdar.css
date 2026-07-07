@@ -1376,6 +1376,40 @@ textarea.form-input {
     box-sizing: border-box;
 }
 
+.app-topbar-start {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+
+.app-topbar-start .breadcrumb {
+    padding: 0;
+    margin: 0;
+}
+
+.app-topbar-start .page-title {
+    font-size: 18px;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.app-mobile-breadcrumb {
+    flex: none;
+    padding: 8px 16px;
+    background: var(--white);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.app-mobile-breadcrumb .breadcrumb {
+    padding: 0;
+    margin: 0;
+}
+
 .header-actions {
     display: flex;
     align-items: center;
@@ -2151,8 +2185,8 @@ textarea.form-input {
 
 .rating-dot.empty { background: #E7EFE6; }
 
-/* Breed Directory v2 — paginated list + detail page */
-.breed-directory { max-width: 900px; margin: 0 auto; }
+/* Breed Directory v3 — grid cards + compare mode */
+.breed-directory { max-width: 1120px; margin: 0 auto; }
 .breed-directory-header {
     display: flex;
     align-items: flex-start;
@@ -2167,8 +2201,54 @@ textarea.form-input {
 .breed-directory-filters {
     display: flex;
     flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.breed-filter-primary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+}
+.breed-filter-sort-row {
+    flex: none;
+}
+.breed-more-filters {
+    margin-top: 2px;
+}
+.breed-more-filters-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--air-force);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+}
+.breed-more-filters-toggle::-webkit-details-marker { display: none; }
+.breed-more-filters-toggle::after {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform 0.15s ease;
+    margin-top: -2px;
+}
+.breed-more-filters[open] .breed-more-filters-toggle::after {
+    transform: rotate(-135deg);
+    margin-top: 2px;
+}
+.breed-more-filters-body {
+    display: flex;
+    flex-direction: column;
     gap: 10px;
-    margin-bottom: 20px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-light);
 }
 .breed-directory-filters .chips-row {
     display: flex;
@@ -2227,83 +2307,172 @@ textarea.form-input {
     font-weight: 600;
 }
 .breed-filter-chip.chip-active,
-.breed-mood-chip.chip-active {
+.breed-mood-chip.chip-active,
+.breed-compare-mode-toggle.chip-active {
     background: var(--burnt-peach);
     border-color: var(--burnt-peach);
     color: var(--white);
     font-weight: 700;
 }
-.breed-list { display: flex; flex-direction: column; gap: 12px; }
-.breed-list-item {
-    display: flex;
-    align-items: stretch;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-.breed-list-item:focus { outline: 2px solid var(--muted-teal); outline-offset: 2px; }
-.breed-list-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-.breed-list-compare-col {
-    flex: none;
-    display: flex;
+.breed-compare-mode-toggle {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 8px 10px;
-    border-right: 1px solid var(--border-light);
-    background: var(--bg-soft);
-    border-radius: var(--radius-md) 0 0 var(--radius-md);
+    min-height: 36px;
+    box-sizing: border-box;
+    border: 1.5px solid var(--border-light);
+    cursor: pointer;
+    font-family: inherit;
+    line-height: 1.2;
+    margin: 0;
+    margin-left: auto;
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--white);
+    color: var(--text);
+    font-weight: 600;
+    padding: 0 14px;
+    border-radius: 999px;
 }
-.breed-list-link {
+.breed-grid {
     display: grid;
-    grid-template-columns: 120px 1fr auto;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 16px;
-    align-items: center;
-    flex: 1;
-    min-width: 0;
-    padding: 14px 16px;
+}
+@media (max-width: 1200px) {
+    .breed-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.breed-grid-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.breed-grid-card-media-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.breed-grid-card:focus { outline: 2px solid var(--muted-teal); outline-offset: 2px; }
+.breed-grid-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.breed-grid-card-link {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     color: inherit;
     text-decoration: none;
 }
-.breed-list-media {
-    width: 120px;
-    height: 96px;
-    border-radius: var(--radius-sm);
+.breed-grid-card-media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
     overflow: hidden;
-    background: var(--tea-green);
-    flex: none;
+    background: var(--bg-soft);
 }
-.breed-list-photo { width: 100%; height: 100%; object-fit: cover; display: block; }
-.breed-list-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 4px; }
-.breed-list-name { font-size: 1rem; font-weight: 700; margin: 0; }
-.breed-list-badges { display: flex; flex-wrap: wrap; gap: 6px; }
-.breed-list-meta { margin: 0 0 6px; }
-.breed-list-blurb { margin: 0; color: var(--text-muted); line-height: 1.45; }
-.breed-list-chevron { color: var(--muted-teal); width: 20px; height: 20px; }
-.breed-compare-check {
+.breed-grid-card-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.breed-grid-card-compare {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 2;
+    opacity: 0;
+    transform: translateY(-4px);
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.breed-directory.is-compare-mode .breed-grid-card-compare {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+.breed-grid-compare-check {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    color: var(--air-force);
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-sm);
     cursor: pointer;
-    text-align: center;
     margin: 0;
 }
-.breed-compare-check input {
+.breed-grid-compare-check input {
     width: 18px;
     height: 18px;
     margin: 0;
     cursor: pointer;
     accent-color: var(--burnt-peach);
 }
-.breed-compare-label { line-height: 1.1; max-width: 52px; }
-.breed-directory.has-compare-bar { padding-bottom: 88px; }
+.breed-grid-card-view {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid var(--border-light);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted-teal);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+.breed-grid-card:hover .breed-grid-card-view,
+.breed-grid-card:focus-within .breed-grid-card-view {
+    opacity: 1;
+}
+.breed-grid-card-view i {
+    width: 16px;
+    height: 16px;
+}
+.breed-grid-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 12px 14px;
+    flex: 1;
+    min-width: 0;
+}
+.breed-grid-card-name {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 800;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.breed-grid-card-meta,
+.breed-grid-card-weight {
+    margin: 0;
+    line-height: 1.35;
+}
+.breed-grid-card-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
+.breed-directory.has-compare-bar { padding-bottom: 112px; }
 .breed-compare-bar {
     position: fixed;
-    bottom: 24px;
+    bottom: 28px;
     left: var(--sidebar-width);
     right: 0;
     z-index: 90;
-    padding: 0 24px;
+    padding: 12px 24px 0;
+    border-top: 1px solid var(--border-light);
+    background: linear-gradient(to top, var(--bg-soft) 70%, transparent);
     pointer-events: none;
 }
 .breed-compare-bar.is-visible { pointer-events: auto; }
@@ -2324,23 +2493,29 @@ textarea.form-input {
 .breed-compare-bar-actions { display: flex; gap: 8px; align-items: center; }
 .breed-compare-hint { margin: 6px auto 0; text-align: center; color: var(--burnt-peach); max-width: 900px; }
 @media (max-width: 1024px) {
-    .breed-compare-bar { left: 0; padding: 0 16px; bottom: calc(var(--bottom-nav-height) + 8px); }
+    .breed-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .breed-compare-bar { left: 0; padding: 12px 16px 0; bottom: calc(var(--bottom-nav-height) + 12px); }
 }
 @media (max-width: 640px) {
-    .breed-list-link { grid-template-columns: 88px 1fr auto; }
-    .breed-list-media { width: 88px; height: 72px; }
-    .breed-list-compare-col { padding: 6px 8px; }
-    .breed-compare-label { display: none; }
+    .breed-filter-primary { flex-direction: column; align-items: stretch; }
+    .breed-compare-mode-toggle { margin-left: 0; width: 100%; }
+    .breed-grid { grid-template-columns: 1fr; gap: 12px; }
     .breed-detail-hero-img { height: 200px; }
-    .breed-compare-bar { bottom: calc(var(--bottom-nav-height) + 4px); }
+    .breed-compare-bar { bottom: calc(var(--bottom-nav-height) + 8px); }
 }
 .breed-pagination {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 16px;
-    margin-top: 24px;
-    padding-bottom: 24px;
+    margin-top: 20px;
+    margin-bottom: 8px;
+    padding-bottom: 20px;
+}
+.breed-directory.has-compare-bar .breed-pagination {
+    margin-bottom: 24px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border-light);
 }
 .breed-page-enter { animation: breedFadeIn 0.25s ease; }
 @keyframes breedFadeIn {
@@ -5233,7 +5408,7 @@ body.modal-open { overflow: hidden; }
 /* Breadcrumbs */
 .breadcrumb {
     padding: 10px 0 4px;
-    margin-bottom: 12px;
+    margin-bottom: 0;
 }
 
 .breadcrumb ol {
