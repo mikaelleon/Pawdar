@@ -2815,9 +2815,23 @@ textarea.form-input {
     color: var(--air-force);
 }
 
-.first-aid-card .severity-badge {
+.first-aid-card .severity-badge,
+.first-aid-severity-badge {
     flex: none;
     margin-left: auto;
+    min-width: 76px;
+    width: 76px;
+    justify-content: center;
+    padding: 5px 8px;
+    box-sizing: border-box;
+    gap: 0;
+}
+
+.severity-badge--text-only .severity-label {
+    display: block;
+    width: 100%;
+    text-align: center;
+    line-height: 1.2;
 }
 
 .first-aid-card.is-selected {

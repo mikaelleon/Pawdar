@@ -48,7 +48,7 @@ app_layout_start('first-aid', 'First Aid Guides', [
                         <?php endif; ?>
                     </span>
                     <?php if (!$active): ?>
-                        <?= severity_badge_html((string) $guide['severity_level']) ?>
+                        <?= severity_badge_html((string) $guide['severity_level'], false) ?>
                     <?php endif; ?>
                 </a>
             <?php endforeach; ?>

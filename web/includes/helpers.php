@@ -344,14 +344,23 @@ function severity_badge_class(string $severity): string
 /**
  * Renders an accessible severity badge with icon and label.
  */
-function severity_badge_html(string $severity): string
+function severity_badge_html(string $severity, bool $withIcon = true): string
 {
     $class = severity_badge_class($severity);
-    $icon = severity_icon_name($severity);
+    if (!$withIcon) {
+        $class .= ' severity-badge--text-only first-aid-severity-badge';
+    }
+
     $label = htmlspecialchars($severity, ENT_QUOTES, 'UTF-8');
+    $iconHtml = '';
+
+    if ($withIcon) {
+        $icon = severity_icon_name($severity);
+        $iconHtml = '<i data-lucide="' . $icon . '" aria-hidden="true"></i>';
+    }
 
     return '<span class="' . $class . '" role="status" aria-label="Severity: ' . $label . '">'
-        . '<i data-lucide="' . $icon . '" aria-hidden="true"></i>'
+        . $iconHtml
         . '<span class="severity-label">' . $label . '</span></span>';
 }
 
