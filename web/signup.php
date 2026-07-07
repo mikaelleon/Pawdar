@@ -19,6 +19,7 @@ $approvalRoles = roles_requiring_approval();
 $phoneRequiredRoles = roles_requiring_phone();
 $error = (string) ($_GET['error'] ?? '');
 $nameSuffixes = ['', 'N/A', 'Jr.', 'Sr.', 'II', 'III', 'IV'];
+$showPawBackground = false;
 
 require __DIR__ . '/includes/head.php';
 

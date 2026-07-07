@@ -70,16 +70,18 @@ if (role_can_report($userRole)) {
             </div>
         </div>
 
-        <div class="chips-row scr" data-filter-chips role="tablist" aria-label="Filter incidents">
-            <?php foreach ($chips as $chip): ?>
-                <button type="button"
-                        class="chip filter-chip<?= $filter === $chip['slug'] ? ' chip-active' : ' chip-outline' ?>"
-                        data-filter="<?= htmlspecialchars($chip['slug']) ?>"
-                        role="tab"
-                        aria-selected="<?= $filter === $chip['slug'] ? 'true' : 'false' ?>">
-                    <?= htmlspecialchars($chip['label']) ?>
-                </button>
-            <?php endforeach; ?>
+        <div class="feed-filter-chips-wrap">
+            <div class="chips-row scr feed-filter-chips" data-filter-chips role="tablist" aria-label="Filter incidents">
+                <?php foreach ($chips as $chip): ?>
+                    <button type="button"
+                            class="chip filter-chip<?= $filter === $chip['slug'] ? ' chip-active' : ' chip-outline' ?>"
+                            data-filter="<?= htmlspecialchars($chip['slug']) ?>"
+                            role="tab"
+                            aria-selected="<?= $filter === $chip['slug'] ? 'true' : 'false' ?>">
+                        <?= htmlspecialchars($chip['label']) ?>
+                    </button>
+                <?php endforeach; ?>
+            </div>
         </div>
 
         <div class="flex flex-col gap-md" data-incident-list>
@@ -93,7 +95,7 @@ if (role_can_report($userRole)) {
         </div>
     </div>
 
-    <aside class="bento-column hidden-mobile">
+    <aside class="bento-column bento-column--feed">
         <?php require __DIR__ . '/partials/widget_firstaid.php'; ?>
         <?php require __DIR__ . '/partials/widget_map.php'; ?>
         <?php require __DIR__ . '/partials/widget_funfact.php'; ?>

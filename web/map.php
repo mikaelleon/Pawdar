@@ -18,7 +18,7 @@ app_layout_start('map', 'Incident Map', [
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
 
-<div class="map-full-wrap" data-map-page>
+<div class="map-full-wrap map-sidebar-open" data-map-page>
     <div id="pawdar-map" class="pawdar-leaflet-map"></div>
 
     <div class="map-state-overlay map-loading-state" data-map-loading hidden aria-live="polite">
@@ -47,33 +47,60 @@ app_layout_start('map', 'Incident Map', [
         <button type="button" class="map-geo-dismiss" data-map-geo-dismiss aria-label="Dismiss">×</button>
     </div>
 
-    <button type="button" class="map-locate-btn" data-map-locate aria-label="Center map on my location">
-        <i data-lucide="crosshair"></i>
-        <span class="hidden-mobile">My location</span>
+    <div class="map-controls-cluster hidden-mobile">
+        <button type="button" class="map-locate-btn" data-map-locate aria-label="Center map on my location">
+            <i data-lucide="crosshair"></i>
+            <span>My location</span>
+        </button>
+    </div>
+
+    <button type="button" class="map-side-panel-toggle hidden-mobile" data-map-sidebar-toggle aria-label="Hide incidents" aria-expanded="true">
+        <i data-lucide="chevrons-right" data-map-sidebar-toggle-icon></i>
+        <span class="map-side-panel-toggle-badge" data-map-sidebar-count><?= count($incidents) ?></span>
     </button>
 
     <div class="map-overlay-top hidden-mobile">
         <div class="card card-body map-toolbar">
-            <div class="search-bar search-bar-light flex-1">
-                <i data-lucide="search"></i>
-                <input type="search" id="map-search" placeholder="Search by barangay, location…">
+            <div class="map-toolbar-tier map-toolbar-tier-1">
+                <div class="search-bar search-bar-light map-toolbar-search">
+                    <i data-lucide="search"></i>
+                    <input type="search" id="map-search" placeholder="Search by barangay, location…">
+                </div>
+                <div class="map-toolbar-tier-1-controls">
+                    <div class="chips-row map-type-chips-row" data-map-type-chips>
+                        <button type="button" class="chip chip-active map-type-chip" data-filter="all">All</button>
+                        <button type="button" class="chip chip-outline map-type-chip" data-filter="animal_bite">Bite</button>
+                        <button type="button" class="chip chip-outline map-type-chip" data-filter="injured_stray">Injured</button>
+                        <button type="button" class="chip chip-outline map-type-chip" data-filter="aggressive">Aggressive</button>
+                    </div>
+                    <div class="map-more-filters-anchor">
+                        <button type="button"
+                                class="map-more-filters-trigger"
+                                data-map-more-filters-toggle
+                                aria-expanded="false"
+                                aria-haspopup="true">
+                            More filters
+                            <i data-lucide="chevron-down" aria-hidden="true"></i>
+                        </button>
+                        <div class="map-more-filters-popover" data-map-more-filters-popover hidden role="menu">
+                            <div class="chips-row map-type-chips-more">
+                                <button type="button" class="chip chip-outline map-type-chip" data-filter="vehicular">Vehicular</button>
+                                <button type="button" class="chip chip-outline map-type-chip" data-filter="disturbance">Disturbance</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="chips-row" data-map-type-chips>
-                <button type="button" class="chip chip-active map-type-chip" data-filter="all">All</button>
-                <button type="button" class="chip chip-outline map-type-chip" data-filter="animal_bite">Bite</button>
-                <button type="button" class="chip chip-outline map-type-chip" data-filter="injured_stray">Injured</button>
-                <button type="button" class="chip chip-outline map-type-chip" data-filter="aggressive">Aggressive</button>
-                <button type="button" class="chip chip-outline map-type-chip" data-filter="vehicular">Vehicular</button>
-                <button type="button" class="chip chip-outline map-type-chip" data-filter="disturbance">Disturbance</button>
-            </div>
-            <select id="map-range" class="registry-filter">
-                <option value="today">Today</option>
-                <option value="week">This week</option>
-                <option value="month" selected>This month</option>
-            </select>
-            <div class="map-mode-toggle">
-                <button type="button" class="is-active" data-map-mode="normal">Normal</button>
-                <button type="button" data-map-mode="heatmap">Heatmap</button>
+            <div class="map-toolbar-tier map-toolbar-tier-2">
+                <select id="map-range" class="registry-filter map-toolbar-range">
+                    <option value="today">Today</option>
+                    <option value="week">This week</option>
+                    <option value="month" selected>This month</option>
+                </select>
+                <div class="map-mode-toggle">
+                    <button type="button" class="is-active" data-map-mode="normal">Normal</button>
+                    <button type="button" data-map-mode="heatmap">Heatmap</button>
+                </div>
             </div>
         </div>
     </div>

@@ -18,11 +18,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     json_response([
         'success' => true,
-        'count' => fetch_bell_badge_count($pdo, $userId, (string) ($_SESSION['user_barangay'] ?? '')),
+        'count' => fetch_unread_notification_count($pdo, $userId),
     ]);
 }
 
-$count = fetch_bell_badge_count($pdo, $userId, (string) ($_SESSION['user_barangay'] ?? ''));
+$count = fetch_unread_notification_count($pdo, $userId);
 
 $stmt = $pdo->prepare('
     SELECT notification_id, message, link, created_at, is_read

@@ -14,6 +14,7 @@ $isLocked = $error === 'locked' || login_lockout_remaining() > 0;
 $lockRemaining = login_lockout_remaining() ?: $lockSeconds;
 $loginStats = fetch_login_stats(db());
 $pageScripts = ['assets/js/ui.js', 'assets/js/auth.js'];
+$showPawBackground = false;
 require __DIR__ . '/includes/head.php';
 ?>
 

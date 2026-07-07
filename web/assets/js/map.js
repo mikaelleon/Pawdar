@@ -18,6 +18,77 @@ document.addEventListener('DOMContentLoaded', function () {
     var emptyEl = document.querySelector('[data-map-empty]');
     var geoErrorEl = document.querySelector('[data-map-geo-error]');
     var listEl = document.getElementById('map-incident-list');
+    var mapWrap = document.querySelector('[data-map-page]');
+    var sidebarPanel = document.querySelector('[data-map-list-panel]');
+    var sidebarToggleBtn = document.querySelector('[data-map-sidebar-toggle]');
+    var sidebarToggleIcon = document.querySelector('[data-map-sidebar-toggle-icon]');
+    var sidebarCountBadge = document.querySelector('[data-map-sidebar-count]');
+    var sidebarStorageKey = 'pawdarMapSidebarOpen';
+    var sidebarMedia = window.matchMedia('(min-width: 1024px)');
+
+    function setSidebarOpen(isOpen) {
+        if (!mapWrap) return;
+
+        mapWrap.classList.toggle('map-sidebar-open', isOpen);
+        mapWrap.classList.toggle('map-sidebar-collapsed', !isOpen);
+
+        if (sidebarPanel) {
+            sidebarPanel.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+        }
+        if (sidebarToggleBtn) {
+            sidebarToggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            sidebarToggleBtn.setAttribute('aria-label', isOpen ? 'Hide incidents' : 'Show incidents');
+        }
+        if (sidebarToggleIcon) {
+            sidebarToggleIcon.setAttribute('data-lucide', isOpen ? 'chevrons-right' : 'chevrons-left');
+        }
+
+        try {
+            sessionStorage.setItem(sidebarStorageKey, isOpen ? '1' : '0');
+        } catch (err) {
+            /* ignore */
+        }
+
+        window.setTimeout(function () {
+            map.invalidateSize();
+        }, 220);
+
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+        }
+    }
+
+    function initSidebarState() {
+        var stored = null;
+        try {
+            stored = sessionStorage.getItem(sidebarStorageKey);
+        } catch (err) {
+            stored = null;
+        }
+
+        var defaultOpen = sidebarMedia.matches;
+        var isOpen = stored === null ? defaultOpen : stored === '1';
+        setSidebarOpen(isOpen);
+    }
+
+    function toggleSidebar() {
+        var isOpen = mapWrap && mapWrap.classList.contains('map-sidebar-open');
+        setSidebarOpen(!isOpen);
+    }
+
+    initSidebarState();
+
+    sidebarToggleBtn?.addEventListener('click', toggleSidebar);
+
+    initMapMoreFiltersPopover();
+
+    if (typeof sidebarMedia.addEventListener === 'function') {
+        sidebarMedia.addEventListener('change', function () {
+            if (sessionStorage.getItem(sidebarStorageKey) === null) {
+                setSidebarOpen(sidebarMedia.matches);
+            }
+        });
+    }
 
     function setLoading(isLoading) {
         if (loadingEl) loadingEl.hidden = !isLoading;
@@ -102,6 +173,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var heading = document.querySelector('[data-map-count-heading]');
         if (heading) heading.textContent = incidents.length + ' incidents in this area';
+        if (sidebarCountBadge) {
+            sidebarCountBadge.textContent = String(incidents.length);
+            sidebarCountBadge.hidden = incidents.length <= 0;
+        }
 
         setEmpty(incidents.length === 0);
         renderList(incidents);
@@ -173,12 +248,69 @@ document.addEventListener('DOMContentLoaded', function () {
         }, { enableHighAccuracy: true, timeout: 10000 });
     }
 
+    function setActiveFilterChip(chip) {
+        document.querySelectorAll('.map-type-chip').forEach(function (c) {
+            var isActive = c.getAttribute('data-filter') === chip.getAttribute('data-filter');
+            c.classList.toggle('chip-active', isActive);
+            c.classList.toggle('chip-outline', !isActive);
+        });
+
+        var overflowFilter = chip.getAttribute('data-filter');
+        if (overflowFilter === 'vehicular' || overflowFilter === 'disturbance') {
+            openMapMoreFiltersPopover();
+        }
+    }
+
+    function initMapMoreFiltersPopover() {
+        var toggle = document.querySelector('[data-map-more-filters-toggle]');
+        var popover = document.querySelector('[data-map-more-filters-popover]');
+        if (!toggle || !popover) {
+            return;
+        }
+
+        toggle.addEventListener('click', function (event) {
+            event.stopPropagation();
+            if (popover.hasAttribute('hidden')) {
+                openMapMoreFiltersPopover();
+            } else {
+                closeMapMoreFiltersPopover();
+            }
+        });
+
+        popover.addEventListener('click', function (event) {
+            event.stopPropagation();
+        });
+
+        document.addEventListener('click', function () {
+            closeMapMoreFiltersPopover();
+        });
+    }
+
+    function openMapMoreFiltersPopover() {
+        var toggle = document.querySelector('[data-map-more-filters-toggle]');
+        var popover = document.querySelector('[data-map-more-filters-popover]');
+        if (!toggle || !popover) {
+            return;
+        }
+
+        popover.removeAttribute('hidden');
+        toggle.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeMapMoreFiltersPopover() {
+        var toggle = document.querySelector('[data-map-more-filters-toggle]');
+        var popover = document.querySelector('[data-map-more-filters-popover]');
+        if (!toggle || !popover) {
+            return;
+        }
+
+        popover.setAttribute('hidden', '');
+        toggle.setAttribute('aria-expanded', 'false');
+    }
+
     document.querySelectorAll('.map-type-chip').forEach(function (chip) {
         chip.addEventListener('click', function () {
-            document.querySelectorAll('.map-type-chip').forEach(function (c) {
-                c.classList.toggle('chip-active', c === chip);
-                c.classList.toggle('chip-outline', c !== chip);
-            });
+            setActiveFilterChip(chip);
             loadMap();
         });
     });

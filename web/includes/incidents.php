@@ -220,16 +220,13 @@ function fetch_active_incident_count(PDO $pdo, string $barangay): int
 }
 
 /**
- * Returns bell badge count: unread notifications, or active incidents when none are unread.
+ * Returns bell badge count from unread notifications only.
  */
-function fetch_bell_badge_count(PDO $pdo, int $userId, string $barangay): int
+function fetch_bell_badge_count(PDO $pdo, int $userId, string $barangay = ''): int
 {
-    $unread = fetch_unread_notification_count($pdo, $userId);
-    if ($unread > 0) {
-        return $unread;
-    }
+    unset($barangay);
 
-    return fetch_active_incident_count($pdo, $barangay);
+    return fetch_unread_notification_count($pdo, $userId);
 }
 
 /**

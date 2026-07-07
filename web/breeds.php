@@ -85,9 +85,9 @@ app_layout_start('breeds', 'Breed Directory', [
                 </button>
             </div>
 
-            <details class="breed-more-filters" data-breed-more-filters <?= $moreFiltersOpen ? 'open' : '' ?>>
-                <summary class="breed-more-filters-toggle">More filters</summary>
-                <div class="breed-more-filters-body">
+            <?php
+            ob_start();
+            ?>
                     <div class="chips-row breed-filter-row" data-origin-chips>
                         <span class="breed-filter-row-label">Origin</span>
                         <button type="button"
@@ -113,8 +113,13 @@ app_layout_start('breeds', 'Breed Directory', [
                             </button>
                         <?php endforeach; ?>
                     </div>
-                </div>
-            </details>
+            <?php
+            $body = ob_get_clean();
+            $open = $moreFiltersOpen;
+            $class = 'breed-more-filters';
+            $attrs = 'data-breed-more-filters';
+            require __DIR__ . '/partials/more-filters.php';
+            ?>
         </div>
     </form>
 

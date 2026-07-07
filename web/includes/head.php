@@ -6,6 +6,7 @@ $pageDescription = $pageDescription ?? SITE_DESCRIPTION;
 $bodyClass = $bodyClass ?? '';
 $pageScripts = $pageScripts ?? [];
 $pageStyles = $pageStyles ?? [];
+$showPawBackground = $showPawBackground ?? true;
 
 $assetVersion = static function (string $relativePath): string {
     $absolute = dirname(__DIR__) . '/' . ltrim($relativePath, '/');
@@ -48,3 +49,6 @@ $assetVersion = static function (string $relativePath): string {
     <?php endforeach; ?>
 </head>
 <body class="<?= htmlspecialchars($bodyClass) ?>">
+<?php if ($showPawBackground): ?>
+    <?php require __DIR__ . '/paw-bg-layer.php'; ?>
+<?php endif; ?>
