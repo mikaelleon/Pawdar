@@ -15,12 +15,11 @@ $safetyTips = [
 $dayIndex = (int) date('z') % count($safetyTips);
 $tip = $safetyTips[$dayIndex];
 ?>
-<details class="bento-card safety-tip-card">
-    <summary class="bento-card-header safety-tip-summary">
-        <span class="bento-icon" aria-hidden="true">💡</span>
+<div class="bento-card safety-tip-card">
+    <div class="bento-card-header">
+        <span class="bento-icon" aria-hidden="true"><i data-lucide="lightbulb"></i></span>
         <span class="bento-label">Safety tip</span>
-        <span class="text-xs text-muted">Tap to expand</span>
-    </summary>
+        <span class="safety-tip-caption text-xs">Rotates daily</span>
+    </div>
     <p class="safety-tip-text"><?= htmlspecialchars($tip) ?></p>
-    <span class="bento-footer">Rotates daily · Pet trivia moved here to keep utility widgets first</span>
-</details>
+</div>

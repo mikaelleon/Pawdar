@@ -11,6 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 $filter = trim((string) ($_GET['filter'] ?? 'all'));
+$search = trim((string) ($_GET['q'] ?? ''));
 $offset = max(0, (int) ($_GET['offset'] ?? 0));
 $limit = min(20, max(1, (int) ($_GET['limit'] ?? 10)));
 
@@ -24,7 +25,7 @@ $barangay = (string) $_SESSION['user_barangay'];
 $userId = (int) $_SESSION['user_id'];
 $userRole = (string) $_SESSION['user_role'];
 
-$incidents = fetch_incidents($pdo, $barangay, $userId, $incidentType, $offset, $limit);
+$incidents = fetch_incidents($pdo, $barangay, $userId, $incidentType, $offset, $limit, $search !== '' ? $search : null);
 $counts = fetch_map_counts($pdo, $barangay);
 $pins = fetch_map_pins($pdo, $barangay, $incidentType);
 

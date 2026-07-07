@@ -6,10 +6,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var csrfToken = feedPage.getAttribute('data-csrf') || getCsrfToken();
     var currentFilter = feedPage.getAttribute('data-filter') || 'all';
+    var currentSearch = feedPage.getAttribute('data-search') || '';
     var nextOffset = document.querySelectorAll('[data-incident-list] .incident-card:not(.incident-skeleton)').length;
     var incidentList = document.querySelector('[data-incident-list]');
     var loadMoreWrap = document.querySelector('[data-load-more-wrap]');
     var loadMoreBtn = document.querySelector('[data-load-more]');
+    var searchInput = document.getElementById('feed-search');
+    var searchDebounce = null;
 
     document.querySelectorAll('[data-filter-chips] .filter-chip').forEach(function (chip) {
         chip.addEventListener('click', function () {
@@ -21,36 +24,42 @@ document.addEventListener('DOMContentLoaded', function () {
             currentFilter = filter;
             nextOffset = 0;
             updateFilterChips(filter);
-            updateUrlFilter(filter);
-            fetchFeed(filter, 0, false);
+            updateUrlState(filter, currentSearch);
+            fetchFeed(filter, 0, false, currentSearch);
         });
     });
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            currentSearch = searchInput.value.trim();
+            nextOffset = 0;
+            clearTimeout(searchDebounce);
+            searchDebounce = setTimeout(function () {
+                updateUrlState(currentFilter, currentSearch);
+                fetchFeed(currentFilter, 0, false, currentSearch);
+            }, 300);
+        });
+    }
 
     if (loadMoreBtn) {
         loadMoreBtn.addEventListener('click', function () {
             var offset = parseInt(feedPage.getAttribute('data-next-offset') || String(nextOffset), 10);
-            fetchFeed(currentFilter, offset, true);
+            fetchFeed(currentFilter, offset, true, currentSearch);
         });
     }
 
-    incidentList.addEventListener('click', function (event) {
-        var corroborateBtn = event.target.closest('[data-corroborate]');
-        if (corroborateBtn) {
-            handleCorroborate(corroborateBtn, csrfToken);
-            return;
-        }
+    if (incidentList) {
+        incidentList.addEventListener('click', function (event) {
+            if (event.target.closest('[data-corroborate]')) {
+                return;
+            }
 
-        var detailsToggle = event.target.closest('[data-details-toggle]');
-        if (detailsToggle) {
-            toggleDetails(detailsToggle);
-            return;
-        }
-
-        var claimBtn = event.target.closest('[data-claim-stray]');
-        if (claimBtn) {
-            handleClaimStray(claimBtn, csrfToken);
-        }
-    });
+            var claimBtn = event.target.closest('[data-claim-stray]');
+            if (claimBtn) {
+                handleClaimStray(claimBtn, csrfToken);
+            }
+        });
+    }
 
     incidentList.addEventListener('change', function (event) {
         var select = event.target.closest('[data-case-status]');
@@ -62,8 +71,9 @@ document.addEventListener('DOMContentLoaded', function () {
     if (typeof window.initReportDrawer === 'function') {
         window.initReportDrawer(csrfToken, function () {
             nextOffset = 0;
-            fetchFeed(currentFilter, 0, false);
+            fetchFeed(currentFilter, 0, false, currentSearch);
             showToast('Incident reported successfully');
+            window.location.reload();
         });
     }
 });
@@ -73,24 +83,46 @@ function updateFilterChips(activeFilter) {
         var isActive = chip.getAttribute('data-filter') === activeFilter;
         chip.classList.toggle('chip-active', isActive);
         chip.classList.toggle('chip-outline', !isActive);
+        chip.classList.toggle('feed-type-chip--full', isActive);
+        chip.classList.toggle('feed-type-chip--icon', !isActive);
         chip.setAttribute('aria-selected', isActive ? 'true' : 'false');
     });
 }
 
-function updateUrlFilter(filter) {
+function updateUrlState(filter, search) {
     var url = new URL(window.location.href);
     if (filter === 'all') {
         url.searchParams.delete('filter');
     } else {
         url.searchParams.set('filter', filter);
     }
+
+    if (search) {
+        url.searchParams.set('q', search);
+    } else {
+        url.searchParams.delete('q');
+    }
+
     window.history.replaceState({}, '', url.toString());
+
+    var feedPage = document.querySelector('[data-feed-page]');
+    if (feedPage) {
+        feedPage.setAttribute('data-filter', filter);
+        feedPage.setAttribute('data-search', search);
+    }
 }
 
-function fetchFeed(filter, offset, append) {
+function fetchFeed(filter, offset, append, search) {
     var incidentList = document.querySelector('[data-incident-list]');
     var loadMoreWrap = document.querySelector('[data-load-more-wrap]');
     var loadMoreBtn = document.querySelector('[data-load-more]');
+    var query = 'ajax/feed-filter.php?filter=' + encodeURIComponent(filter) +
+        '&offset=' + offset +
+        '&limit=10';
+
+    if (search) {
+        query += '&q=' + encodeURIComponent(search);
+    }
 
     if (!append) {
         incidentList.innerHTML = getSkeletonHtml(3);
@@ -99,7 +131,7 @@ function fetchFeed(filter, offset, append) {
         loadMoreBtn.textContent = 'Loading…';
     }
 
-    fetch('ajax/feed-filter.php?filter=' + encodeURIComponent(filter) + '&offset=' + offset + '&limit=10')
+    fetch(query)
         .then(function (res) { return res.json(); })
         .then(function (data) {
             if (!data.success) {
@@ -119,7 +151,7 @@ function fetchFeed(filter, offset, append) {
                 lucide.createIcons();
             }
 
-            updateMapPreview(data.counts, data.pins);
+            updateMapPreview(data.counts);
 
             if (typeof data.next_offset === 'number') {
                 window.feedNextOffset = data.next_offset;
@@ -177,73 +209,39 @@ function escapeHtml(text) {
 function getSkeletonHtml(count) {
     var html = '';
     for (var i = 0; i < count; i++) {
-        html += '<article class="incident-card incident-skeleton card-bordered" aria-hidden="true">' +
-            '<div class="accent skeleton-shimmer"></div>' +
-            '<div class="card-body" style="flex:1;">' +
-            '<div class="skeleton-line skeleton-shimmer" style="width:30%;height:20px;margin-bottom:12px;"></div>' +
-            '<div class="skeleton-line skeleton-shimmer" style="width:85%;height:18px;margin-bottom:8px;"></div>' +
-            '<div class="skeleton-line skeleton-shimmer" style="width:60%;height:14px;"></div>' +
-            '</div></article>';
+        html += '<div class="feed-incident-card-wrap" aria-hidden="true">' +
+            '<article class="incident-card feed-incident-card incident-skeleton card-bordered">' +
+            '<div class="card-body feed-incident-card-body">' +
+            '<div class="feed-incident-header">' +
+            '<div class="feed-incident-icon skeleton-shimmer"></div>' +
+            '<div class="feed-incident-meta">' +
+            '<div class="skeleton-line skeleton-shimmer" style="width:45%;height:18px;margin-bottom:8px;"></div>' +
+            '<div class="skeleton-line skeleton-shimmer" style="width:70%;height:14px;"></div>' +
+            '</div>' +
+            '<div class="skeleton-line skeleton-shimmer" style="width:76px;height:24px;border-radius:8px;"></div>' +
+            '</div>' +
+            '<div class="feed-incident-media">' +
+            '<div class="feed-incident-media-tile skeleton-shimmer"></div>' +
+            '<div class="feed-incident-media-tile skeleton-shimmer"></div>' +
+            '</div>' +
+            '<div class="skeleton-line skeleton-shimmer" style="width:100%;height:36px;margin-top:16px;"></div>' +
+            '<div class="feed-incident-open skeleton-shimmer"></div>' +
+            '</div></article></div>';
     }
     return html;
 }
 
-function updateMapPreview(counts, pins) {
-    if (counts) {
-        ['bites', 'strays', 'aggressive', 'vehicular', 'disturbance'].forEach(function (key) {
-            var el = document.querySelector('[data-count-' + key + ']');
-            if (el) {
-                el.textContent = counts[key] || 0;
-            }
-        });
-    }
-
-    var preview = document.querySelector('[data-map-preview]');
-    if (!preview || !pins) {
+function updateMapPreview(counts) {
+    if (!counts) {
         return;
     }
 
-    if (!pins.length) {
-        preview.innerHTML = '<div class="map-preview-empty text-xs text-muted">No incidents in this barangay yet.</div>';
-        return;
-    }
-
-    preview.innerHTML = pins.map(function (pin) {
-        return '<div class="map-pin map-pin-dot" style="left:' + pin.left + 'px;top:' + pin.top + 'px;background:' +
-            (pin.color || '#87AFAE') + ';" title="' + escapeHtml(pin.label || pin.type || 'Incident') +
-            '" data-pin-type="' + escapeHtml(pin.count_key || '') + '"></div>';
-    }).join('');
-}
-
-function handleCorroborate(btn, csrfToken) {
-    var incidentId = btn.getAttribute('data-corroborate');
-    btn.disabled = true;
-
-    fetch('ajax/corroborate.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': csrfToken
-        },
-        body: JSON.stringify({ incident_id: parseInt(incidentId, 10), csrf_token: csrfToken })
-    })
-        .then(function (res) { return res.json(); })
-        .then(function (data) {
-            if (data.success) {
-                btn.outerHTML = '<div class="chip chip-outline corroborated is-corroborated">' +
-                    '<i data-lucide="thumbs-up" style="width:14px;height:14px;color:var(--air-force);"></i> ' +
-                    'Corroborate · ' + data.new_count + '</div>';
-                if (window.lucide) {
-                    lucide.createIcons();
-                }
-            } else {
-                btn.disabled = false;
-                showToast(data.message || 'Could not corroborate');
-            }
-        })
-        .catch(function () {
-            btn.disabled = false;
-        });
+    ['bites', 'strays', 'aggressive', 'vehicular', 'disturbance'].forEach(function (key) {
+        var el = document.querySelector('[data-count-' + key + ']');
+        if (el) {
+            el.textContent = counts[key] || 0;
+        }
+    });
 }
 
 function handleCaseStatusUpdate(select, csrfToken) {
@@ -279,7 +277,7 @@ function handleCaseStatusUpdate(select, csrfToken) {
                 var dotOrCheck = data.status_label === 'Resolved'
                     ? '<i data-lucide="check" style="width:12px;height:12px;"></i>'
                     : '<span class="badge-dot" aria-hidden="true"></span>';
-                badge.className = 'badge badge-with-dot ' + data.status_class;
+                badge.className = 'badge badge-with-dot feed-incident-status ' + data.status_class;
                 badge.innerHTML = dotOrCheck + data.status_label;
                 if (window.lucide) {
                     lucide.createIcons();
@@ -311,19 +309,6 @@ function handleClaimStray(btn, csrfToken) {
                 showToast(data.message || 'Could not claim case');
             }
         });
-}
-
-function toggleDetails(toggle) {
-    var panel = toggle.nextElementSibling;
-    if (!panel) {
-        return;
-    }
-
-    var expanded = toggle.getAttribute('aria-expanded') === 'true';
-    toggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
-    var label = toggle.querySelector('span');
-    if (label) label.textContent = expanded ? 'More details' : 'Less details';
-    panel.hidden = expanded;
 }
 
 function showToast(message) {

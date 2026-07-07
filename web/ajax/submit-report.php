@@ -22,6 +22,11 @@ $incidentType = trim((string) ($_POST['incident_type'] ?? ''));
 $location = trim((string) ($_POST['location'] ?? ''));
 $description = trim((string) ($_POST['description'] ?? ''));
 $dogId = (int) ($_POST['dog_id'] ?? 0);
+$observedBreed = trim((string) ($_POST['observed_breed'] ?? ''));
+$observedCoat = trim((string) ($_POST['observed_coat_color'] ?? ''));
+$observedCoatOther = trim((string) ($_POST['observed_coat_color_other'] ?? ''));
+$observedSize = trim((string) ($_POST['observed_dog_size'] ?? ''));
+$observedMarks = trim((string) ($_POST['observed_marks'] ?? ''));
 $userId = (int) $_SESSION['user_id'];
 $barangay = (string) $_SESSION['user_barangay'];
 $latitude = trim((string) ($_POST['latitude'] ?? ''));
@@ -78,7 +83,7 @@ if (isset($_FILES['photo']) && is_array($_FILES['photo']) && (int) $_FILES['phot
         json_response(['success' => false, 'message' => 'Invalid photo type'], 400);
     }
 
-    $uploadDir = dirname(__DIR__, 2) . '/uploads/incidents';
+    $uploadDir = dirname(__DIR__) . '/uploads/incidents';
     if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0755, true);
     }
@@ -90,16 +95,30 @@ if (isset($_FILES['photo']) && is_array($_FILES['photo']) && (int) $_FILES['phot
         json_response(['success' => false, 'message' => 'Failed to save photo'], 500);
     }
 
-    $photoPath = $filename;
+    $photoPath = 'uploads/incidents/' . $filename;
 }
 
 if ($description === '' && $photoPath !== null) {
     $description = 'Photo attached.';
 }
 
+if ($dogId <= 0) {
+    $coatColor = $observedCoat === 'Other' && $observedCoatOther !== ''
+        ? $observedCoatOther
+        : $observedCoat;
+    $sizeLabel = $observedSize === 'Unknown' ? '' : $observedSize;
+    $description = compose_observed_dog_description(
+        $observedBreed,
+        $coatColor,
+        $sizeLabel,
+        $observedMarks,
+        $description
+    );
+}
+
 $insert = $pdo->prepare('
-    INSERT INTO incident (UserID, dog_id, IncidentType, Date, Location, Description, latitude, longitude)
-    VALUES (:user_id, :dog_id, :incident_type, NOW(), :location, :description, :latitude, :longitude)
+    INSERT INTO incident (UserID, dog_id, IncidentType, Date, Location, Description, photo_path, latitude, longitude)
+    VALUES (:user_id, :dog_id, :incident_type, NOW(), :location, :description, :photo_path, :latitude, :longitude)
 ');
 $insert->execute([
     ':user_id' => $userId,
@@ -107,6 +126,7 @@ $insert->execute([
     ':incident_type' => $incidentType,
     ':location' => $location,
     ':description' => $description !== '' ? $description : null,
+    ':photo_path' => $photoPath,
     ':latitude' => $coords['lat'] ?? null,
     ':longitude' => $coords['lng'] ?? null,
 ]);

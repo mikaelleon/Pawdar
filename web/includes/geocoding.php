@@ -180,11 +180,46 @@ function incident_location_short_label(string $displayLocation): string
  */
 function resolve_incident_coordinates(array $row): ?array
 {
+    $location = (string) ($row['Location'] ?? '');
+    $preset = coordinates_for_location_label($location);
+    if ($preset !== null) {
+        return $preset;
+    }
+
     if (!empty($row['latitude']) && !empty($row['longitude'])) {
         return ['lat' => (float) $row['latitude'], 'lng' => (float) $row['longitude']];
     }
 
-    return parse_coordinates_from_text((string) ($row['Location'] ?? ''));
+    return parse_coordinates_from_text($location);
+}
+
+/**
+ * Returns distinct map coordinates for known demo/reporting locations.
+ *
+ * @return array{lat: float, lng: float}|null
+ */
+function coordinates_for_location_label(string $location): ?array
+{
+    $normalized = strtolower(trim($location));
+    if ($normalized === '') {
+        return null;
+    }
+
+    $presets = [
+        'riverside park' => ['lat' => 13.7545, 'lng' => 121.0550],
+        'market st' => ['lat' => 13.7588, 'lng' => 121.0612],
+        'acacia ave' => ['lat' => 13.7614, 'lng' => 121.0578],
+        'national hwy' => ['lat' => 13.7521, 'lng' => 121.0684],
+        'barangay hall' => ['lat' => 13.7596, 'lng' => 121.0542],
+    ];
+
+    foreach ($presets as $needle => $coords) {
+        if (str_contains($normalized, $needle)) {
+            return $coords;
+        }
+    }
+
+    return null;
 }
 
 /**

@@ -25,6 +25,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (window.lucide && typeof window.lucide.createIcons === 'function') {
             window.lucide.createIcons();
         }
+        window.requestAnimationFrame(function () {
+            idCardModal.scrollTop = 0;
+            var card = idCardModal.querySelector('[data-id-card-print-target]');
+            if (card && typeof card.scrollIntoView === 'function') {
+                card.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+            }
+        });
     }
 
     function closeIdCardModal() {
@@ -38,7 +45,15 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('[data-print-id-card]').forEach(function (btn) {
         btn.addEventListener('click', function (event) {
             event.preventDefault();
-            openIdCardModal();
+            if (idCardModal) {
+                openIdCardModal();
+                return;
+            }
+
+            var dogId = profile ? profile.getAttribute('data-dog-id') : '';
+            if (dogId) {
+                window.open('dog-id-card.php?id=' + encodeURIComponent(dogId), '_blank', 'noopener');
+            }
         });
     });
 
@@ -55,12 +70,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var idCardPrintBtn = idCardModal.querySelector('[data-id-card-print]');
         if (idCardPrintBtn) {
-            idCardPrintBtn.addEventListener('click', function () {
+            idCardPrintBtn.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
                 if (window.lucide && typeof window.lucide.createIcons === 'function') {
                     window.lucide.createIcons();
                 }
                 document.body.classList.add('id-card-printing');
-                window.print();
+                window.requestAnimationFrame(function () {
+                    window.requestAnimationFrame(function () {
+                        window.print();
+                    });
+                });
             });
         }
     }

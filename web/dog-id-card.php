@@ -69,13 +69,19 @@ $pageTitle = htmlspecialchars((string) $dog['DogName']) . ' · ID Card';
 
             if (printBtn) {
                 printBtn.addEventListener('click', function () {
-                    window.print();
+                    window.requestAnimationFrame(function () {
+                        window.print();
+                    });
                 });
             }
 
             if (closeBtn) {
                 closeBtn.addEventListener('click', function () {
-                    window.close();
+                    if (window.history.length > 1) {
+                        window.history.back();
+                        return;
+                    }
+                    window.location.href = 'registry.php';
                 });
             }
 

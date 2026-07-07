@@ -76,15 +76,26 @@ function render_feed_empty_state(string $filter): string
 function render_feed_skeleton_cards(int $count = 3): void
 {
     for ($i = 0; $i < $count; $i++): ?>
-        <article class="incident-card incident-skeleton card-bordered" aria-hidden="true">
-            <div class="accent skeleton-shimmer"></div>
-            <div class="card-body" style="flex:1;">
-                <div class="skeleton-line skeleton-shimmer" style="width:30%;height:20px;margin-bottom:12px;"></div>
-                <div class="skeleton-line skeleton-shimmer" style="width:85%;height:18px;margin-bottom:8px;"></div>
-                <div class="skeleton-line skeleton-shimmer" style="width:60%;height:14px;"></div>
-                <div class="skeleton-line skeleton-shimmer" style="width:100%;height:36px;margin-top:16px;"></div>
-            </div>
-        </article>
+        <div class="feed-incident-card-wrap" aria-hidden="true">
+            <article class="incident-card feed-incident-card incident-skeleton card-bordered">
+                <div class="card-body feed-incident-card-body">
+                    <div class="feed-incident-header">
+                            <div class="feed-incident-icon skeleton-shimmer"></div>
+                            <div class="feed-incident-meta">
+                                <div class="skeleton-line skeleton-shimmer" style="width:45%;height:18px;margin-bottom:8px;"></div>
+                                <div class="skeleton-line skeleton-shimmer" style="width:70%;height:14px;"></div>
+                            </div>
+                            <div class="skeleton-line skeleton-shimmer" style="width:76px;height:24px;border-radius:8px;"></div>
+                        </div>
+                        <div class="feed-incident-media">
+                            <div class="feed-incident-media-tile skeleton-shimmer"></div>
+                            <div class="feed-incident-media-tile skeleton-shimmer"></div>
+                        </div>
+                        <div class="skeleton-line skeleton-shimmer" style="width:100%;height:36px;margin-top:16px;"></div>
+                    <div class="feed-incident-open skeleton-shimmer" aria-hidden="true"></div>
+                </div>
+            </article>
+        </div>
     <?php endfor;
 }
 
@@ -95,20 +106,15 @@ function render_single_incident_card(array $incident, string $userRole, int $use
 {
     $type = normalize_incident_type((string) $incident['IncidentType']);
     $meta = incident_type_meta($type);
+    $severity = incident_type_severity($type);
+    $severitySurfaceClass = incident_severity_surface_class($severity, 'feed-incident-icon');
     $locationParts = incident_location_display(
         (string) $incident['Location'],
         isset($incident['latitude']) ? (float) $incident['latitude'] : null,
         isset($incident['longitude']) ? (float) $incident['longitude'] : null
     );
     $displayLocation = $locationParts['display'];
-    $rawCoordinates = $locationParts['coordinates'];
 
-    $title = generate_incident_title(
-        $type,
-        (string) $incident['Location'],
-        isset($incident['latitude']) ? (float) $incident['latitude'] : null,
-        isset($incident['longitude']) ? (float) $incident['longitude'] : null
-    );
     $timeAgo = time_elapsed_string((string) $incident['Date']);
     $statusMeta = case_status_meta($incident['CaseStatus'] ?? null);
     $corroborateCount = (int) ($incident['corroborate_count'] ?? 0);
@@ -118,110 +124,130 @@ function render_single_incident_card(array $incident, string $userRole, int $use
     $isOwnReport = $reporterId === $userId;
     $canCorroborate = !$isOwnReport && !$hasCorroborated;
     $dogId = isset($incident['dog_id']) ? (int) $incident['dog_id'] : 0;
-    $fullTimestamp = date('M j, Y g:i A', strtotime((string) $incident['Date']));
-    $reporterName = (string) ($incident['reporter_name'] ?? 'Anonymous');
+    $fullTimestamp = date('F j, Y', strtotime((string) $incident['Date']));
+    $photoPath = incident_photo_url((string) ($incident['photo_path'] ?? ''));
+    $latitude = isset($incident['latitude']) ? (float) $incident['latitude'] : null;
+    $longitude = isset($incident['longitude']) ? (float) $incident['longitude'] : null;
+    $mapCoords = resolve_incident_coordinates($incident);
+    if ($mapCoords !== null) {
+        $latitude = $mapCoords['lat'];
+        $longitude = $mapCoords['lng'];
+    }
+    $mapThumbnail = incident_map_thumbnail_url($latitude, $longitude, 280, 168);
+    $descriptionSnippet = trim((string) ($incident['Description'] ?? ''));
+    if ($descriptionSnippet !== '' && strlen($descriptionSnippet) > 48) {
+        $descriptionSnippet = substr($descriptionSnippet, 0, 45) . '…';
+    }
+
     $corroborateHint = $hasCorroborated
         ? 'You corroborated this report.'
         : ($isOwnReport
             ? 'You reported this incident.'
             : 'Community confirmations help LGU prioritize. Three or more may escalate review.');
     ?>
-    <article class="incident-card card-bordered" data-incident-id="<?= $incidentId ?>">
-        <div class="accent <?= htmlspecialchars($meta['accent']) ?>"></div>
-        <div class="card-body" style="flex:1;">
-            <div class="flex justify-between items-center mb-md" style="margin-bottom:10px;">
-                <span class="badge <?= htmlspecialchars($meta['badge']) ?>"><?= htmlspecialchars($meta['label']) ?></span>
-                    <span class="text-xs text-muted incident-card-time" title="<?= htmlspecialchars($fullTimestamp) ?>"><?= htmlspecialchars($timeAgo) ?></span>
-            </div>
-            <div class="flex gap-md" style="gap:11px;">
-                <div class="icon-box icon-box-md"><i data-lucide="<?= htmlspecialchars($meta['icon']) ?>"></i></div>
-                <div class="flex-1" style="min-width:0;">
-                    <a href="incident.php?id=<?= $incidentId ?>" class="incident-card-title"><?= htmlspecialchars($title) ?></a>
-                    <div class="text-xs text-muted mt-sm flex items-center gap-sm" style="margin-top:3px;">
-                        <i data-lucide="map-pin" style="width:13px;height:13px;"></i>
-                        <?= htmlspecialchars($displayLocation) ?>
+    <div class="feed-incident-card-wrap">
+        <article class="incident-card feed-incident-card card-bordered" data-incident-id="<?= $incidentId ?>">
+            <div class="card-body feed-incident-card-body">
+                <div class="feed-incident-header">
+                    <div class="feed-incident-icon <?= htmlspecialchars($severitySurfaceClass) ?>" aria-hidden="true">
+                        <i data-lucide="<?= htmlspecialchars($meta['icon']) ?>"></i>
+                    </div>
+                    <div class="feed-incident-meta">
+                        <div class="feed-incident-title-row">
+                            <a href="incident.php?id=<?= $incidentId ?>" class="feed-incident-type"><?= htmlspecialchars($meta['label']) ?></a>
+                            <?= severity_badge_html($severity, false) ?>
+                        </div>
+                        <div class="feed-incident-location"><?= htmlspecialchars($displayLocation) ?></div>
+                    </div>
+                    <div class="feed-incident-header-end">
+                        <span class="badge badge-with-dot feed-incident-status <?= htmlspecialchars($statusMeta['class']) ?>"
+                              data-status-badge="<?= $incidentId ?>">
+                            <?php if ($statusMeta['label'] === 'Resolved'): ?>
+                                <i data-lucide="check" style="width:12px;height:12px;"></i>
+                            <?php else: ?>
+                                <span class="badge-dot" aria-hidden="true"></span>
+                            <?php endif; ?>
+                            <?= htmlspecialchars($statusMeta['label']) ?>
+                        </span>
+                        <a href="incident.php?id=<?= $incidentId ?>" class="feed-incident-open" aria-label="Open full incident details">
+                            <i data-lucide="chevron-right" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="feed-incident-media">
+                    <a href="incident.php?id=<?= $incidentId ?>" class="feed-incident-media-tile feed-incident-media-tile--photo" aria-label="View incident photo evidence">
+                        <?php if ($photoPath !== null): ?>
+                            <img src="<?= htmlspecialchars($photoPath) ?>" alt="Incident photo evidence" loading="lazy">
+                        <?php else: ?>
+                            <i data-lucide="image" aria-hidden="true"></i>
+                        <?php endif; ?>
+                    </a>
+                    <a href="map.php" class="feed-incident-media-tile feed-incident-media-tile--map<?= $mapThumbnail === null ? ' is-map-fallback' : ' has-map-preview' ?>" aria-label="View incident location on map">
+                        <?php if ($mapThumbnail !== null): ?>
+                            <img src="<?= htmlspecialchars($mapThumbnail) ?>"
+                                 alt=""
+                                 class="feed-incident-media-map-img"
+                                 loading="lazy"
+                                 decoding="async"
+                                 onerror="this.closest('.feed-incident-media-tile').classList.add('is-map-fallback'); this.remove(); if(window.lucide){window.lucide.createIcons();}">
+                        <?php endif; ?>
+                        <span class="feed-incident-media-placeholder" aria-hidden="true">
+                            <i data-lucide="map-pin"></i>
+                        </span>
+                    </a>
+                </div>
+
+                <div class="incident-card-footer feed-incident-footer">
+                    <div class="feed-incident-footer-main">
+                        <div class="incident-card-actions flex items-center gap-sm">
+                        <?php if ($hasCorroborated): ?>
+                            <div class="chip chip-outline corroborated is-corroborated" title="<?= htmlspecialchars($corroborateHint) ?>">
+                                <i data-lucide="thumbs-up" style="width:14px;height:14px;color:var(--tea-green);"></i>
+                                <?= $corroborateCount ?>
+                            </div>
+                        <?php elseif ($canCorroborate): ?>
+                            <button type="button"
+                                    class="chip chip-outline corroborate-btn"
+                                    data-corroborate="<?= $incidentId ?>"
+                                    title="<?= htmlspecialchars($corroborateHint) ?>">
+                                <i data-lucide="thumbs-up" style="width:14px;height:14px;color:var(--air-force);"></i>
+                                <?= $corroborateCount ?>
+                            </button>
+                        <?php else: ?>
+                            <div class="chip chip-outline corroborated"
+                                 title="<?= htmlspecialchars($corroborateHint) ?>">
+                                <i data-lucide="thumbs-up" style="width:14px;height:14px;color:var(--air-force);"></i>
+                                <?= $corroborateCount ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (in_array($userRole, ['LGU Official', 'Admin'], true)): ?>
+                            <select class="case-status-select text-xs" data-case-status="<?= $incidentId ?>" aria-label="Update case status">
+                                <option value="Received" <?= ($incident['CaseStatus'] ?? '') === 'Received' ? 'selected' : '' ?>>Received</option>
+                                <option value="Under Investigation" <?= ($incident['CaseStatus'] ?? '') === 'Under Investigation' ? 'selected' : '' ?>>Investigating</option>
+                                <option value="Resolved" <?= ($incident['CaseStatus'] ?? '') === 'Resolved' ? 'selected' : '' ?>>Resolved</option>
+                                <option value="Referred" <?= ($incident['CaseStatus'] ?? '') === 'Referred' ? 'selected' : '' ?>>Referred</option>
+                            </select>
+                        <?php endif; ?>
+
+                        <?php if ($userRole === 'Veterinarian' && $dogId > 0): ?>
+                            <a href="dog-profile.php?id=<?= $dogId ?>" class="btn-ghost btn-sm">View Dog Record</a>
+                        <?php endif; ?>
+
+                        <?php if (in_array($userRole, ['Rescue Organization', 'Admin'], true) && $type === 'Injured Stray'): ?>
+                            <button type="button" class="btn-ghost btn-sm claim-stray-btn" data-claim-stray="<?= $incidentId ?>">
+                                Claim Stray Case
+                            </button>
+                        <?php endif; ?>
+                        </div>
+                        <span class="feed-incident-date text-xs text-muted" title="<?= htmlspecialchars($timeAgo) ?>">
+                            <?= htmlspecialchars($fullTimestamp) ?><?php if ($descriptionSnippet !== ''): ?> · <?= htmlspecialchars($descriptionSnippet) ?><?php endif; ?>
+                        </span>
                     </div>
                 </div>
             </div>
-
-            <button type="button" class="incident-details-toggle text-sm" data-details-toggle aria-expanded="false">
-                <i data-lucide="chevron-down" class="chevron" style="width:14px;height:14px;"></i><span>More details</span>
-            </button>
-            <div class="incident-details-panel" hidden>
-                <p class="text-xs text-muted" style="margin:0 0 4px;">Reported by <?= htmlspecialchars($reporterName) ?></p>
-                <p class="text-xs text-muted" style="margin:0 0 8px;"><?= htmlspecialchars($fullTimestamp) ?></p>
-                <?php if ($rawCoordinates !== null): ?>
-                    <p class="text-xs text-muted" style="margin:0 0 8px;">GPS: <?= htmlspecialchars($rawCoordinates) ?></p>
-                <?php endif; ?>
-                <?php if ($dogId > 0 && !empty($incident['DogName'])): ?>
-                    <a href="dog-profile.php?id=<?= $dogId ?>" class="text-sm" style="font-weight:700;color:var(--air-force);">
-                        View dog: <?= htmlspecialchars((string) $incident['DogName']) ?>
-                        <?php if (!empty($incident['Breed'])): ?>
-                            (<?= htmlspecialchars((string) $incident['Breed']) ?>)
-                        <?php endif; ?>
-                    </a>
-                <?php endif; ?>
-                <?php if (!empty($incident['Description'])): ?>
-                    <p class="text-sm" style="margin-top:8px;"><?= htmlspecialchars((string) $incident['Description']) ?></p>
-                <?php endif; ?>
-            </div>
-
-            <div class="incident-card-footer flex justify-between items-center">
-                <div class="incident-card-actions flex items-center gap-sm" style="flex-wrap:wrap;">
-                    <?php if ($hasCorroborated): ?>
-                        <div class="chip chip-outline corroborated is-corroborated" title="<?= htmlspecialchars($corroborateHint) ?>">
-                            <i data-lucide="thumbs-up" style="width:14px;height:14px;color:var(--tea-green);"></i>
-                            Corroborate · <?= $corroborateCount ?>
-                        </div>
-                    <?php elseif ($canCorroborate): ?>
-                        <button type="button"
-                                class="chip chip-outline corroborate-btn"
-                                data-corroborate="<?= $incidentId ?>"
-                                title="<?= htmlspecialchars($corroborateHint) ?>">
-                            <i data-lucide="thumbs-up" style="width:14px;height:14px;color:var(--air-force);"></i>
-                            Corroborate · <?= $corroborateCount ?>
-                        </button>
-                    <?php else: ?>
-                        <div class="chip chip-outline corroborated"
-                             title="<?= htmlspecialchars($corroborateHint) ?>">
-                            <i data-lucide="thumbs-up" style="width:14px;height:14px;color:var(--air-force);"></i>
-                            Corroborate · <?= $corroborateCount ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php if (in_array($userRole, ['LGU Official', 'Admin'], true)): ?>
-                        <select class="case-status-select text-xs" data-case-status="<?= $incidentId ?>" aria-label="Update case status">
-                            <option value="Received" <?= ($incident['CaseStatus'] ?? '') === 'Received' ? 'selected' : '' ?>>Received</option>
-                            <option value="Under Investigation" <?= ($incident['CaseStatus'] ?? '') === 'Under Investigation' ? 'selected' : '' ?>>Investigating</option>
-                            <option value="Resolved" <?= ($incident['CaseStatus'] ?? '') === 'Resolved' ? 'selected' : '' ?>>Resolved</option>
-                            <option value="Referred" <?= ($incident['CaseStatus'] ?? '') === 'Referred' ? 'selected' : '' ?>>Referred</option>
-                        </select>
-                    <?php endif; ?>
-
-                    <?php if ($userRole === 'Veterinarian' && $dogId > 0): ?>
-                        <a href="dog-profile.php?id=<?= $dogId ?>" class="btn-ghost btn-sm">View Dog Record</a>
-                    <?php endif; ?>
-
-                    <?php if (in_array($userRole, ['Rescue Organization', 'Admin'], true) && $type === 'Injured Stray'): ?>
-                        <button type="button" class="btn-ghost btn-sm claim-stray-btn" data-claim-stray="<?= $incidentId ?>">
-                            Claim Stray Case
-                        </button>
-                    <?php endif; ?>
-                </div>
-                <div class="flex items-center gap-sm">
-                    <span class="badge badge-with-dot <?= htmlspecialchars($statusMeta['class']) ?>"
-                          data-status-badge="<?= $incidentId ?>">
-                        <?php if ($statusMeta['label'] === 'Resolved'): ?>
-                            <i data-lucide="check" style="width:12px;height:12px;"></i>
-                        <?php else: ?>
-                            <span class="badge-dot" aria-hidden="true"></span>
-                        <?php endif; ?>
-                        <?= htmlspecialchars($statusMeta['label']) ?>
-                    </span>
-                    <span class="text-xs text-muted incident-distance" title="Same barangay">Same brgy.</span>
-                </div>
-            </div>
-        </div>
-    </article>
+        </article>
+    </div>
     <?php
 }

@@ -224,6 +224,68 @@ function case_status_meta(?string $status): array
 }
 
 /**
+ * Builds a direct OpenStreetMap tile URL centered near incident coordinates.
+ */
+function incident_map_tile_url(?float $latitude, ?float $longitude, int $zoom = 15): ?string
+{
+    if ($latitude === null || $longitude === null) {
+        return null;
+    }
+
+    if ($latitude < -90 || $latitude > 90 || $longitude < -180 || $longitude > 180) {
+        return null;
+    }
+
+    $zoom = max(10, min(18, $zoom));
+    $scale = 2 ** $zoom;
+    $tileX = (int) floor(($longitude + 180.0) / 360.0 * $scale);
+    $latitudeRadians = deg2rad($latitude);
+    $tileY = (int) floor((1.0 - log(tan($latitudeRadians) + 1.0 / cos($latitudeRadians)) / M_PI) / 2.0 * $scale);
+
+    return 'https://tile.openstreetmap.org/' . $zoom . '/' . $tileX . '/' . $tileY . '.png';
+}
+
+/**
+ * Builds a static map thumbnail URL for feed preview tiles.
+ */
+function incident_map_thumbnail_url(?float $latitude, ?float $longitude, int $width = 280, int $height = 168): ?string
+{
+    if ($latitude === null || $longitude === null) {
+        return null;
+    }
+
+    if ($latitude < -90 || $latitude > 90 || $longitude < -180 || $longitude > 180) {
+        return null;
+    }
+
+    if (function_exists('imagecreatetruecolor')) {
+        return 'ajax/map-thumbnail.php?lat=' . rawurlencode((string) $latitude)
+            . '&lng=' . rawurlencode((string) $longitude)
+            . '&w=' . max(120, min(640, $width))
+            . '&h=' . max(88, min(360, $height));
+    }
+
+    return incident_map_tile_url($latitude, $longitude);
+}
+
+/**
+ * Normalizes stored incident photo paths for public URLs.
+ */
+function incident_photo_url(?string $photoPath): ?string
+{
+    $photoPath = trim((string) $photoPath);
+    if ($photoPath === '') {
+        return null;
+    }
+
+    if (str_starts_with($photoPath, 'uploads/') || str_starts_with($photoPath, 'http://') || str_starts_with($photoPath, 'https://')) {
+        return $photoPath;
+    }
+
+    return 'uploads/incidents/' . ltrim($photoPath, '/');
+}
+
+/**
  * Returns true when the role may access a nav item.
  *
  * Community Reporter intentionally shares Dog Owner nav (Feed, Map, Registry,
@@ -330,6 +392,30 @@ function severity_icon_name(string $severity): string
 }
 
 /**
+ * Returns default first-aid severity tier for an incident type.
+ */
+function incident_type_severity(string $type): string
+{
+    return match (normalize_incident_type($type)) {
+        'Animal Bite', 'Vehicular Accident' => 'Severe',
+        'Injured Stray', 'Aggressive Behavior' => 'Moderate',
+        default => 'Mild',
+    };
+}
+
+/**
+ * Returns a severity surface modifier for icon backgrounds.
+ */
+function incident_severity_surface_class(string $severity, string $prefix = 'severity-surface'): string
+{
+    return match ($severity) {
+        'Severe' => $prefix . '--severe',
+        'Moderate' => $prefix . '--moderate',
+        default => $prefix . '--mild',
+    };
+}
+
+/**
  * Returns CSS classes for a severity badge.
  */
 function severity_badge_class(string $severity): string
@@ -362,6 +448,44 @@ function severity_badge_html(string $severity, bool $withIcon = true): string
     return '<span class="' . $class . '" role="status" aria-label="Severity: ' . $label . '">'
         . $iconHtml
         . '<span class="severity-label">' . $label . '</span></span>';
+}
+
+/**
+ * Builds incident description text from observed dog appearance fields.
+ */
+function compose_observed_dog_description(
+    string $breed = '',
+    string $coatColor = '',
+    string $dogSize = '',
+    string $marks = '',
+    string $userDescription = ''
+): string {
+    $parts = [];
+
+    if ($breed !== '') {
+        $parts[] = 'Breed: ' . $breed;
+    }
+
+    if ($coatColor !== '') {
+        $parts[] = 'Coat: ' . $coatColor;
+    }
+
+    if ($dogSize !== '') {
+        $parts[] = 'Size: ' . $dogSize;
+    }
+
+    if ($marks !== '') {
+        $parts[] = 'Appearance: ' . $marks;
+    }
+
+    $observed = count($parts) > 0 ? 'Dog observed — ' . implode(' · ', $parts) : '';
+    $userDescription = trim($userDescription);
+
+    if ($observed !== '' && $userDescription !== '') {
+        return $observed . "\n\n" . $userDescription;
+    }
+
+    return $observed !== '' ? $observed : $userDescription;
 }
 
 /**

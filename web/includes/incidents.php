@@ -15,7 +15,8 @@ function fetch_incidents(
     int $userId,
     ?string $incidentType = null,
     int $offset = 0,
-    int $limit = 10
+    int $limit = 10,
+    ?string $search = null
 ): array {
     $sql = '
         SELECT i.IncidentID,
@@ -27,6 +28,7 @@ function fetch_incidents(
                i.UserID AS reporter_id,
                i.dog_id,
                i.Description,
+               i.photo_path,
                u.Name AS reporter_name,
                c.CaseID,
                c.CaseStatus,
@@ -55,9 +57,21 @@ function fetch_incidents(
         $params[':incident_type'] = $incidentType;
     }
 
+    $searchTerm = trim((string) ($search ?? ''));
+    if ($searchTerm !== '') {
+        $sql .= ' AND (
+            i.Location LIKE :search
+            OR i.IncidentType LIKE :search
+            OR i.Description LIKE :search
+            OR COALESCE(d.DogName, \'\') LIKE :search
+            OR COALESCE(d.Breed, \'\') LIKE :search
+        )';
+        $params[':search'] = '%' . $searchTerm . '%';
+    }
+
     $sql .= '
         GROUP BY i.IncidentID, i.IncidentType, i.Date, i.Location, i.latitude, i.longitude, i.UserID, i.dog_id,
-                 i.Description, u.Name, c.CaseID, c.CaseStatus, d.DogName, d.Breed
+                 i.Description, i.photo_path, u.Name, c.CaseID, c.CaseStatus, d.DogName, d.Breed
         ORDER BY i.Date DESC
         LIMIT :limit OFFSET :offset
     ';
@@ -70,6 +84,34 @@ function fetch_incidents(
 
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+
+    return $stmt->fetchAll();
+}
+
+/**
+ * Fetches incidents submitted by the logged-in user.
+ *
+ * @return list<array<string, mixed>>
+ */
+function fetch_user_reports(PDO $pdo, int $userId, int $limit = 5): array
+{
+    $sql = '
+        SELECT i.IncidentID,
+               i.IncidentType,
+               i.Date,
+               i.Location,
+               c.CaseStatus
+        FROM incident i
+        LEFT JOIN `case` c ON c.IncidentID = i.IncidentID
+        WHERE i.UserID = :user_id
+        ORDER BY i.Date DESC
+        LIMIT :limit
+    ';
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->execute();
 
     return $stmt->fetchAll();

@@ -17,11 +17,15 @@
         if (!f) return;
         var dogIdInput = f.querySelector('#report-dog-id');
         var dogSearch = f.querySelector('#report-dog-search');
+        var breedInput = f.querySelector('#report-observed-breed');
+        var registeredToggle = f.querySelector('.report-registered-dog-toggle');
         if (dogIdInput) dogIdInput.value = '';
         if (dogSearch) {
             dogSearch.value = '';
             dogSearch.readOnly = false;
         }
+        if (breedInput) breedInput.value = '';
+        if (registeredToggle) registeredToggle.open = false;
     }
 
     function openReportDrawerPrefill(options) {
@@ -56,6 +60,8 @@
             dogSearch.value = label;
             if (options.dogId) {
                 dogSearch.readOnly = true;
+                var registeredToggle = f.querySelector('.report-registered-dog-toggle');
+                if (registeredToggle) registeredToggle.open = true;
             }
         }
         if (options.incidentType) {
@@ -222,6 +228,65 @@
                 f.querySelector('#report-dog-id').value = item.getAttribute('data-dog-id');
                 dogSearch.value = item.getAttribute('data-dog-name');
                 dogResults.hidden = true;
+            });
+        }
+
+        var coatSelect = f.querySelector('[data-coat-select]');
+        var coatOtherWrap = f.querySelector('[data-coat-other-wrap]');
+        if (coatSelect && coatOtherWrap) {
+            coatSelect.addEventListener('change', function () {
+                coatOtherWrap.hidden = coatSelect.value !== 'Other';
+            });
+        }
+
+        var breedInput = f.querySelector('#report-observed-breed');
+        var breedDropdown = f.querySelector('[data-report-breed-dropdown]');
+        var breedWrap = f.querySelector('[data-report-breed-wrap]');
+        var breedUnknownBtn = f.querySelector('[data-report-breed-unknown]');
+        var breedTimer;
+        if (breedInput && breedDropdown) {
+            breedInput.addEventListener('input', function () {
+                clearTimeout(breedTimer);
+                var query = breedInput.value.trim();
+                breedTimer = setTimeout(function () {
+                    if (query.length < 2) {
+                        breedDropdown.hidden = true;
+                        if (breedWrap) breedWrap.classList.remove('is-open');
+                        return;
+                    }
+                    fetch('ajax/search_breeds.php?q=' + encodeURIComponent(query))
+                        .then(function (res) { return res.json(); })
+                        .then(function (data) {
+                            var breeds = (data && data.breeds) ? data.breeds : [];
+                            if (!breeds.length) {
+                                breedDropdown.hidden = true;
+                                if (breedWrap) breedWrap.classList.remove('is-open');
+                                return;
+                            }
+                            breedDropdown.innerHTML = breeds.map(function (breed) {
+                                return '<li class="breed-dropdown-item" role="option"><button type="button" class="breed-dropdown-choice" data-breed-name="' + breed.breed_name + '">' + breed.breed_name + '</button></li>';
+                            }).join('');
+                            breedDropdown.hidden = false;
+                            if (breedWrap) breedWrap.classList.add('is-open');
+                        });
+                }, 250);
+            });
+
+            breedDropdown.addEventListener('mousedown', function (e) {
+                var choice = e.target.closest('[data-breed-name]');
+                if (!choice) return;
+                e.preventDefault();
+                breedInput.value = choice.getAttribute('data-breed-name');
+                breedDropdown.hidden = true;
+                if (breedWrap) breedWrap.classList.remove('is-open');
+            });
+        }
+
+        if (breedUnknownBtn && breedInput) {
+            breedUnknownBtn.addEventListener('click', function () {
+                breedInput.value = 'Unknown / Not sure';
+                if (breedDropdown) breedDropdown.hidden = true;
+                if (breedWrap) breedWrap.classList.remove('is-open');
             });
         }
 

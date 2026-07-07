@@ -1,10 +1,13 @@
 <?php
+require_once __DIR__ . '/../includes/breed-media.php';
+
 $incidentTypes = incident_type_map();
+$coatOptions = dog_coat_color_options();
 $today = date('Y-m-d');
 $now = date('H:i');
 ?>
 <div class="report-drawer-overlay" data-report-drawer-overlay aria-hidden="true"></div>
-<aside class="report-drawer" data-report-drawer aria-hidden="true">
+<aside class="report-drawer sidebar-scroll" data-report-drawer aria-hidden="true">
     <div class="report-drawer-header">
         <h2>Report Incident</h2>
         <button type="button" class="report-drawer-close" data-close-report-drawer aria-label="Close">
@@ -61,17 +64,68 @@ $now = date('H:i');
                 <label class="form-label" for="report-time">Time</label>
                 <input class="form-input" type="time" id="report-time" name="report_time" value="<?= $now ?>">
             </div>
-            <div class="form-group">
-                <label class="form-label" for="report-dog-search">Tag a registered dog (optional)</label>
-                <input class="form-input" type="text" id="report-dog-search" placeholder="Search your dogs…" autocomplete="off">
-                <input type="hidden" name="dog_id" id="report-dog-id" value="">
-                <input type="hidden" name="latitude" id="report-latitude" value="">
-                <input type="hidden" name="longitude" id="report-longitude" value="">
-                <div class="dog-search-results" data-dog-search-results hidden></div>
+            <input type="hidden" name="latitude" id="report-latitude" value="">
+            <input type="hidden" name="longitude" id="report-longitude" value="">
+
+            <div class="report-dog-section">
+                <p class="form-label" style="margin-bottom:10px;">Describe the dog involved</p>
+
+                <div class="form-group">
+                    <label class="form-label" for="report-observed-breed">Breed</label>
+                    <div class="breed-autocomplete-wrap" data-report-breed-wrap>
+                        <input class="form-input" type="text" id="report-observed-breed" name="observed_breed" placeholder="Search breeds or choose unknown" autocomplete="off" aria-expanded="false">
+                        <ul class="breed-dropdown" data-report-breed-dropdown hidden role="listbox"></ul>
+                    </div>
+                    <button type="button" class="btn-ghost btn-sm report-breed-unknown" data-report-breed-unknown style="margin-top:6px;">
+                        Unknown / Not sure
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="report-observed-coat">Coat color</label>
+                    <select class="form-input" id="report-observed-coat" name="observed_coat_color" data-coat-select>
+                        <option value="">— Select —</option>
+                        <?php foreach ($coatOptions as $color): ?>
+                            <option value="<?= htmlspecialchars($color) ?>"><?= htmlspecialchars($color) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="form-group" data-coat-other-wrap hidden>
+                    <label class="form-label" for="report-observed-coat-other">Specify color</label>
+                    <input class="form-input" id="report-observed-coat-other" name="observed_coat_color_other" placeholder="e.g. brown and white">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="report-observed-size">Size</label>
+                    <select class="form-input" id="report-observed-size" name="observed_dog_size">
+                        <option value="">— Select —</option>
+                        <option value="Small">Small</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Large">Large</option>
+                        <option value="Unknown">Unknown / Not sure</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="report-observed-marks">Distinguishing marks / appearance</label>
+                    <textarea class="form-input" id="report-observed-marks" name="observed_marks" rows="3" placeholder="e.g. brown and white, collar visible, limping on left hind leg" style="height:auto;padding:12px;"></textarea>
+                </div>
             </div>
+
+            <details class="report-registered-dog-toggle">
+                <summary>I know this is a registered dog →</summary>
+                <div class="form-group" style="margin-top:12px;">
+                    <label class="form-label" for="report-dog-search">Search your dogs</label>
+                    <input class="form-input" type="text" id="report-dog-search" placeholder="Search your dogs…" autocomplete="off">
+                    <input type="hidden" name="dog_id" id="report-dog-id" value="">
+                    <div class="dog-search-results" data-dog-search-results hidden></div>
+                </div>
+            </details>
+
             <div class="form-group">
-                <label class="form-label" for="report-description">Description <span class="text-muted">(optional)</span></label>
-                <textarea class="form-input" id="report-description" name="description" rows="4" maxlength="280" placeholder="Add context — e.g. limping on left hind leg, bit near basketball court…" style="height:auto;padding:12px;"></textarea>
+                <label class="form-label" for="report-description">Additional notes <span class="text-muted">(optional)</span></label>
+                <textarea class="form-input" id="report-description" name="description" rows="3" maxlength="280" placeholder="Anything else responders should know…" style="height:auto;padding:12px;"></textarea>
                 <div class="text-xs text-muted" data-char-count>0 / 280</div>
             </div>
             <div class="report-nav-row">

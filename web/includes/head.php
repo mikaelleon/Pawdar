@@ -6,6 +6,7 @@ $pageDescription = $pageDescription ?? SITE_DESCRIPTION;
 $bodyClass = $bodyClass ?? '';
 $pageScripts = $pageScripts ?? [];
 $pageStyles = $pageStyles ?? [];
+$includeReportDrawer = $includeReportDrawer ?? false;
 $showPawBackground = $showPawBackground ?? true;
 
 $assetVersion = static function (string $relativePath): string {
@@ -42,8 +43,12 @@ $assetVersion = static function (string $relativePath): string {
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
     <script src="<?= htmlspecialchars($assetVersion('assets/js/app.js')) ?>" defer></script>
     <script src="<?= htmlspecialchars($assetVersion('assets/js/ui.js')) ?>" defer></script>
+    <script src="<?= htmlspecialchars($assetVersion('assets/js/corroborate.js')) ?>" defer></script>
     <script src="<?= htmlspecialchars($assetVersion('assets/js/case-status-update.js')) ?>" defer></script>
     <script src="<?= htmlspecialchars($assetVersion('assets/js/theme-toggle.js')) ?>" defer></script>
+    <?php if (!empty($includeReportDrawer)): ?>
+        <script src="<?= htmlspecialchars($assetVersion('assets/js/report-drawer.js')) ?>" defer></script>
+    <?php endif; ?>
     <?php foreach ($pageScripts as $script): ?>
         <script src="<?= htmlspecialchars($assetVersion($script)) ?>" defer></script>
     <?php endforeach; ?>

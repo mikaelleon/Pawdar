@@ -7,6 +7,7 @@ $userRole = current_user_role();
 $userId = (int) $_SESSION['user_id'];
 $barangay = (string) $_SESSION['user_barangay'];
 $filter = trim((string) ($_GET['filter'] ?? 'all'));
+$searchQuery = trim((string) ($_GET['q'] ?? ''));
 $incidentType = $filter === 'all' ? null : filter_to_incident_type($filter);
 if ($filter !== 'all' && $incidentType === null) {
     $filter = 'all';
@@ -14,20 +15,30 @@ if ($filter !== 'all' && $incidentType === null) {
 }
 
 $pdo = db();
-$incidents = fetch_incidents($pdo, $barangay, $userId, $incidentType, 0, 10);
+$incidents = fetch_incidents(
+    $pdo,
+    $barangay,
+    $userId,
+    $incidentType,
+    0,
+    10,
+    $searchQuery !== '' ? $searchQuery : null
+);
 $mapCounts = fetch_map_counts($pdo, $barangay);
 $mapPins = fetch_map_pins($pdo, $barangay, $incidentType);
 
 app_layout_start('feed', 'Home Feed', [
     'scripts' => ['assets/js/feed.js'],
     'report_drawer' => true,
+    'showSearch' => false,
+    'showMobileSearch' => false,
     'breadcrumbs' => [['label' => 'Feed']],
 ]);
 
 $typeMap = incident_type_map();
-$chips = [['slug' => 'all', 'label' => 'All']];
+$chips = [['slug' => 'all', 'label' => 'All', 'icon' => 'layout-grid']];
 foreach ($typeMap as $meta) {
-    $chips[] = ['slug' => $meta['filter'], 'label' => $meta['label']];
+    $chips[] = ['slug' => $meta['filter'], 'label' => $meta['label'], 'icon' => $meta['icon']];
 }
 
 $fabOptions = ['show' => false];
@@ -42,7 +53,7 @@ if (role_can_report($userRole)) {
 }
 ?>
 
-<div class="feed-grid" data-feed-page data-csrf="<?= htmlspecialchars($_SESSION['csrf_token']) ?>" data-filter="<?= htmlspecialchars($filter) ?>" data-barangay="<?= htmlspecialchars($barangay) ?>" data-next-offset="<?= count($incidents) ?>">
+<div class="feed-grid" data-feed-page data-csrf="<?= htmlspecialchars($_SESSION['csrf_token']) ?>" data-filter="<?= htmlspecialchars($filter) ?>" data-search="<?= htmlspecialchars($searchQuery) ?>" data-barangay="<?= htmlspecialchars($barangay) ?>" data-next-offset="<?= count($incidents) ?>">
     <div class="feed-column">
         <div class="feed-header">
             <div>
@@ -70,17 +81,36 @@ if (role_can_report($userRole)) {
             </div>
         </div>
 
-        <div class="feed-filter-chips-wrap">
-            <div class="chips-row scr feed-filter-chips" data-filter-chips role="tablist" aria-label="Filter incidents">
-                <?php foreach ($chips as $chip): ?>
-                    <button type="button"
-                            class="chip filter-chip<?= $filter === $chip['slug'] ? ' chip-active' : ' chip-outline' ?>"
-                            data-filter="<?= htmlspecialchars($chip['slug']) ?>"
-                            role="tab"
-                            aria-selected="<?= $filter === $chip['slug'] ? 'true' : 'false' ?>">
-                        <?= htmlspecialchars($chip['label']) ?>
-                    </button>
-                <?php endforeach; ?>
+        <div class="feed-toolbar card card-bordered">
+            <div class="search-bar search-bar-light feed-toolbar-search">
+                <i data-lucide="search"></i>
+                <input type="search"
+                       id="feed-search"
+                       value="<?= htmlspecialchars($searchQuery) ?>"
+                       placeholder="Search incidents or dogs…"
+                       aria-label="Search incidents or dogs">
+            </div>
+            <div class="feed-filter-chips-wrap">
+                <div class="chips-row scr feed-filter-chips" data-filter-chips role="tablist" aria-label="Filter incidents">
+                    <?php foreach ($chips as $chip):
+                        $isActive = $filter === $chip['slug'];
+                        $chipClasses = 'chip filter-chip feed-type-chip';
+                        $chipClasses .= $isActive ? ' chip-active feed-type-chip--full' : ' chip-outline feed-type-chip--icon';
+                        ?>
+                        <button type="button"
+                                class="<?= $chipClasses ?>"
+                                data-filter="<?= htmlspecialchars($chip['slug']) ?>"
+                                data-label="<?= htmlspecialchars($chip['label']) ?>"
+                                data-icon="<?= htmlspecialchars($chip['icon']) ?>"
+                                role="tab"
+                                aria-selected="<?= $isActive ? 'true' : 'false' ?>"
+                                aria-label="<?= htmlspecialchars($chip['label']) ?>"
+                                title="<?= htmlspecialchars($chip['label']) ?>">
+                            <i data-lucide="<?= htmlspecialchars($chip['icon']) ?>" aria-hidden="true"></i>
+                            <span class="feed-chip-label"><?= htmlspecialchars($chip['label']) ?></span>
+                        </button>
+                    <?php endforeach; ?>
+                </div>
             </div>
         </div>
 
@@ -95,7 +125,8 @@ if (role_can_report($userRole)) {
         </div>
     </div>
 
-    <aside class="bento-column bento-column--feed">
+    <aside class="bento-column bento-column--feed sidebar-scroll">
+        <?php require __DIR__ . '/partials/widget_my_reports.php'; ?>
         <?php require __DIR__ . '/partials/widget_firstaid.php'; ?>
         <?php require __DIR__ . '/partials/widget_map.php'; ?>
         <?php require __DIR__ . '/partials/widget_funfact.php'; ?>

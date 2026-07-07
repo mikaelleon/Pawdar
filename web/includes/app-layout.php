@@ -52,17 +52,6 @@ function app_layout_end(array $fabOptions = []): void
 
     echo '</div></main>';
 
-    if (!empty($fabOptions['dog_edit_modal']) && is_array($fabOptions['dog_edit_modal'])) {
-        $dog = $fabOptions['dog_edit_modal'];
-        require __DIR__ . '/../partials/dog-edit-modal.php';
-    }
-
-    if (!empty($fabOptions['dog_id_card_modal']) && is_array($fabOptions['dog_id_card_modal'])) {
-        $dog = $fabOptions['dog_id_card_modal']['dog'];
-        $breedInfo = $fabOptions['dog_id_card_modal']['breedInfo'] ?? null;
-        require __DIR__ . '/../partials/dog-id-card-modal.php';
-    }
-
     require __DIR__ . '/bottom-nav.php';
 
     if (!empty($includeReportDrawer)) {
@@ -86,5 +75,17 @@ function app_layout_end(array $fabOptions = []): void
     }
 
     echo '</div>';
+
+    if (!empty($fabOptions['dog_edit_modal']) && is_array($fabOptions['dog_edit_modal'])) {
+        $dog = $fabOptions['dog_edit_modal'];
+        require __DIR__ . '/../partials/dog-edit-modal.php';
+    }
+
+    if (!empty($fabOptions['dog_id_card_modal']) && is_array($fabOptions['dog_id_card_modal'])) {
+        $dog = $fabOptions['dog_id_card_modal']['dog'];
+        $breedInfo = $fabOptions['dog_id_card_modal']['breedInfo'] ?? null;
+        require __DIR__ . '/../partials/dog-id-card-modal.php';
+    }
+
     require __DIR__ . '/foot.php';
 }

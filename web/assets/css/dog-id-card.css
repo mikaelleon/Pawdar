@@ -301,8 +301,10 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 16px;
+    padding: 24px 16px;
+    overflow-x: hidden;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .id-card-modal-overlay[hidden] {
@@ -311,16 +313,48 @@ body {
 
 .id-card-modal {
     width: 100%;
-    max-width: 560px;
+    max-width: min(520px, calc(100vw - 32px));
+    max-height: none;
+    flex: none;
     background: var(--white);
     border-radius: 12px;
     box-shadow: 0 16px 40px rgba(74, 67, 67, 0.2);
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+}
+
+.id-card-modal .id-card-modal-chrome {
+    flex: none;
 }
 
 .id-card-modal .id-card-stage {
     padding: 20px 16px 24px;
     background: var(--bg-soft);
+    overflow: visible;
+}
+
+/* Screen preview: show full card without clipping fixed print height */
+.id-card-modal .id-card {
+    width: min(118mm, 100%);
+    height: auto;
+    min-height: 74mm;
+    overflow: visible;
+    margin: 0 auto;
+}
+
+.id-card-modal .id-card-main {
+    flex: none;
+    min-height: auto;
+    align-items: stretch;
+}
+
+.id-card-modal .id-card-logo-mark {
+    background: var(--air-force);
+    color: var(--white);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .id-card-missing {
@@ -351,8 +385,17 @@ body {
     }
 
     /* In-page modal on dog-profile.php */
-    body.id-card-printing .app-shell {
+    body.id-card-printing .paw-bg-layer,
+    body.id-card-printing .app-shell,
+    body.id-card-printing .toast-container,
+    body.id-card-printing .fab {
         display: none !important;
+    }
+
+    body.id-card-printing .id-card-modal-overlay,
+    body.id-card-printing .id-card-modal-overlay[hidden] {
+        display: flex !important;
+        visibility: visible !important;
     }
 
     body.id-card-printing .id-card-modal-overlay {
@@ -392,6 +435,9 @@ body {
 
     body.id-card-printing [data-id-card-print-target],
     body.id-card-page [data-id-card-print-target] {
+        width: 118mm !important;
+        height: 74mm !important;
+        overflow: hidden !important;
         box-shadow: none !important;
         max-width: none !important;
         page-break-inside: avoid !important;
