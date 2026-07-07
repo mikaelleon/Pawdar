@@ -516,7 +516,7 @@ function updateStrength(value, segments, label, srLabel) {
     if (/\d/.test(value)) score++;
     if (/[^A-Za-z0-9]/.test(value)) score++;
 
-    var labels = ['', 'Weak', 'Fair', 'Strong', 'Very strong'];
+    var labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
     var text = value ? labels[score] : '';
     if (label) {
         label.textContent = text;

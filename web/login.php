@@ -19,6 +19,7 @@ require __DIR__ . '/includes/head.php';
 ?>
 
 <div class="auth-page">
+    <?php require __DIR__ . '/includes/auth-theme-toggle.php'; ?>
     <div class="auth-panel auth-desktop-only auth-panel-pattern">
         <a href="index.html" class="flex items-center gap-sm auth-panel-logo">
             <div class="logo-mark"><i data-lucide="paw-print"></i></div>

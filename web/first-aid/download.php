@@ -26,7 +26,32 @@ $lines = [
 ];
 
 foreach ($guide['steps'] as $index => $step) {
-    $lines[] = ($index + 1) . '. ' . $step;
+    $summary = is_array($step) ? (string) ($step['summary'] ?? '') : (string) $step;
+    $lines[] = ($index + 1) . '. ' . $summary;
+
+    if (is_array($step) && !empty($step['detail'])) {
+        $lines[] = '   Detail: ' . (string) $step['detail'];
+    }
+}
+
+if (!empty($guide['facts']['items'])) {
+    $lines[] = '';
+    $lines[] = 'Did you know?';
+
+    foreach ($guide['facts']['items'] as $fact) {
+        if (!empty($fact['heading'])) {
+            $lines[] = '- ' . (string) $fact['heading'];
+        }
+
+        if (!empty($fact['body'])) {
+            $lines[] = '  ' . (string) $fact['body'];
+        }
+    }
+
+    if (!empty($guide['facts']['source'])) {
+        $lines[] = '';
+        $lines[] = 'Facts source: ' . (string) $guide['facts']['source'];
+    }
 }
 
 $lines[] = '';

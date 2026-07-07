@@ -225,6 +225,10 @@ function case_status_meta(?string $status): array
 
 /**
  * Returns true when the role may access a nav item.
+ *
+ * Community Reporter intentionally shares Dog Owner nav (Feed, Map, Registry,
+ * First Aid, Breeds): reporters need map/registry context when flagging incidents.
+ * LGU-only items (Cases, Analytics) stay restricted. Change here only with product sign-off.
  */
 function role_can_see_nav(string $item, string $role): bool
 {

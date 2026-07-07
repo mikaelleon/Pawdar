@@ -80,7 +80,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     sidebarToggleBtn?.addEventListener('click', toggleSidebar);
 
-    initMapMoreFiltersPopover();
+    initMapSecondaryControls();
+    initMapFilterHint();
 
     if (typeof sidebarMedia.addEventListener === 'function') {
         sidebarMedia.addEventListener('change', function () {
@@ -248,64 +249,77 @@ document.addEventListener('DOMContentLoaded', function () {
         }, { enableHighAccuracy: true, timeout: 10000 });
     }
 
+    var mapFilterHintKey = 'pawdarMapFilterHintSeen';
+
     function setActiveFilterChip(chip) {
         document.querySelectorAll('.map-type-chip').forEach(function (c) {
             var isActive = c.getAttribute('data-filter') === chip.getAttribute('data-filter');
             c.classList.toggle('chip-active', isActive);
             c.classList.toggle('chip-outline', !isActive);
+            c.setAttribute('aria-pressed', isActive ? 'true' : 'false');
         });
 
-        var overflowFilter = chip.getAttribute('data-filter');
-        if (overflowFilter === 'vehicular' || overflowFilter === 'disturbance') {
-            openMapMoreFiltersPopover();
+        dismissMapFilterHint();
+
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
         }
     }
 
-    function initMapMoreFiltersPopover() {
-        var toggle = document.querySelector('[data-map-more-filters-toggle]');
-        var popover = document.querySelector('[data-map-more-filters-popover]');
-        if (!toggle || !popover) {
+    function initMapSecondaryControls() {
+        var toggle = document.querySelector('[data-map-secondary-toggle]');
+        var panel = document.querySelector('[data-map-secondary-panel]');
+        if (!toggle || !panel) {
             return;
         }
 
         toggle.addEventListener('click', function (event) {
             event.stopPropagation();
-            if (popover.hasAttribute('hidden')) {
-                openMapMoreFiltersPopover();
+            var isHidden = panel.hasAttribute('hidden');
+            if (isHidden) {
+                panel.removeAttribute('hidden');
+                toggle.setAttribute('aria-expanded', 'true');
+                toggle.setAttribute('aria-label', 'Hide time range and map view options');
             } else {
-                closeMapMoreFiltersPopover();
+                panel.setAttribute('hidden', '');
+                toggle.setAttribute('aria-expanded', 'false');
+                toggle.setAttribute('aria-label', 'Show time range and map view options');
+            }
+
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
             }
         });
-
-        popover.addEventListener('click', function (event) {
-            event.stopPropagation();
-        });
-
-        document.addEventListener('click', function () {
-            closeMapMoreFiltersPopover();
-        });
     }
 
-    function openMapMoreFiltersPopover() {
-        var toggle = document.querySelector('[data-map-more-filters-toggle]');
-        var popover = document.querySelector('[data-map-more-filters-popover]');
-        if (!toggle || !popover) {
+    function initMapFilterHint() {
+        var hint = document.querySelector('[data-map-filter-hint]');
+        if (!hint) {
             return;
         }
 
-        popover.removeAttribute('hidden');
-        toggle.setAttribute('aria-expanded', 'true');
-    }
-
-    function closeMapMoreFiltersPopover() {
-        var toggle = document.querySelector('[data-map-more-filters-toggle]');
-        var popover = document.querySelector('[data-map-more-filters-popover]');
-        if (!toggle || !popover) {
-            return;
+        try {
+            if (sessionStorage.getItem(mapFilterHintKey) === '1') {
+                return;
+            }
+        } catch (err) {
+            /* ignore */
         }
 
-        popover.setAttribute('hidden', '');
-        toggle.setAttribute('aria-expanded', 'false');
+        hint.hidden = false;
+    }
+
+    function dismissMapFilterHint() {
+        var hint = document.querySelector('[data-map-filter-hint]');
+        if (hint) {
+            hint.hidden = true;
+        }
+
+        try {
+            sessionStorage.setItem(mapFilterHintKey, '1');
+        } catch (err) {
+            /* ignore */
+        }
     }
 
     document.querySelectorAll('.map-type-chip').forEach(function (chip) {

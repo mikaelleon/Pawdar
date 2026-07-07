@@ -6,6 +6,7 @@ $userRole = current_user_role();
 $pdo = db();
 $barangay = (string) $_SESSION['user_barangay'];
 $incidents = fetch_map_incidents($pdo, $barangay, null, date('Y-m-d 00:00:00', strtotime('-30 days')));
+$mapTypeFilters = incident_type_map();
 
 app_layout_start('map', 'Incident Map', [
     'showSearch' => false,
@@ -62,44 +63,56 @@ app_layout_start('map', 'Incident Map', [
     <div class="map-overlay-top hidden-mobile">
         <div class="card card-body map-toolbar">
             <div class="map-toolbar-tier map-toolbar-tier-1">
-                <div class="search-bar search-bar-light map-toolbar-search">
-                    <i data-lucide="search"></i>
-                    <input type="search" id="map-search" placeholder="Search by barangay, location…">
+                <div class="map-toolbar-search-col">
+                    <div class="search-bar search-bar-light map-toolbar-search">
+                        <i data-lucide="search"></i>
+                        <input type="search" id="map-search" placeholder="Search by barangay, location…">
+                    </div>
+                    <p class="map-filter-hint text-xs text-muted" data-map-filter-hint hidden>
+                        Tap an icon to filter by incident type.
+                    </p>
                 </div>
                 <div class="map-toolbar-tier-1-controls">
-                    <div class="chips-row map-type-chips-row" data-map-type-chips>
-                        <button type="button" class="chip chip-active map-type-chip" data-filter="all">All</button>
-                        <button type="button" class="chip chip-outline map-type-chip" data-filter="animal_bite">Bite</button>
-                        <button type="button" class="chip chip-outline map-type-chip" data-filter="injured_stray">Injured</button>
-                        <button type="button" class="chip chip-outline map-type-chip" data-filter="aggressive">Aggressive</button>
-                    </div>
-                    <div class="map-more-filters-anchor">
+                    <div class="chips-row map-type-chips-row" data-map-type-chips role="toolbar" aria-label="Filter by incident type">
                         <button type="button"
-                                class="map-more-filters-trigger"
-                                data-map-more-filters-toggle
-                                aria-expanded="false"
-                                aria-haspopup="true">
-                            More filters
-                            <i data-lucide="chevron-down" aria-hidden="true"></i>
+                                class="chip chip-active map-type-chip map-type-chip--all"
+                                data-filter="all"
+                                aria-pressed="true">
+                            All
                         </button>
-                        <div class="map-more-filters-popover" data-map-more-filters-popover hidden role="menu">
-                            <div class="chips-row map-type-chips-more">
-                                <button type="button" class="chip chip-outline map-type-chip" data-filter="vehicular">Vehicular</button>
-                                <button type="button" class="chip chip-outline map-type-chip" data-filter="disturbance">Disturbance</button>
-                            </div>
-                        </div>
+                        <?php foreach ($mapTypeFilters as $meta): ?>
+                            <button type="button"
+                                    class="chip chip-outline map-type-chip map-type-chip--icon"
+                                    data-filter="<?= htmlspecialchars($meta['filter']) ?>"
+                                    aria-label="<?= htmlspecialchars($meta['label']) ?>"
+                                    title="<?= htmlspecialchars($meta['label']) ?>"
+                                    aria-pressed="false">
+                                <i data-lucide="<?= htmlspecialchars($meta['icon']) ?>" aria-hidden="true"></i>
+                            </button>
+                        <?php endforeach; ?>
+                        <button type="button"
+                                class="map-secondary-toggle"
+                                data-map-secondary-toggle
+                                aria-expanded="false"
+                                aria-controls="map-secondary-controls"
+                                aria-label="Show time range and map view options"
+                                title="Time range and view options">
+                            <i data-lucide="chevrons-up-down" aria-hidden="true"></i>
+                        </button>
                     </div>
                 </div>
             </div>
-            <div class="map-toolbar-tier map-toolbar-tier-2">
-                <select id="map-range" class="registry-filter map-toolbar-range">
-                    <option value="today">Today</option>
-                    <option value="week">This week</option>
-                    <option value="month" selected>This month</option>
-                </select>
-                <div class="map-mode-toggle">
-                    <button type="button" class="is-active" data-map-mode="normal">Normal</button>
-                    <button type="button" data-map-mode="heatmap">Heatmap</button>
+            <div class="map-toolbar-tier map-toolbar-tier-2" id="map-secondary-controls" data-map-secondary-panel hidden>
+                <div class="map-toolbar-tier-2-inner">
+                    <select id="map-range" class="registry-filter map-toolbar-range" aria-label="Incident date range">
+                        <option value="today">Today</option>
+                        <option value="week">This week</option>
+                        <option value="month" selected>This month</option>
+                    </select>
+                    <div class="map-mode-toggle">
+                        <button type="button" class="is-active" data-map-mode="normal">Normal</button>
+                        <button type="button" data-map-mode="heatmap">Heatmap</button>
+                    </div>
                 </div>
             </div>
         </div>

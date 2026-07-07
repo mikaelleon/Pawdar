@@ -36,6 +36,7 @@ $stepLabels = [1 => 'Account', 2 => 'Role & location', 3 => 'Verify'];
 ?>
 
 <div class="auth-page">
+    <?php require __DIR__ . '/includes/auth-theme-toggle.php'; ?>
     <div class="auth-panel auth-desktop-only auth-panel-pattern">
         <a href="index.html" class="flex items-center gap-sm auth-panel-logo">
             <div class="logo-mark"><i data-lucide="paw-print"></i></div>
@@ -116,10 +117,12 @@ $stepLabels = [1 => 'Account', 2 => 'Role & location', 3 => 'Verify'];
                         <button type="button" class="password-toggle" data-toggle-password="password" aria-label="Show password" aria-pressed="false"><i data-lucide="eye"></i></button>
                     </div>
                     <div class="password-strength" aria-live="polite">
-                        <div class="strength-bar" aria-hidden="true">
-                            <span class="strength-seg" data-strength-seg></span><span class="strength-seg" data-strength-seg></span><span class="strength-seg" data-strength-seg></span><span class="strength-seg" data-strength-seg></span>
+                        <div class="strength-row">
+                            <div class="strength-bar" aria-hidden="true">
+                                <span class="strength-seg" data-strength-seg></span><span class="strength-seg" data-strength-seg></span><span class="strength-seg" data-strength-seg></span><span class="strength-seg" data-strength-seg></span>
+                            </div>
+                            <span class="strength-label" data-strength-label></span>
                         </div>
-                        <span class="text-xs text-muted" data-strength-label></span>
                         <span class="sr-only" data-strength-sr></span>
                     </div>
                     <p class="field-hint field-hint--warning" data-password-weak hidden>Choose a stronger password.</p>

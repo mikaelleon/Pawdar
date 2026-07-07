@@ -44,7 +44,7 @@ INSERT INTO first_aid_guides (incident_type, severity_level, title, steps, warni
  'CDC Dog Bite Prevention Guidelines (2024)', 'alert-triangle', 4),
 ('Disturbance', 'Mild', 'Disturbance First Aid',
  '["Stay calm and keep a safe distance from the dog.","Avoid chasing or cornering the animal.","If the dog appears sick or injured, report it as an Injured Stray instead.","Contact the barangay if stray dogs are regularly causing disturbances in the area."]',
- 'Trash-disturbing dogs are usually hungry strays — avoid feeding them directly as it encourages return.',
+ 'Stray dogs causing disturbances are often hungry or seeking shelter — avoid feeding them directly as it encourages return visits.',
  'Local Barangay Animal Control Advisory (2024)', 'footprints', 5)
 ON DUPLICATE KEY UPDATE title = VALUES(title);
 
