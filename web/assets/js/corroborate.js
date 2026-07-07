@@ -57,6 +57,9 @@
                         lucide.createIcons();
                     }
                     showToast('Thanks for corroborating');
+                    if (document.querySelector('[data-incident-detail]')) {
+                        window.setTimeout(function () { window.location.reload(); }, 500);
+                    }
                     return;
                 }
 

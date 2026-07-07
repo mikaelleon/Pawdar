@@ -10,7 +10,7 @@ $barangay = (string) $_SESSION['user_barangay'];
 $canManage = in_array($userRole, ['Rescue Organization', 'Admin'], true);
 
 $unclaimed = $canManage ? fetch_unclaimed_stray_cases($pdo, $barangay) : [];
-$tracked = $canManage ? fetch_rescue_org_cases($pdo, $userId) : [];
+$tracked = $canManage ? fetch_rescue_org_cases($pdo, $userId, $userRole, $barangay) : [];
 $listings = fetch_adoption_listings($pdo);
 
 /**
@@ -26,6 +26,34 @@ function rescue_status_accent(string $status): string
     ];
 
     return $map[$status] ?? 'is-spotted';
+}
+
+/**
+ * Badge class for rescue pipeline status.
+ */
+function rescue_status_badge_class(string $status): string
+{
+    $map = [
+        'Spotted' => 'badge-investigating',
+        'Rescued' => 'badge-resolved',
+        'Under Vet Care' => 'badge-received',
+        'Ready for Adoption' => 'badge-resolved',
+    ];
+
+    return $map[$status] ?? 'badge-received';
+}
+
+/**
+ * Best timestamp for last pipeline activity.
+ */
+function rescue_case_updated_label(array $case): string
+{
+    $raw = (string) ($case['last_status_at'] ?? $case['claimed_at'] ?? $case['updated_at'] ?? '');
+    if ($raw === '') {
+        return 'Unknown';
+    }
+
+    return time_elapsed_string($raw);
 }
 
 app_layout_start('rescue-board', 'Rescue Board', [
@@ -77,8 +105,19 @@ app_layout_start('rescue-board', 'Rescue Board', [
             ?>
         <?php else: ?>
             <div class="rescue-claim-list">
-                <?php foreach ($unclaimed as $row): ?>
+                <?php foreach ($unclaimed as $row):
+                    $claimPhoto = incident_photo_url((string) ($row['photo_path'] ?? ''));
+                    ?>
                     <article class="rescue-claim-card">
+                        <?php if ($claimPhoto): ?>
+                            <div class="rescue-card-thumb">
+                                <img src="<?= htmlspecialchars($claimPhoto) ?>" alt="Stray case photo near <?= htmlspecialchars((string) $row['Location']) ?>">
+                            </div>
+                        <?php else: ?>
+                            <div class="rescue-card-thumb rescue-card-thumb-placeholder" aria-hidden="true">
+                                <i data-lucide="camera-off"></i>
+                            </div>
+                        <?php endif; ?>
                         <div class="rescue-claim-card-body">
                             <div class="flex items-start gap-sm">
                                 <div class="icon-box icon-box-sm" aria-hidden="true"><i data-lucide="map-pin"></i></div>
@@ -110,7 +149,7 @@ app_layout_start('rescue-board', 'Rescue Board', [
             <i data-lucide="life-buoy"></i>
             Tracked rescues
         </h2>
-        <p class="text-xs text-muted rescue-section-lead">Cases your organization has claimed and is moving through the pipeline.</p>
+        <p class="text-xs text-muted rescue-section-lead">Cases your organization has claimed and is moving through the pipeline. Set status to <strong>Ready for Adoption</strong> to publish in Adoption listings.</p>
 
         <?php if (count($tracked) === 0): ?>
             <?php
@@ -124,18 +163,32 @@ app_layout_start('rescue-board', 'Rescue Board', [
                 <?php foreach ($tracked as $case):
                     $status = (string) $case['status'];
                     $accent = rescue_status_accent($status);
+                    $badgeClass = rescue_status_badge_class($status);
                     $caseId = (int) $case['rescue_case_id'];
+                    $trackPhoto = incident_photo_url((string) ($case['photo_path'] ?? ''));
                     ?>
                     <article class="rescue-track-card card card-bordered" data-rescue-card="<?= $caseId ?>">
                         <div class="rescue-track-card-accent <?= htmlspecialchars($accent) ?>" data-rescue-accent="<?= $caseId ?>"></div>
                         <div class="card-body">
                             <div class="rescue-track-card-head">
-                                <div class="icon-box icon-box-sm" aria-hidden="true"><i data-lucide="map-pin"></i></div>
+                                <?php if ($trackPhoto): ?>
+                                    <div class="rescue-card-thumb">
+                                        <img src="<?= htmlspecialchars($trackPhoto) ?>" alt="Rescue case photo near <?= htmlspecialchars((string) $case['Location']) ?>">
+                                    </div>
+                                <?php else: ?>
+                                    <div class="rescue-card-thumb rescue-card-thumb-placeholder" aria-hidden="true">
+                                        <i data-lucide="camera-off"></i>
+                                    </div>
+                                <?php endif; ?>
                                 <div class="flex-1 min-w-0">
                                     <div class="rescue-track-location"><?= htmlspecialchars((string) $case['Location']) ?></div>
-                                    <div class="text-xs text-muted">Updated <?= htmlspecialchars(time_elapsed_string((string) $case['updated_at'])) ?></div>
+                                    <div class="text-xs text-muted" data-rescue-updated="<?= $caseId ?>">Updated <?= htmlspecialchars(rescue_case_updated_label($case)) ?></div>
+                                    <div class="text-xs text-muted mt-sm">
+                                        <i data-lucide="building-2" class="rescue-inline-icon"></i>
+                                        Handled by <?= htmlspecialchars((string) ($case['org_name'] ?? 'Rescue organization')) ?>
+                                    </div>
                                 </div>
-                                <span class="badge badge-owned rescue-status-badge" data-rescue-badge="<?= $caseId ?>"><?= htmlspecialchars($status) ?></span>
+                                <span class="badge <?= htmlspecialchars($badgeClass) ?> rescue-status-badge" data-rescue-badge="<?= $caseId ?>"><?= htmlspecialchars($status) ?></span>
                             </div>
                             <?php if ((string) ($case['Description'] ?? '') !== ''): ?>
                                 <p class="text-sm text-muted mt-sm"><?= htmlspecialchars((string) $case['Description']) ?></p>
@@ -177,11 +230,19 @@ app_layout_start('rescue-board', 'Rescue Board', [
             ?>
         <?php else: ?>
             <div class="rescue-adoption-grid">
-                <?php foreach ($listings as $listing): ?>
+                <?php foreach ($listings as $listing):
+                    $listingPhoto = incident_photo_url((string) ($listing['display_photo'] ?? ''));
+                    ?>
                     <article class="card card-bordered card-body rescue-adoption-card">
-                        <div class="registry-dog-avatar pastel-color-1 rescue-adoption-avatar" aria-hidden="true">
-                            <i data-lucide="dog"></i>
-                        </div>
+                        <?php if ($listingPhoto): ?>
+                            <div class="rescue-adoption-photo">
+                                <img src="<?= htmlspecialchars($listingPhoto) ?>" alt="Photo of <?= htmlspecialchars((string) ($listing['dog_name'] ?: 'rescue dog')) ?>">
+                            </div>
+                        <?php else: ?>
+                            <div class="registry-dog-avatar pastel-color-1 rescue-adoption-avatar" aria-hidden="true">
+                                <i data-lucide="dog"></i>
+                            </div>
+                        <?php endif; ?>
                         <div class="rescue-adoption-name"><?= htmlspecialchars((string) ($listing['dog_name'] ?: 'Rescue dog')) ?></div>
                         <p class="text-xs text-muted">
                             <?= htmlspecialchars((string) ($listing['estimated_age'] ?? 'Age unknown')) ?>

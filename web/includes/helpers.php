@@ -261,8 +261,8 @@ function incident_map_thumbnail_url(?float $latitude, ?float $longitude, int $wi
     if (function_exists('imagecreatetruecolor')) {
         return 'ajax/map-thumbnail.php?lat=' . rawurlencode((string) $latitude)
             . '&lng=' . rawurlencode((string) $longitude)
-            . '&w=' . max(120, min(640, $width))
-            . '&h=' . max(88, min(360, $height));
+            . '&w=' . max(120, min(800, $width))
+            . '&h=' . max(88, min(300, $height));
     }
 
     return incident_map_tile_url($latitude, $longitude);
@@ -315,6 +315,15 @@ function role_can_see_nav(string $item, string $role): bool
 function role_can_report(string $role): bool
 {
     return in_array($role, ['Dog Owner', 'Community Reporter', 'Admin'], true);
+}
+
+/**
+ * Returns true when the role may update case status from Feed, Cases, or Incident Detail.
+ * Intentional quick-action for management roles; browsing users see read-only status only.
+ */
+function role_can_manage_cases(string $role): bool
+{
+    return in_array($role, ['LGU Official', 'Admin'], true);
 }
 
 /**
@@ -486,6 +495,31 @@ function compose_observed_dog_description(
     }
 
     return $observed !== '' ? $observed : $userDescription;
+}
+
+/**
+ * Splits stored incident description into observed-dog fields and free-text narrative.
+ *
+ * @return array{observed: string|null, narrative: string|null}
+ */
+function incident_description_parts(?string $description): array
+{
+    $description = trim((string) $description);
+    if ($description === '') {
+        return ['observed' => null, 'narrative' => null];
+    }
+
+    if (preg_match('/^Dog observed — (.+?)(?:\r?\n\r?\n(.*))?$/s', $description, $matches) === 1) {
+        $observed = trim($matches[1]);
+        $narrative = isset($matches[2]) ? trim($matches[2]) : null;
+
+        return [
+            'observed' => $observed !== '' ? $observed : null,
+            'narrative' => $narrative !== '' ? $narrative : null,
+        ];
+    }
+
+    return ['observed' => null, 'narrative' => $description];
 }
 
 /**

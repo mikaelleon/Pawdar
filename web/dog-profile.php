@@ -126,14 +126,29 @@ app_layout_start('registry', 'Dog Profile', [
                 <?php endif; ?>
             </div>
             <h1 class="profile-name"><?= htmlspecialchars((string) $dog['DogName']) ?></h1>
-            <div class="registry-id text-xs text-muted">Registry ID · <?= htmlspecialchars($registryId) ?></div>
-            <?php if ($isOwner): ?>
-                <button type="button" class="btn-outline btn-sm mt-sm" data-open-edit-dog>Edit Profile</button>
-            <?php endif; ?>
-            <?php if ($canReport): ?>
-                <button type="button" class="btn-primary btn-sm mt-sm" data-report-dog-incident>Report Incident</button>
-            <?php endif; ?>
-            <button type="button" class="btn-outline btn-sm mt-sm" data-flag-dog>Flag This Dog</button>
+            <div class="profile-hero-meta">
+                <span class="badge badge-owned"><?= htmlspecialchars((string) ($dog['DogType'] ?? 'Owned')) ?></span>
+                <span class="profile-hero-breed text-sm text-muted"><?= htmlspecialchars((string) $dog['Breed']) ?> · <?= htmlspecialchars($genderLabel) ?></span>
+            </div>
+            <div class="registry-id text-xs text-muted profile-hero-registry">Registry ID · <?= htmlspecialchars($registryId) ?></div>
+            <div class="profile-hero-actions">
+                <?php if ($isOwner): ?>
+                    <button type="button" class="btn-outline btn-sm profile-hero-btn" data-open-edit-dog>Edit Profile</button>
+                <?php endif; ?>
+                <?php if ($canReport): ?>
+                    <button type="button" class="btn-primary btn-sm profile-hero-btn profile-hero-btn--primary" data-report-dog-incident>
+                        <i data-lucide="flag-triangle-right" style="width:16px;height:16px;"></i>
+                        Report Incident
+                    </button>
+                <?php endif; ?>
+                <?php if ($canCosign): ?>
+                    <button type="button" class="btn-primary btn-sm profile-hero-btn" data-cosign-vaccine data-vaccine-id="<?= (int) $dog['vaccine']['VaccineID'] ?>">Co-sign Vaccination</button>
+                <?php endif; ?>
+                <button type="button" class="btn-outline btn-sm profile-hero-btn" data-flag-dog>
+                    <i data-lucide="flag" style="width:16px;height:16px;"></i>
+                    Flag This Dog
+                </button>
+            </div>
         </div>
 
         <div class="profile-content-grid<?= $breedInfo ? '' : ' profile-content-grid--no-breed' ?>">

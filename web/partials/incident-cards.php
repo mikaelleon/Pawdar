@@ -87,9 +87,9 @@ function render_feed_skeleton_cards(int $count = 3): void
                             </div>
                             <div class="skeleton-line skeleton-shimmer" style="width:76px;height:24px;border-radius:8px;"></div>
                         </div>
-                        <div class="feed-incident-media">
-                            <div class="feed-incident-media-tile skeleton-shimmer"></div>
-                            <div class="feed-incident-media-tile skeleton-shimmer"></div>
+                        <div class="feed-incident-media incident-card-tiles feed-incident-media--no-photo">
+                            <div class="feed-incident-media-tile incident-card-tile-photo skeleton-shimmer"></div>
+                            <div class="feed-incident-media-tile incident-card-tile-map skeleton-shimmer"></div>
                         </div>
                         <div class="skeleton-line skeleton-shimmer" style="width:100%;height:36px;margin-top:16px;"></div>
                     <div class="feed-incident-open skeleton-shimmer" aria-hidden="true"></div>
@@ -133,7 +133,7 @@ function render_single_incident_card(array $incident, string $userRole, int $use
         $latitude = $mapCoords['lat'];
         $longitude = $mapCoords['lng'];
     }
-    $mapThumbnail = incident_map_thumbnail_url($latitude, $longitude, 280, 168);
+    $mapThumbnail = incident_map_thumbnail_url($latitude, $longitude, 800, 250);
     $descriptionSnippet = trim((string) ($incident['Description'] ?? ''));
     if ($descriptionSnippet !== '' && strlen($descriptionSnippet) > 48) {
         $descriptionSnippet = substr($descriptionSnippet, 0, 45) . '…';
@@ -144,6 +144,10 @@ function render_single_incident_card(array $incident, string $userRole, int $use
         : ($isOwnReport
             ? 'You reported this incident.'
             : 'Community confirmations help LGU prioritize. Three or more may escalate review.');
+    $canManageCaseStatus = role_can_manage_cases($userRole);
+    $showVetDogLink = $userRole === 'Veterinarian' && $dogId > 0;
+    $showClaimStray = in_array($userRole, ['Rescue Organization', 'Admin'], true) && $type === 'Injured Stray';
+    $caseStages = ['Received', 'Under Investigation', 'Action Taken', 'Resolved', 'Referred'];
     ?>
     <div class="feed-incident-card-wrap">
         <article class="incident-card feed-incident-card card-bordered" data-incident-id="<?= $incidentId ?>">
@@ -175,15 +179,15 @@ function render_single_incident_card(array $incident, string $userRole, int $use
                     </div>
                 </div>
 
-                <div class="feed-incident-media">
-                    <a href="incident.php?id=<?= $incidentId ?>" class="feed-incident-media-tile feed-incident-media-tile--photo" aria-label="View incident photo evidence">
+                <div class="feed-incident-media incident-card-tiles<?= $photoPath === null ? ' feed-incident-media--no-photo' : ' incident-card-tiles--has-photo' ?>">
+                    <a href="incident.php?id=<?= $incidentId ?>" class="feed-incident-media-tile feed-incident-media-tile--photo incident-card-tile-photo" aria-label="View incident photo evidence">
                         <?php if ($photoPath !== null): ?>
                             <img src="<?= htmlspecialchars($photoPath) ?>" alt="Incident photo evidence" loading="lazy">
                         <?php else: ?>
                             <i data-lucide="image" aria-hidden="true"></i>
                         <?php endif; ?>
                     </a>
-                    <a href="map.php" class="feed-incident-media-tile feed-incident-media-tile--map<?= $mapThumbnail === null ? ' is-map-fallback' : ' has-map-preview' ?>" aria-label="View incident location on map">
+                    <a href="map.php" class="feed-incident-media-tile feed-incident-media-tile--map incident-card-tile-map<?= $mapThumbnail === null ? ' is-map-fallback' : ' has-map-preview' ?>" aria-label="View incident location on map">
                         <?php if ($mapThumbnail !== null): ?>
                             <img src="<?= htmlspecialchars($mapThumbnail) ?>"
                                  alt=""
@@ -199,52 +203,65 @@ function render_single_incident_card(array $incident, string $userRole, int $use
                 </div>
 
                 <div class="incident-card-footer feed-incident-footer">
-                    <div class="feed-incident-footer-main">
-                        <div class="incident-card-actions flex items-center gap-sm">
-                        <?php if ($hasCorroborated): ?>
-                            <div class="chip chip-outline corroborated is-corroborated" title="<?= htmlspecialchars($corroborateHint) ?>">
-                                <i data-lucide="thumbs-up" style="width:14px;height:14px;color:var(--tea-green);"></i>
-                                <?= $corroborateCount ?>
-                            </div>
-                        <?php elseif ($canCorroborate): ?>
-                            <button type="button"
-                                    class="chip chip-outline corroborate-btn"
-                                    data-corroborate="<?= $incidentId ?>"
-                                    title="<?= htmlspecialchars($corroborateHint) ?>">
-                                <i data-lucide="thumbs-up" style="width:14px;height:14px;color:var(--air-force);"></i>
-                                <?= $corroborateCount ?>
-                            </button>
-                        <?php else: ?>
-                            <div class="chip chip-outline corroborated"
-                                 title="<?= htmlspecialchars($corroborateHint) ?>">
-                                <i data-lucide="thumbs-up" style="width:14px;height:14px;color:var(--air-force);"></i>
-                                <?= $corroborateCount ?>
-                            </div>
-                        <?php endif; ?>
-
-                        <?php if (in_array($userRole, ['LGU Official', 'Admin'], true)): ?>
-                            <select class="case-status-select text-xs" data-case-status="<?= $incidentId ?>" aria-label="Update case status">
-                                <option value="Received" <?= ($incident['CaseStatus'] ?? '') === 'Received' ? 'selected' : '' ?>>Received</option>
-                                <option value="Under Investigation" <?= ($incident['CaseStatus'] ?? '') === 'Under Investigation' ? 'selected' : '' ?>>Investigating</option>
-                                <option value="Resolved" <?= ($incident['CaseStatus'] ?? '') === 'Resolved' ? 'selected' : '' ?>>Resolved</option>
-                                <option value="Referred" <?= ($incident['CaseStatus'] ?? '') === 'Referred' ? 'selected' : '' ?>>Referred</option>
-                            </select>
-                        <?php endif; ?>
-
-                        <?php if ($userRole === 'Veterinarian' && $dogId > 0): ?>
-                            <a href="dog-profile.php?id=<?= $dogId ?>" class="btn-ghost btn-sm">View Dog Record</a>
-                        <?php endif; ?>
-
-                        <?php if (in_array($userRole, ['Rescue Organization', 'Admin'], true) && $type === 'Injured Stray'): ?>
-                            <button type="button" class="btn-ghost btn-sm claim-stray-btn" data-claim-stray="<?= $incidentId ?>">
-                                Claim Stray Case
-                            </button>
-                        <?php endif; ?>
+                    <div class="feed-incident-footer-row feed-incident-footer-row--meta">
+                        <div class="feed-incident-corroborate">
+                            <?php if ($hasCorroborated): ?>
+                                <div class="chip chip-outline corroborated is-corroborated" title="<?= htmlspecialchars($corroborateHint) ?>">
+                                    <i data-lucide="thumbs-up" style="width:14px;height:14px;color:var(--tea-green);"></i>
+                                    <?= $corroborateCount ?>
+                                </div>
+                            <?php elseif ($canCorroborate): ?>
+                                <button type="button"
+                                        class="chip chip-outline corroborate-btn"
+                                        data-corroborate="<?= $incidentId ?>"
+                                        title="<?= htmlspecialchars($corroborateHint) ?>">
+                                    <i data-lucide="thumbs-up" style="width:14px;height:14px;color:var(--air-force);"></i>
+                                    <?= $corroborateCount ?>
+                                </button>
+                            <?php else: ?>
+                                <div class="chip chip-outline corroborated"
+                                     title="<?= htmlspecialchars($corroborateHint) ?>">
+                                    <i data-lucide="thumbs-up" style="width:14px;height:14px;color:var(--air-force);"></i>
+                                    <?= $corroborateCount ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
                         <span class="feed-incident-date text-xs text-muted" title="<?= htmlspecialchars($timeAgo) ?>">
                             <?= htmlspecialchars($fullTimestamp) ?><?php if ($descriptionSnippet !== ''): ?> · <?= htmlspecialchars($descriptionSnippet) ?><?php endif; ?>
                         </span>
                     </div>
+
+                    <?php if ($canManageCaseStatus): ?>
+                        <div class="feed-incident-footer-row feed-incident-footer-row--status">
+                            <label class="sr-only" for="feed-case-status-<?= $incidentId ?>">Update case status</label>
+                            <select class="case-status-select feed-incident-status-select text-xs"
+                                    id="feed-case-status-<?= $incidentId ?>"
+                                    data-case-status="<?= $incidentId ?>"
+                                    aria-label="Update case status">
+                                <?php foreach ($caseStages as $stage):
+                                    $optionLabel = $stage === 'Under Investigation' ? 'Investigating' : $stage; ?>
+                                    <option value="<?= htmlspecialchars($stage) ?>" <?= ($incident['CaseStatus'] ?? '') === $stage ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($optionLabel) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if ($showVetDogLink || $showClaimStray): ?>
+                        <div class="feed-incident-footer-row feed-incident-footer-row--action">
+                            <?php if ($showVetDogLink): ?>
+                                <a href="dog-profile.php?id=<?= $dogId ?>" class="btn-ghost btn-sm feed-incident-action-btn">View Dog Record</a>
+                            <?php endif; ?>
+                            <?php if ($showClaimStray): ?>
+                                <button type="button"
+                                        class="btn-ghost btn-sm feed-incident-action-btn claim-stray-btn"
+                                        data-claim-stray="<?= $incidentId ?>">
+                                    Claim Stray Case
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </article>

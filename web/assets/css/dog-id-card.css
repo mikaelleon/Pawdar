@@ -459,10 +459,22 @@ body {
     .id-card-toolbar-actions,
     .id-card-modal-chrome .id-card-toolbar-actions {
         display: flex;
+        flex-direction: column;
     }
 
     .id-card-btn {
-        flex: 1;
+        flex: none;
+        width: 100%;
+        min-height: 44px;
+    }
+
+    .id-card-modal-overlay {
+        padding: 12px 10px;
+        align-items: flex-start;
+    }
+
+    .id-card-modal {
+        max-width: none;
     }
 
     .id-card {

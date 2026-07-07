@@ -61,13 +61,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    incidentList.addEventListener('change', function (event) {
-        var select = event.target.closest('[data-case-status]');
-        if (select) {
-            handleCaseStatusUpdate(select, csrfToken);
-        }
-    });
-
     if (typeof window.initReportDrawer === 'function') {
         window.initReportDrawer(csrfToken, function () {
             nextOffset = 0;
@@ -151,6 +144,10 @@ function fetchFeed(filter, offset, append, search) {
                 lucide.createIcons();
             }
 
+            if (window.PawdarCaseStatus && typeof window.PawdarCaseStatus.bindSelects === 'function') {
+                PawdarCaseStatus.bindSelects(incidentList);
+            }
+
             updateMapPreview(data.counts);
 
             if (typeof data.next_offset === 'number') {
@@ -220,9 +217,9 @@ function getSkeletonHtml(count) {
             '</div>' +
             '<div class="skeleton-line skeleton-shimmer" style="width:76px;height:24px;border-radius:8px;"></div>' +
             '</div>' +
-            '<div class="feed-incident-media">' +
-            '<div class="feed-incident-media-tile skeleton-shimmer"></div>' +
-            '<div class="feed-incident-media-tile skeleton-shimmer"></div>' +
+            '<div class="feed-incident-media incident-card-tiles feed-incident-media--no-photo">' +
+            '<div class="feed-incident-media-tile incident-card-tile-photo skeleton-shimmer"></div>' +
+            '<div class="feed-incident-media-tile incident-card-tile-map skeleton-shimmer"></div>' +
             '</div>' +
             '<div class="skeleton-line skeleton-shimmer" style="width:100%;height:36px;margin-top:16px;"></div>' +
             '<div class="feed-incident-open skeleton-shimmer"></div>' +
@@ -242,49 +239,6 @@ function updateMapPreview(counts) {
             el.textContent = counts[key] || 0;
         }
     });
-}
-
-function handleCaseStatusUpdate(select, csrfToken) {
-    if (window.PawdarCaseStatus) {
-        PawdarCaseStatus.handleStatusSelectChange(select);
-        return;
-    }
-
-    var incidentId = select.getAttribute('data-case-status');
-    var status = select.value;
-
-    fetch('ajax/update_case.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': csrfToken
-        },
-        body: JSON.stringify({
-            incident_id: parseInt(incidentId, 10),
-            status: status,
-            csrf_token: csrfToken
-        })
-    })
-        .then(function (res) { return res.json(); })
-        .then(function (data) {
-            if (!data.success) {
-                showToast(data.message || 'Update failed');
-                return;
-            }
-
-            var badge = document.querySelector('[data-status-badge="' + incidentId + '"]');
-            if (badge) {
-                var dotOrCheck = data.status_label === 'Resolved'
-                    ? '<i data-lucide="check" style="width:12px;height:12px;"></i>'
-                    : '<span class="badge-dot" aria-hidden="true"></span>';
-                badge.className = 'badge badge-with-dot feed-incident-status ' + data.status_class;
-                badge.innerHTML = dotOrCheck + data.status_label;
-                if (window.lucide) {
-                    lucide.createIcons();
-                }
-            }
-            showToast('Case status updated');
-        });
 }
 
 function handleClaimStray(btn, csrfToken) {

@@ -97,8 +97,13 @@
                 }
             }).then(function (data) {
                 select.disabled = false;
-                if (data && data.success && !badgeUpdated) {
-                    window.setTimeout(function () { window.location.reload(); }, 600);
+                if (data && data.success) {
+                    select.dataset.previousValue = status;
+                    if (!badgeUpdated || document.querySelector('[data-incident-detail]')) {
+                        window.setTimeout(function () { window.location.reload(); }, 600);
+                    }
+                } else {
+                    select.value = previousValue;
                 }
             });
         }

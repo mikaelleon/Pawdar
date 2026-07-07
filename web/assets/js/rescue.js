@@ -5,6 +5,13 @@ var RESCUE_ACCENT_MAP = {
     'Ready for Adoption': 'is-adoption'
 };
 
+var RESCUE_BADGE_MAP = {
+    'Spotted': 'badge-investigating',
+    'Rescued': 'badge-resolved',
+    'Under Vet Care': 'badge-received',
+    'Ready for Adoption': 'badge-resolved'
+};
+
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('[data-claim-stray]').forEach(function (btn) {
         btn.addEventListener('click', function () {
@@ -51,11 +58,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (badge) {
                 badge.textContent = newStatus;
+                badge.className = 'badge ' + (RESCUE_BADGE_MAP[newStatus] || 'badge-received') + ' rescue-status-badge';
             }
 
             if (accent) {
                 accent.className = 'rescue-track-card-accent ' + (RESCUE_ACCENT_MAP[newStatus] || 'is-spotted');
             }
+
+            var updatedEl = document.querySelector('[data-rescue-updated="' + caseId + '"]');
+            var previousBadgeClass = badge ? badge.className : '';
 
             fetch('ajax/update_rescue_status.php', {
                 method: 'POST',
@@ -67,6 +78,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (!data.success) {
                         if (badge) {
                             badge.textContent = previousStatus;
+                            badge.className = previousBadgeClass || ('badge ' + (RESCUE_BADGE_MAP[previousStatus] || 'badge-received') + ' rescue-status-badge');
                         }
                         select.value = previousValue;
                         if (accent) {
@@ -77,13 +89,24 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                         return;
                     }
+
+                    if (updatedEl) {
+                        updatedEl.textContent = 'Updated 1s ago';
+                    }
+
                     if (window.PawdarUI && PawdarUI.showToast) {
-                        PawdarUI.showToast('Status updated to ' + newStatus, 'success');
+                        if (newStatus === 'Ready for Adoption') {
+                            PawdarUI.showToast('Dog published to Adoption listings.', 'success');
+                            setTimeout(function () { location.reload(); }, 1200);
+                        } else {
+                            PawdarUI.showToast('Status updated to ' + newStatus, 'success');
+                        }
                     }
                 })
                 .catch(function () {
                     if (badge) {
                         badge.textContent = previousStatus;
+                        badge.className = previousBadgeClass || ('badge ' + (RESCUE_BADGE_MAP[previousStatus] || 'badge-received') + ' rescue-status-badge');
                     }
                     select.value = previousValue;
                     if (accent) {

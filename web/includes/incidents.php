@@ -384,7 +384,7 @@ function fetch_incident_corroborators(PDO $pdo, int $incidentId, int $limit = 5)
 function fetch_related_incidents(PDO $pdo, string $barangay, int $excludeId, int $limit = 3): array
 {
     $stmt = $pdo->prepare('
-        SELECT i.IncidentID, i.IncidentType, i.Location, i.Date, c.CaseStatus
+        SELECT i.IncidentID, i.IncidentType, i.Location, i.Date, i.latitude, i.longitude, c.CaseStatus
         FROM incident i
         INNER JOIN `user` u ON u.UserID = i.UserID
         LEFT JOIN `case` c ON c.IncidentID = i.IncidentID

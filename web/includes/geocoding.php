@@ -163,6 +163,33 @@ function incident_location_display(string $location, ?float $latitude = null, ?f
 }
 
 /**
+ * Formats a single location line with barangay, avoiding duplicate "Brgy." suffixes.
+ */
+function incident_location_with_barangay(string $displayLocation, ?string $barangay): string
+{
+    $display = trim($displayLocation);
+    $barangay = trim((string) $barangay);
+    if ($barangay === '') {
+        return $display;
+    }
+
+    $normalizedName = preg_replace('/^brgy\.?\s*/i', '', $barangay) ?? $barangay;
+    if ($normalizedName === '') {
+        return $display;
+    }
+
+    if (preg_match('/brgy\.?\s*' . preg_quote($normalizedName, '/') . '\b/i', $display)) {
+        return $display;
+    }
+
+    if (stripos($display, $normalizedName) !== false) {
+        return $display;
+    }
+
+    return $display . ' · Brgy. ' . $barangay;
+}
+
+/**
  * Short place label for incident titles.
  */
 function incident_location_short_label(string $displayLocation): string

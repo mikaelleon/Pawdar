@@ -44,7 +44,7 @@ foreach ($typeMap as $meta) {
 $fabOptions = ['show' => false];
 if (role_can_report($userRole)) {
     $fabOptions = ['show' => true, 'label' => 'Report', 'opensDrawer' => true];
-} elseif ($userRole === 'LGU Official' || $userRole === 'Admin') {
+} elseif (role_can_manage_cases($userRole)) {
     $fabOptions = ['show' => true, 'label' => 'Cases', 'href' => 'cases.php'];
 } elseif ($userRole === 'Veterinarian') {
     $fabOptions = ['show' => true, 'label' => 'Verify', 'href' => 'dog-profile.php'];
@@ -65,7 +65,7 @@ if (role_can_report($userRole)) {
                     <button type="button" class="btn-primary" style="height:44px;padding:0 20px;font-size:14px;" data-open-report-drawer>
                         <i data-lucide="plus"></i> Report Incident
                     </button>
-                <?php elseif ($userRole === 'LGU Official' || $userRole === 'Admin'): ?>
+                <?php elseif (role_can_manage_cases($userRole)): ?>
                     <a href="cases.php" class="btn-primary" style="height:44px;padding:0 20px;font-size:14px;">
                         <i data-lucide="folder-check"></i> Manage Cases
                     </a>
@@ -126,7 +126,11 @@ if (role_can_report($userRole)) {
     </div>
 
     <aside class="bento-column bento-column--feed sidebar-scroll">
-        <?php require __DIR__ . '/partials/widget_my_reports.php'; ?>
+        <?php if (role_can_manage_cases($userRole)): ?>
+            <?php require __DIR__ . '/partials/widget_feed_admin.php'; ?>
+        <?php elseif (role_can_report($userRole)): ?>
+            <?php require __DIR__ . '/partials/widget_my_reports.php'; ?>
+        <?php endif; ?>
         <?php require __DIR__ . '/partials/widget_firstaid.php'; ?>
         <?php require __DIR__ . '/partials/widget_map.php'; ?>
         <?php require __DIR__ . '/partials/widget_funfact.php'; ?>

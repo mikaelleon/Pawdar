@@ -137,6 +137,13 @@ function loadNotifications(dropdown, markRead) {
 
             updateNotificationBadges(data.count);
 
+            var header = dropdown.querySelector('.notification-dropdown-header');
+            if (header) {
+                header.textContent = data.count > 0
+                    ? 'Notifications (' + data.count + ' unread)'
+                    : 'Notifications';
+            }
+
             if (!data.items.length) {
                 list.innerHTML = '<p class="notification-empty text-sm text-muted">No notifications yet.</p>';
             } else {

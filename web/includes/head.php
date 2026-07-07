@@ -50,7 +50,11 @@ $assetVersion = static function (string $relativePath): string {
         <script src="<?= htmlspecialchars($assetVersion('assets/js/report-drawer.js')) ?>" defer></script>
     <?php endif; ?>
     <?php foreach ($pageScripts as $script): ?>
-        <script src="<?= htmlspecialchars($assetVersion($script)) ?>" defer></script>
+        <?php if (preg_match('#^https?://#i', $script)): ?>
+            <script src="<?= htmlspecialchars($script) ?>" defer></script>
+        <?php else: ?>
+            <script src="<?= htmlspecialchars($assetVersion($script)) ?>" defer></script>
+        <?php endif; ?>
     <?php endforeach; ?>
 </head>
 <body class="<?= htmlspecialchars($bodyClass) ?>">
