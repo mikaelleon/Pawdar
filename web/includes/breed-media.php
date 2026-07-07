@@ -79,11 +79,54 @@ function breed_to_dog_ceo_slug(string $breedName): string
 }
 
 /**
- * Quick HEAD check — broken dog.ceo caches caused empty thumbnails.
+ * Absolute filesystem path for a breed image stored under web/uploads/breeds/.
+ */
+function breed_local_image_path(string $relativePath): ?string
+{
+    $relativePath = ltrim(str_replace('\\', '/', $relativePath), '/');
+    if ($relativePath === '' || str_contains($relativePath, '..')) {
+        return null;
+    }
+
+    $fullPath = dirname(__DIR__) . '/' . $relativePath;
+
+    return is_file($fullPath) ? $fullPath : null;
+}
+
+/**
+ * Returns a public relative path when a local breed image exists for the slug.
+ */
+function breed_local_image_public_path(string $slug): ?string
+{
+    $slug = trim($slug);
+    if ($slug === '') {
+        return null;
+    }
+
+    foreach (['jpg', 'jpeg', 'png', 'webp', 'gif'] as $ext) {
+        $relative = 'uploads/breeds/' . $slug . '.' . $ext;
+        if (breed_local_image_path($relative) !== null) {
+            return $relative;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Validates remote dog.ceo URLs and local uploads/breeds paths.
  */
 function breed_image_url_is_valid(string $url): bool
 {
-    if ($url === '' || filter_var($url, FILTER_VALIDATE_URL) === false) {
+    if ($url === '') {
+        return false;
+    }
+
+    if (str_starts_with($url, 'uploads/')) {
+        return breed_local_image_path($url) !== null;
+    }
+
+    if (filter_var($url, FILTER_VALIDATE_URL) === false) {
         return false;
     }
 
@@ -113,9 +156,13 @@ function breed_image_url_is_valid(string $url): bool
  */
 function resolve_breed_image_url(PDO $pdo, int $breedId, string $breedName): ?string
 {
-    $stmt = $pdo->prepare('SELECT image_url FROM breeds WHERE breed_id = :id LIMIT 1');
+    $stmt = $pdo->prepare('SELECT image_url, slug FROM breeds WHERE breed_id = :id LIMIT 1');
     $stmt->execute([':id' => $breedId]);
-    $existing = $stmt->fetchColumn();
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $existing = is_array($row) ? ($row['image_url'] ?? null) : null;
+    $slug = is_array($row) && !empty($row['slug'])
+        ? (string) $row['slug']
+        : breed_slug_from_name($breedName);
 
     if (is_string($existing) && $existing !== '') {
         if (breed_image_url_is_valid($existing)) {
@@ -124,6 +171,14 @@ function resolve_breed_image_url(PDO $pdo, int $breedId, string $breedName): ?st
 
         $clear = $pdo->prepare('UPDATE breeds SET image_url = NULL WHERE breed_id = :id');
         $clear->execute([':id' => $breedId]);
+    }
+
+    $localPath = breed_local_image_public_path($slug);
+    if ($localPath !== null) {
+        $update = $pdo->prepare('UPDATE breeds SET image_url = :url WHERE breed_id = :id');
+        $update->execute([':url' => $localPath, ':id' => $breedId]);
+
+        return $localPath;
     }
 
     $slug = breed_to_dog_ceo_slug($breedName);
@@ -188,8 +243,14 @@ function dog_profile_image_url(array $dog, ?array $breed = null): ?string
  */
 function breed_card_image_url(array $breed): ?string
 {
-    if (!empty($breed['image_url'])) {
+    if (!empty($breed['image_url']) && breed_image_url_is_valid((string) $breed['image_url'])) {
         return (string) $breed['image_url'];
+    }
+
+    $slug = (string) ($breed['slug'] ?? breed_slug_from_name((string) ($breed['breed_name'] ?? '')));
+    $localPath = breed_local_image_public_path($slug);
+    if ($localPath !== null) {
+        return $localPath;
     }
 
     if (!empty($breed['breed_id'])) {
@@ -216,7 +277,12 @@ function breed_silhouette_url(array $breed): string
  */
 function breed_list_thumbnail_url(array $breed): string
 {
-    if (!empty($breed['image_url']) && !empty($breed['breed_id'])) {
+    $cardImage = breed_card_image_url($breed);
+    if ($cardImage !== null && !str_starts_with($cardImage, 'ajax/')) {
+        return $cardImage;
+    }
+
+    if (!empty($breed['breed_id'])) {
         return 'ajax/breed-image.php?id=' . (int) $breed['breed_id'];
     }
 
